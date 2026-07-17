@@ -1,0 +1,70 @@
+@keyframes ff-progress-indeterminate {
+  from {
+    transform: translateX(-120%);
+  }
+  to {
+    transform: translateX(280%);
+  }
+}
+
+@keyframes ff-progress-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+[data-ff-button]:hover:not(:disabled) {
+  background: var(--ff-color-primary-hover);
+}
+[data-ff-button][data-variant='secondary']:hover:not(:disabled),
+[data-ff-button][data-variant='ghost']:hover:not(:disabled) {
+  background: var(--ff-color-primary-soft);
+}
+[data-ff-button][data-variant='danger']:hover:not(:disabled) {
+  filter: brightness(0.92);
+}
+[data-ff-button]:active:not(:disabled) {
+  transform: translateY(1px) scale(0.99);
+}
+
+[data-ff-button]:focus-visible,
+[data-ff-toggle]:focus-visible,
+[data-ff-slider]:focus-visible,
+[data-ff-select]:focus-visible,
+[data-ff-card='interactive']:focus-visible {
+  outline: 3px solid var(--ff-color-primary);
+  outline-offset: 3px;
+}
+
+[data-ff-input-shell]:focus-within {
+  border-color: var(--ff-color-primary) !important;
+  box-shadow: var(--ff-shadow-focus);
+}
+[data-ff-input]:focus {
+  outline: none;
+}
+[data-ff-card='interactive'] {
+  cursor: pointer;
+}
+[data-ff-card='interactive']:hover {
+  border-color: var(--ff-color-primary) !important;
+  box-shadow: var(--ff-shadow-md) !important;
+  transform: translateY(-2px);
+}
+[data-ff-progress-indeterminate] {
+  animation: ff-progress-indeterminate 1.2s ease-in-out infinite;
+}
+[data-ff-progress-circle-indeterminate] {
+  animation: ff-progress-spin 0.9s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-ff-progress-indeterminate],
+  [data-ff-progress-circle-indeterminate] {
+    animation: none;
+  }
+  [data-ff-button]:active:not(:disabled),
+  [data-ff-card='interactive']:hover {
+    transform: none;
+  }
+}

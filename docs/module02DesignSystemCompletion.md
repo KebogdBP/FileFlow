@@ -43,5 +43,5 @@ pnpm dev
 - [x] Responsive demo page
 - [x] Accessibility foundation
 - [x] Reduced-motion tokens
-- [ ] Component unit tests
+- [x] Component unit tests
 - [ ] Visual regression tests

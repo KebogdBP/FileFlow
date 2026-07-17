@@ -38,13 +38,14 @@ export function Slider({
       ) : null}
       <input
         {...props}
+        data-ff-slider=""
         id={id}
         type="range"
         min={min}
         max={max}
         value={value}
         defaultValue={defaultValue}
-        style={{ width: '100%', accentColor: 'var(--ff-color-primary)' }}
+        style={{ width: '100%', minHeight: 44, accentColor: 'var(--ff-color-primary)' }}
       />
     </label>
   );

@@ -18,6 +18,7 @@ export function Toggle({
   return (
     <button
       {...props}
+      data-ff-toggle=""
       type="button"
       role="switch"
       aria-checked={checked}

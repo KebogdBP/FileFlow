@@ -26,6 +26,7 @@ export function Select({
       {label ? <span style={{ fontSize: 14, fontWeight: 700 }}>{label}</span> : null}
       <select
         {...props}
+        data-ff-select=""
         id={id}
         disabled={disabled}
         aria-invalid={error ? true : undefined}

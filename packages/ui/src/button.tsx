@@ -33,7 +33,7 @@ const variants: Record<ButtonVariant, CSSProperties> = {
 };
 
 const sizes: Record<ButtonSize, CSSProperties> = {
-  sm: { minHeight: 36, padding: '0 12px', fontSize: 13 },
+  sm: { minHeight: 44, padding: '0 12px', fontSize: 13 },
   md: { minHeight: 44, padding: '0 18px', fontSize: 14 },
   lg: { minHeight: 52, padding: '0 22px', fontSize: 16 },
 };
@@ -50,6 +50,8 @@ export function Button({
   return (
     <button
       {...props}
+      data-ff-button=""
+      data-variant={variant}
       disabled={disabled || loading}
       aria-busy={loading || undefined}
       style={{

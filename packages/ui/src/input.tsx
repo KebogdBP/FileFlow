@@ -29,6 +29,7 @@ export function Input({
     >
       {label ? <span style={{ fontSize: 14, fontWeight: 700 }}>{label}</span> : null}
       <span
+        data-ff-input-shell=""
         style={{
           minHeight: 44,
           display: 'flex',
@@ -44,6 +45,7 @@ export function Input({
         {prefix ? <span aria-hidden="true">{prefix}</span> : null}
         <input
           {...props}
+          data-ff-input=""
           id={id}
           disabled={disabled}
           aria-invalid={error ? true : undefined}
@@ -52,7 +54,6 @@ export function Input({
             width: '100%',
             minWidth: 0,
             border: 0,
-            outline: 0,
             color: 'var(--ff-color-text)',
             background: 'transparent',
             font: 'inherit',

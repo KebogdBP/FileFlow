@@ -1,15 +1,23 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Badge, Button, Card, Input, Progress, Select, Slider, Toggle } from '@fileflow/ui';
 
 export function DesignSystemDemo() {
-  const [dark, setDark] = useState(false);
+  const [theme, setTheme] = useState<'system' | 'light' | 'dark'>('system');
   const [stripMetadata, setStripMetadata] = useState(true);
   const [quality, setQuality] = useState(80);
 
+  useEffect(() => {
+    const root = document.documentElement;
+    if (theme === 'system') root.removeAttribute('data-theme');
+    else root.dataset.theme = theme;
+
+    return () => root.removeAttribute('data-theme');
+  }, [theme]);
+
   return (
-    <div data-theme={dark ? 'dark' : 'light'} className="ds-theme">
+    <div data-theme={theme === 'system' ? undefined : theme} className="ds-theme">
       <main className="ds-shell">
         <header className="ds-header">
           <div>
@@ -17,7 +25,16 @@ export function DesignSystemDemo() {
             <h1>Design System</h1>
             <p>Tokens, components, themes and accessibility foundations.</p>
           </div>
-          <Toggle checked={dark} label="Dark mode" onCheckedChange={setDark} />
+          <Select
+            id="theme"
+            label="Theme"
+            value={theme}
+            onChange={(event) => setTheme(event.target.value as typeof theme)}
+          >
+            <option value="system">System</option>
+            <option value="light">Light</option>
+            <option value="dark">Dark</option>
+          </Select>
         </header>
         <section className="ds-section">
           <h2>Buttons</h2>
@@ -78,6 +95,10 @@ export function DesignSystemDemo() {
             <div className="ds-stack">
               <Progress value={quality} label="Image optimization" />
               <Progress indeterminate label="Preparing file" />
+              <div className="ds-row">
+                <Progress variant="circular" value={quality} label="Circular" />
+                <Progress variant="circular" indeterminate label="Working" />
+              </div>
               <div className="ds-result">
                 <span>JPG · 2.4 MB</span>
                 <span>→</span>

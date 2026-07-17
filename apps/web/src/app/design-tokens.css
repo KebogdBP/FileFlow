@@ -16,6 +16,29 @@
   --ff-color-danger-soft: #fdecec;
   --ff-color-purple: #7b61ff;
 
+  --ff-font-display-xl-size: 4.5rem;
+  --ff-font-display-xl-line: 4.75rem;
+  --ff-font-display-lg-size: 3.5rem;
+  --ff-font-display-lg-line: 3.75rem;
+  --ff-font-heading-1-size: 2.5rem;
+  --ff-font-heading-1-line: 2.875rem;
+  --ff-font-heading-2-size: 2rem;
+  --ff-font-heading-2-line: 2.375rem;
+  --ff-font-heading-3-size: 1.5rem;
+  --ff-font-heading-3-line: 1.875rem;
+  --ff-font-heading-4-size: 1.25rem;
+  --ff-font-heading-4-line: 1.625rem;
+  --ff-font-body-lg-size: 1.125rem;
+  --ff-font-body-lg-line: 1.75rem;
+  --ff-font-body-md-size: 1rem;
+  --ff-font-body-md-line: 1.5rem;
+  --ff-font-body-sm-size: 0.875rem;
+  --ff-font-body-sm-line: 1.25rem;
+  --ff-font-caption-size: 0.75rem;
+  --ff-font-caption-line: 1rem;
+  --ff-font-micro-size: 0.6875rem;
+  --ff-font-micro-line: 0.875rem;
+
   --ff-space-1: 0.25rem;
   --ff-space-2: 0.5rem;
   --ff-space-3: 0.75rem;
@@ -26,6 +49,15 @@
   --ff-space-10: 2.5rem;
   --ff-space-12: 3rem;
   --ff-space-16: 4rem;
+  --ff-space-20: 5rem;
+  --ff-space-24: 6rem;
+
+  /* CSS custom properties document breakpoints but cannot be used in media queries. */
+  --ff-breakpoint-sm: 640px;
+  --ff-breakpoint-md: 768px;
+  --ff-breakpoint-lg: 1024px;
+  --ff-breakpoint-xl: 1280px;
+  --ff-breakpoint-2xl: 1440px;
 
   --ff-radius-xs: 0.5rem;
   --ff-radius-sm: 0.75rem;
@@ -42,6 +74,20 @@
 
   --ff-transition-fast: 140ms ease;
   --ff-transition-base: 220ms ease;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --ff-color-bg: #0d1422;
+    --ff-color-surface: #172235;
+    --ff-color-surface-raised: #1d2a40;
+    --ff-color-text: #eef4ff;
+    --ff-color-text-muted: #a2aec1;
+    --ff-color-border: #2b3950;
+    --ff-color-primary: #6e9bff;
+    --ff-color-primary-hover: #87adff;
+    --ff-color-primary-soft: #182d55;
+  }
 }
 
 [data-theme='dark'] {

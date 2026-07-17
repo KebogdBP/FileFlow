@@ -17,15 +17,15 @@ export default function HomePage() {
         </nav>
       </header>
       <section className="hero">
-        <p className="eyebrow">MODULE {MODULE_MARKER} · REPOSITORY FOUNDATION</p>
+        <p className="eyebrow">MODULE {MODULE_MARKER} · DESIGN SYSTEM</p>
         <h1>Private file tools.</h1>
         <p className="lead">
-          The monorepo is ready. The next module will turn this foundation into the FileFlow design
-          system.
+          The visual foundation is ready for every FileFlow workflow, in light, dark and system
+          themes.
         </p>
         <div className="actions">
-          <Button>Repository ready</Button>
-          <Button variant="secondary">Next: Design system</Button>
+          <Button>Design system ready</Button>
+          <Button variant="secondary">Next: Audiovisual system</Button>
         </div>
       </section>
       <section className="statusGrid" id="tools">

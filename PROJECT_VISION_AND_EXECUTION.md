@@ -918,27 +918,22 @@ AI-agent tool layer
 
 ## 27. Текущий статус
 
-На текущем этапе:
+На текущем этапе M01 и M02 завершены:
 
-- видение проекта определено;
-- MVP scope сформирован;
-- архитектура описана;
-- database schema описана;
-- API specification создана;
-- processing engine описан;
-- modular roadmap создан;
-- HTML prototype создан;
-- начат Module M01;
-- repository structure подготовлена;
-- исправляются M01 quality checks.
+- repository foundation и CI работают;
+- design tokens и типографическая шкала определены;
+- system/light/dark themes реализованы;
+- основные UI-компоненты и их состояния доступны;
+- responsive и accessibility foundation готовы;
+- unit tests, lint, typecheck и build проходят.
 
 Следующая цель:
 
-> Полностью завершить M01 и перейти к M02 Design System.
+> Перейти к M03 — Audiovisual Experience System.
 
 ## 28. Ближайший результат
 
-Команда должна получить работающий foundation:
+Команда получила работающий foundation:
 
 ```text
 pnpm install
@@ -952,18 +947,13 @@ pnpm build
 
 Все команды должны завершаться успешно.
 
-После этого начинается M02:
+Следующий этап — M03:
 
-- design tokens;
-- colors;
-- typography;
-- spacing;
-- buttons;
-- cards;
-- badges;
-- responsive rules;
-- dark mode;
-- reduced motion.
+- meaningful motion;
+- file transformation states;
+- progress and completion feedback;
+- reduced-motion alternatives;
+- audiovisual interaction foundations.
 
 ## 29. Итог
 

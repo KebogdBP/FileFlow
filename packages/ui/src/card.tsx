@@ -6,7 +6,14 @@ export type CardProps = HTMLAttributes<HTMLDivElement> & {
   variant?: CardVariant;
 };
 
-export function Card({ variant = 'surface', style, children, ...props }: CardProps) {
+export function Card({
+  variant = 'surface',
+  style,
+  children,
+  tabIndex,
+  role,
+  ...props
+}: CardProps) {
   const selected = variant === 'selected';
   const glass = variant === 'glass';
 
@@ -22,6 +29,9 @@ export function Card({ variant = 'surface', style, children, ...props }: CardPro
   return (
     <div
       {...props}
+      data-ff-card={variant}
+      tabIndex={variant === 'interactive' ? (tabIndex ?? 0) : tabIndex}
+      role={variant === 'interactive' ? (role ?? 'button') : role}
       style={{
         borderWidth: 1,
         borderStyle: 'solid',
