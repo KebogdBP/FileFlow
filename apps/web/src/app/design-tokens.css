@@ -74,6 +74,14 @@
 
   --ff-transition-fast: 140ms ease;
   --ff-transition-base: 220ms ease;
+  --ff-motion-instant: 0ms;
+  --ff-motion-fast: 140ms;
+  --ff-motion-base: 220ms;
+  --ff-motion-slow: 420ms;
+  --ff-motion-process: 900ms;
+  --ff-ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --ff-ease-enter: cubic-bezier(0, 0, 0.2, 1);
+  --ff-ease-exit: cubic-bezier(0.4, 0, 1, 1);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -106,5 +114,9 @@
   :root {
     --ff-transition-fast: 0ms;
     --ff-transition-base: 0ms;
+    --ff-motion-fast: 0ms;
+    --ff-motion-base: 0ms;
+    --ff-motion-slow: 0ms;
+    --ff-motion-process: 0ms;
   }
 }

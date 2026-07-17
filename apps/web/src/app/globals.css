@@ -1,5 +1,6 @@
 @import './design-tokens.css';
 @import './ui-components.css';
+@import './motion-system.css';
 :root {
   --background: #f5f2e9;
   --surface: rgba(255, 255, 255, 0.82);

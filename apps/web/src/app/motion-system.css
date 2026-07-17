@@ -1,0 +1,79 @@
+@keyframes ff-stage-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(0.88);
+    opacity: 0.65;
+  }
+}
+
+@keyframes ff-waveform-play {
+  0%,
+  100% {
+    transform: scaleY(0.55);
+  }
+  50% {
+    transform: scaleY(1);
+  }
+}
+
+@keyframes ff-transform-arrow {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(5px);
+  }
+}
+
+[data-ff-processing='analyzing'] [data-ff-stage-symbol],
+[data-ff-processing='processing'] [data-ff-stage-symbol] {
+  animation: ff-stage-pulse var(--ff-motion-process) var(--ff-ease-standard) infinite;
+}
+
+[data-ff-processing='completed'] [data-ff-stage-symbol] {
+  color: var(--ff-color-success);
+  background: var(--ff-color-success-soft);
+}
+
+[data-ff-processing='error'] [data-ff-stage-symbol] {
+  color: var(--ff-color-danger);
+  background: var(--ff-color-danger-soft);
+}
+
+[data-ff-transform-arrow] {
+  display: inline-block;
+  color: var(--ff-color-primary);
+  font-size: var(--ff-font-heading-3-size);
+  animation: ff-transform-arrow var(--ff-motion-process) var(--ff-ease-standard) infinite;
+}
+
+[data-ff-waveform='active'] > span {
+  transform-origin: center;
+  animation: ff-waveform-play var(--ff-motion-process) var(--ff-ease-standard) infinite;
+}
+
+.ff-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-ff-processing] [data-ff-stage-symbol],
+  [data-ff-transform-arrow],
+  [data-ff-waveform='active'] > span {
+    animation: none;
+    transform: none;
+  }
+}

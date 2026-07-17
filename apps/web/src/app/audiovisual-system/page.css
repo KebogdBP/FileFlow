@@ -1,0 +1,106 @@
+.av-shell {
+  width: min(1180px, calc(100% - 40px));
+  margin: 0 auto;
+  padding: var(--ff-space-16) 0 var(--ff-space-20);
+  color: var(--ff-color-text);
+}
+
+.av-header {
+  max-width: 820px;
+  margin-bottom: var(--ff-space-12);
+}
+
+.av-header h1 {
+  margin: var(--ff-space-2) 0 var(--ff-space-4);
+  font-size: clamp(var(--ff-font-display-lg-size), 7vw, var(--ff-font-display-xl-size));
+  line-height: 0.98;
+  letter-spacing: -0.05em;
+}
+
+.av-header > p:last-child,
+.av-section-heading p,
+.av-card-heading p,
+.av-note p {
+  color: var(--ff-color-text-muted);
+  font-size: var(--ff-font-body-md-size);
+  line-height: var(--ff-font-body-md-line);
+}
+
+.av-eyebrow {
+  color: var(--ff-color-primary);
+  font-size: var(--ff-font-caption-size);
+  font-weight: 800;
+  letter-spacing: 0.12em;
+}
+
+.av-section {
+  display: grid;
+  gap: var(--ff-space-5);
+}
+
+.av-section-heading,
+.av-card-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--ff-space-6);
+}
+
+.av-section-heading > :last-child {
+  width: min(300px, 100%);
+}
+
+.av-section h2,
+.av-card-heading h2 {
+  margin: 0;
+}
+
+.av-section-heading p,
+.av-card-heading p,
+.av-note p {
+  margin: var(--ff-space-1) 0 0;
+}
+
+.av-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ff-space-2);
+}
+
+.av-feedback-grid,
+.av-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--ff-space-5);
+}
+
+.av-grid {
+  margin-top: var(--ff-space-10);
+  align-items: stretch;
+}
+
+.av-note {
+  margin-top: var(--ff-space-5);
+}
+
+@media (max-width: 768px) {
+  .av-shell {
+    width: min(100% - 24px, 1180px);
+    padding: var(--ff-space-10) 0 var(--ff-space-16);
+  }
+  .av-header h1 {
+    font-size: var(--ff-font-heading-1-size);
+    line-height: var(--ff-font-heading-1-line);
+  }
+  .av-section-heading,
+  .av-card-heading {
+    flex-direction: column;
+  }
+  .av-feedback-grid,
+  .av-grid {
+    grid-template-columns: 1fr;
+  }
+  .av-controls > button {
+    flex: 1 1 calc(50% - var(--ff-space-2));
+  }
+}
