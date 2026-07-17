@@ -1,0 +1,21 @@
+fileflow-m01/
+├── apps/
+│   ├── web/
+│   ├── api/
+│   ├── media-worker/
+│   ├── document-worker/
+│   └── cleanup-worker/
+├── packages/
+│   ├── ui/
+│   ├── contracts/
+│   ├── shared-types/
+│   ├── operation-registry/
+│   ├── eslint-config/
+│   └── typescript-config/
+├── infrastructure/
+├── docs/
+├── .github/workflows/ci.yml
+├── compose.yaml
+├── package.json
+├── pnpm-workspace.yaml
+└── turbo.json
