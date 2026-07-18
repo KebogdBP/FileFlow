@@ -20,6 +20,8 @@ class WorkResult:
 
 
 class OperationHandler(Protocol):
+    def accepts(self, content_type: str) -> bool: ...
+
     def execute(self, request: WorkRequest) -> WorkResult: ...
 
 

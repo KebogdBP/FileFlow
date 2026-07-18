@@ -41,4 +41,4 @@ pnpm test
 pnpm build
 ```
 
-The next product module is M16 — Media Processing.
+The next product module is M17 — Social Media Importers.

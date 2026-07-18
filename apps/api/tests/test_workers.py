@@ -67,6 +67,9 @@ class FakeQueue:
 
 
 class CopyHandler:
+    def accepts(self, content_type: str) -> bool:
+        return content_type == "image/png"
+
     def execute(self, request: WorkRequest) -> WorkResult:
         request.report_progress(50)
         request.output_path.write_bytes(request.input_path.read_bytes() + b"-result")

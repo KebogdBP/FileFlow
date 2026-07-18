@@ -33,6 +33,8 @@ class CloudJobExecutor:
         if handler is None:
             return self._jobs.fail(job_id, "unsupported_operation").status
         upload = self._safety.require_clean(job.upload_id)
+        if not handler.accepts(upload.content_type):
+            return self._jobs.fail(job_id, "unsupported_input_type").status
         started = monotonic()
         try:
             with TemporaryDirectory(prefix=f"fileflow-{job.id}-") as directory:

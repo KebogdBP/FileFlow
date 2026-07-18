@@ -45,6 +45,8 @@ class Settings(BaseSettings):
     cost_egress_gib_usd: Decimal = Field(default=Decimal("0.09"), ge=0)
     cost_request_usd: Decimal = Field(default=Decimal("0.00001"), ge=0)
     cost_retention_hours: Decimal = Field(default=Decimal("1"), ge=0)
+    ffmpeg_path: str = "/usr/bin/ffmpeg"
+    ffprobe_path: str = "/usr/bin/ffprobe"
     allowed_origins: list[AnyHttpUrl] = Field(
         default_factory=lambda: [AnyHttpUrl("http://localhost:3000")]
     )

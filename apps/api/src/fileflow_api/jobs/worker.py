@@ -2,11 +2,13 @@ from fileflow_api.config import get_settings
 from fileflow_api.database import build_engine, build_session_factory
 from fileflow_api.jobs.queue import CeleryTaskQueue, create_celery
 from fileflow_api.jobs.service import JobService
+from fileflow_api.media.registry import register_media_operations
 from fileflow_api.safety.scanner import ClamAVScanner
 from fileflow_api.safety.service import SafetyService
 from fileflow_api.uploads.storage import S3ObjectStorage
 from fileflow_api.workers.contracts import OperationRegistry
 from fileflow_api.workers.executor import CloudJobExecutor
+from fileflow_api.workers.subprocess import ProcessLimits, SafeSubprocessRunner
 
 settings = get_settings()
 celery_app = create_celery(settings)
@@ -31,6 +33,16 @@ safety = SafetyService(
 queue = CeleryTaskQueue(celery_app)
 jobs = JobService(sessions, safety, queue, settings)
 operations = OperationRegistry()
+runner = SafeSubprocessRunner(
+    ProcessLimits(
+        timeout_seconds=settings.job_time_limit_seconds,
+        cpu_seconds=settings.worker_cpu_limit_seconds,
+        memory_bytes=settings.worker_memory_limit_bytes,
+        output_bytes=settings.worker_max_output_bytes,
+        open_files=settings.worker_file_limit,
+    )
+)
+register_media_operations(operations, settings.ffmpeg_path, runner)
 executor = CloudJobExecutor(jobs, safety, storage, operations, settings)
 
 

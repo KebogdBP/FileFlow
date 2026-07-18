@@ -5,7 +5,7 @@
     "max_output_ratio": 1.0,
     "max_cost_usd": 0.01
   },
-  "video.compress": {
+  "compress-video": {
     "max_runtime_ms": 900000,
     "max_peak_memory_bytes": 2147483648,
     "max_output_ratio": 1.0,

@@ -918,7 +918,7 @@ AI-agent tool layer
 
 ## 27. Текущий статус
 
-На текущем этапе M01–M15 завершены:
+На текущем этапе M01–M16 завершены:
 
 - repository foundation и CI работают;
 - design tokens и типографическая шкала определены;
@@ -937,12 +937,13 @@ AI-agent tool layer
 - durable Celery orchestration разделяет safety и processing queues и сохраняет lifecycle jobs;
 - isolated cloud worker lifecycle безопасно материализует input и сохраняет проверенный result;
 - measured unit economics связывает worker telemetry с per-operation regression budgets;
+- validated FFmpeg handlers выполняют основные video/audio операции через cloud worker;
 - responsive и accessibility foundation готовы;
 - unit tests, lint, typecheck и build проходят.
 
 Следующая цель:
 
-> Перейти к M16 — Media Processing.
+> Перейти к M17 — Social Media Importers.
 
 ## 28. Ближайший результат
 
@@ -976,7 +977,9 @@ M14 завершён: operation registry, isolated workspace, resource-bounded e
 
 M15 завершён: runtime/memory telemetry, Decimal cost model и machine-readable benchmark gates готовы.
 
-Следующий этап — M16: Media Processing.
+M16 завершён: MP4 conversion/compression/resize, audio extraction/conversion/compression/trim готовы.
+
+Следующий этап — M17: Social Media Importers.
 
 ## 29. Итог
 
