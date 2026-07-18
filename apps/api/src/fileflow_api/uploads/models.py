@@ -14,6 +14,14 @@ class UploadStatus(StrEnum):
     EXPIRED = "expired"
 
 
+class SafetyStatus(StrEnum):
+    PENDING = "pending"
+    SCANNING = "scanning"
+    CLEAN = "clean"
+    REJECTED = "rejected"
+    ERROR = "error"
+
+
 class Upload(Base):
     __tablename__ = "uploads"
 
@@ -29,6 +37,12 @@ class Upload(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)
     expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)
     completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    safety_status: Mapped[SafetyStatus] = mapped_column(
+        Enum(SafetyStatus), default=SafetyStatus.PENDING, index=True
+    )
+    detected_content_type: Mapped[str | None] = mapped_column(String(127), nullable=True)
+    rejection_reason: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    scanned_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
 
 class UploadPart(Base):

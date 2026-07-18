@@ -16,4 +16,9 @@ services:
     environment: { MINIO_ROOT_USER: fileflow, MINIO_ROOT_PASSWORD: fileflow-local-only }
     ports: ['9000:9000', '9001:9001']
     volumes: ['minio_data:/data']
-volumes: { postgres_data: {}, minio_data: {} }
+  clamav:
+    image: clamav/clamav:1.4_base
+    profiles: ['backend']
+    ports: ['3310:3310']
+    volumes: ['clamav_signatures:/var/lib/clamav']
+volumes: { postgres_data: {}, minio_data: {}, clamav_signatures: {} }

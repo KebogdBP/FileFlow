@@ -1,3 +1,4 @@
+from collections.abc import Iterator
 from typing import Any, Protocol
 
 import boto3
@@ -14,6 +15,12 @@ class ObjectStorage(Protocol):
     ) -> None: ...
 
     def abort_multipart(self, key: str, upload_id: str) -> None: ...
+
+    def object_size(self, key: str) -> int: ...
+
+    def iter_object(self, key: str, chunk_size: int = 1024 * 1024) -> Iterator[bytes]: ...
+
+    def delete_object(self, key: str) -> None: ...
 
 
 class S3ObjectStorage:
@@ -69,3 +76,18 @@ class S3ObjectStorage:
 
     def abort_multipart(self, key: str, upload_id: str) -> None:
         self._client.abort_multipart_upload(Bucket=self._bucket, Key=key, UploadId=upload_id)
+
+    def object_size(self, key: str) -> int:
+        return int(self._client.head_object(Bucket=self._bucket, Key=key)["ContentLength"])
+
+    def iter_object(self, key: str, chunk_size: int = 1024 * 1024) -> Iterator[bytes]:
+        body = self._client.get_object(Bucket=self._bucket, Key=key)["Body"]
+        try:
+            for chunk in body.iter_chunks(chunk_size=chunk_size):
+                if chunk:
+                    yield bytes(chunk)
+        finally:
+            body.close()
+
+    def delete_object(self, key: str) -> None:
+        self._client.delete_object(Bucket=self._bucket, Key=key)

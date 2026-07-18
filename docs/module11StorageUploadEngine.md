@@ -22,4 +22,4 @@ Run migrations from `apps/api`:
 
 Configuration uses the `FILEFLOW_` prefix. Production must override database and S3 credentials. Object expiry enforcement should also be configured as an S3 lifecycle rule; `expires_at` is the application cleanup source of truth.
 
-Content-type validation is only an admission rule. M12 is responsible for signature inspection, malware scanning and abuse controls before any processing job can consume an object.
+Content-type validation is only an admission rule. M12 adds signature inspection, malware scanning and the clean-object gate before processing.

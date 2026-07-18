@@ -26,6 +26,10 @@ class Settings(BaseSettings):
     max_upload_bytes: int = Field(default=2 * 1024 * 1024 * 1024, gt=0)
     upload_retention_seconds: int = Field(default=60 * 60, ge=300)
     upload_url_ttl_seconds: int = Field(default=15 * 60, ge=60, le=60 * 60)
+    malware_scanner_host: str = "localhost"
+    malware_scanner_port: int = Field(default=3310, ge=1, le=65535)
+    malware_scanner_timeout_seconds: float = Field(default=30.0, gt=0, le=300)
+    safety_header_bytes: int = Field(default=16 * 1024, ge=512, le=1024 * 1024)
     allowed_origins: list[AnyHttpUrl] = Field(
         default_factory=lambda: [AnyHttpUrl("http://localhost:3000")]
     )

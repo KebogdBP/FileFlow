@@ -3,7 +3,7 @@ from typing import Literal
 
 from pydantic import BaseModel, Field, field_validator
 
-from fileflow_api.uploads.models import UploadStatus
+from fileflow_api.uploads.models import SafetyStatus, UploadStatus
 
 
 class UploadCreate(BaseModel):
@@ -29,6 +29,9 @@ class UploadResponse(BaseModel):
     part_size_bytes: int
     part_count: int
     expires_at: datetime
+    safety_status: SafetyStatus
+    detected_content_type: str | None
+    rejection_reason: str | None
 
 
 class PartUrlResponse(BaseModel):

@@ -41,4 +41,4 @@ pnpm test
 pnpm build
 ```
 
-The next product module is M12 — Abuse and Content Safety Foundation.
+The next product module is M13 — Job Queue and Orchestrator.

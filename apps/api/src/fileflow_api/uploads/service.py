@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session, sessionmaker
 
 from fileflow_api.config import Settings
 from fileflow_api.uploads.contracts import CompletedPart, UploadCreate
-from fileflow_api.uploads.models import Upload, UploadPart, UploadStatus
+from fileflow_api.uploads.models import SafetyStatus, Upload, UploadPart, UploadStatus
 from fileflow_api.uploads.storage import ObjectStorage
 
 ALLOWED_CONTENT_PREFIXES = ("image/", "video/", "audio/")
@@ -57,6 +57,10 @@ class UploadService:
             created_at=now,
             expires_at=now + timedelta(seconds=self._settings.upload_retention_seconds),
             completed_at=None,
+            safety_status=SafetyStatus.PENDING,
+            detected_content_type=None,
+            rejection_reason=None,
+            scanned_at=None,
         )
         with self._sessions.begin() as session:
             session.add(upload)

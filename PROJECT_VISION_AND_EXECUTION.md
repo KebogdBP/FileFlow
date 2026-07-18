@@ -918,7 +918,7 @@ AI-agent tool layer
 
 ## 27. Текущий статус
 
-На текущем этапе M01–M11 завершены:
+На текущем этапе M01–M12 завершены:
 
 - repository foundation и CI работают;
 - design tokens и типографическая шкала определены;
@@ -933,12 +933,13 @@ AI-agent tool layer
 - local image tools создают проверенный WebP без загрузки source;
 - FastAPI foundation предоставляет versioned health, settings и error contracts;
 - PostgreSQL и S3-compatible upload engine управляет безопасным multipart lifecycle;
+- server-side signature и malware checks удерживают cloud uploads в карантине до clean verdict;
 - responsive и accessibility foundation готовы;
 - unit tests, lint, typecheck и build проходят.
 
 Следующая цель:
 
-> Перейти к M12 — Abuse and Content Safety Foundation.
+> Перейти к M13 — Job Queue and Orchestrator.
 
 ## 28. Ближайший результат
 
@@ -964,7 +965,9 @@ M11 завершён:
 - retention и cleanup metadata;
 - upload validation и quotas.
 
-Следующий этап — M12: abuse controls, file-signature verification и malware scanning boundary.
+M12 завершён: file-signature verification, streaming malware scanning и fail-closed clean-object gate готовы.
+
+Следующий этап — M13: Job Queue and Orchestrator.
 
 ## 29. Итог
 

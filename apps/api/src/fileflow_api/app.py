@@ -13,6 +13,8 @@ from fileflow_api.contracts import MessageResponse
 from fileflow_api.database import build_engine, build_session_factory
 from fileflow_api.errors import http_error_handler, validation_error_handler
 from fileflow_api.health import router as health_router
+from fileflow_api.safety.scanner import ClamAVScanner
+from fileflow_api.safety.service import SafetyService
 from fileflow_api.uploads.router import router as uploads_router
 from fileflow_api.uploads.service import UploadService
 from fileflow_api.uploads.storage import S3ObjectStorage
@@ -21,7 +23,9 @@ REQUEST_ID_PATTERN = re.compile(r"^[A-Za-z0-9._-]{1,64}$")
 
 
 def create_app(
-    settings: Settings | None = None, upload_service: UploadService | None = None
+    settings: Settings | None = None,
+    upload_service: UploadService | None = None,
+    safety_service: SafetyService | None = None,
 ) -> FastAPI:
     current = settings or get_settings()
     app = FastAPI(
@@ -32,14 +36,22 @@ def create_app(
         openapi_url="/openapi.json" if current.docs_enabled else None,
     )
     app.state.settings = current
-    app.state.upload_service = upload_service or UploadService(
-        build_session_factory(build_engine(current.database_url)),
-        S3ObjectStorage(
-            endpoint_url=current.s3_endpoint_url,
-            access_key=current.s3_access_key,
-            secret_key=current.s3_secret_key,
-            bucket=current.s3_bucket,
-            region=current.s3_region,
+    sessions = build_session_factory(build_engine(current.database_url))
+    storage = S3ObjectStorage(
+        endpoint_url=current.s3_endpoint_url,
+        access_key=current.s3_access_key,
+        secret_key=current.s3_secret_key,
+        bucket=current.s3_bucket,
+        region=current.s3_region,
+    )
+    app.state.upload_service = upload_service or UploadService(sessions, storage, current)
+    app.state.safety_service = safety_service or SafetyService(
+        sessions,
+        storage,
+        ClamAVScanner(
+            host=current.malware_scanner_host,
+            port=current.malware_scanner_port,
+            timeout=current.malware_scanner_timeout_seconds,
         ),
         current,
     )
