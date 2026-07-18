@@ -165,6 +165,8 @@ describe('M05 file and URL input UI', () => {
     expect(markup).toContain('Nothing uploaded');
     expect(markup).toContain('Selecting a file does not upload it');
     expect(markup).toContain('aria-live="polite"');
+    expect(markup).toContain('Browser worker readiness');
+    expect(markup).toContain('Test local engine');
   });
 
   it('moves a valid picker selection into the ready state', async () => {

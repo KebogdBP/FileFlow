@@ -17,7 +17,7 @@ export default function WorkspacePage() {
         <Link className="landing-brand" href="/" aria-label="FileFlow home">
           <span className="landing-mark" aria-hidden="true" /> FileFlow
         </Link>
-        <Badge variant="private">M07 · RECOMMENDATIONS</Badge>
+        <Badge variant="local">M08 · LOCAL CORE</Badge>
       </header>
       <section className="input-hero" aria-labelledby="input-page-title" data-ff-reveal="1">
         <p className="input-eyebrow">NEW WORKSPACE</p>

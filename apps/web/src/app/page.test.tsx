@@ -12,7 +12,7 @@ describe('privacy-first landing page', () => {
   const markup = renderToStaticMarkup(<HomePage />);
 
   it('presents the product positioning and current module', () => {
-    expect(MODULE_MARKER).toBe('M07');
+    expect(MODULE_MARKER).toBe('M08');
     expect(markup).toContain('Your files. Your device. Your call.');
     expect(markup).toContain('LOCAL-FIRST FILE TOOLS');
     expect(metadata.description).toContain('local processing');

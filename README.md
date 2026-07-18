@@ -12,6 +12,7 @@ The current foundation includes:
 - M05 — accessible file and URL input.
 - M06 — local file inspector.
 - M07 — recommendation and explainability engine.
+- M08 — guarded browser-worker processing core.
 
 ## Development
 
@@ -37,4 +38,4 @@ pnpm test
 pnpm build
 ```
 
-The next product module is M08 — Local Processing Core.
+The next product module is M09 — Local Image Tools.

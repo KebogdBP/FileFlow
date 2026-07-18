@@ -1,6 +1,13 @@
 'use client';
 
-import React, { useId, useRef, useState } from 'react';
+import React, { useEffect, useId, useRef, useState } from 'react';
+import {
+  getLocalProcessingCapability,
+  LocalJobRunner,
+  type LocalCapability,
+  type LocalJobHandle,
+  type WorkerTransport,
+} from '@fileflow/local-processing';
 import {
   recommendOperation,
   type RecommendationPlan,
@@ -212,7 +219,109 @@ export function FileUrlInput() {
           </p>
         </div>
       </div>
+      <LocalEngineStatus />
     </Card>
+  );
+}
+
+type EngineState =
+  | { status: 'idle' }
+  | { status: 'running'; progress: number; stage: string }
+  | { status: 'completed' }
+  | { status: 'error'; message: string };
+
+function LocalEngineStatus() {
+  const [capability, setCapability] = useState<LocalCapability>();
+  const [state, setState] = useState<EngineState>({ status: 'idle' });
+  const handle = useRef<LocalJobHandle | null>(null);
+
+  useEffect(() => setCapability(getLocalProcessingCapability()), []);
+
+  function runReadinessCheck() {
+    if (!capability?.supported) return;
+    const runner = new LocalJobRunner({
+      capability,
+      timeoutMs: 10_000,
+      createWorker: () =>
+        new Worker(new URL('./local-readiness.worker.ts', import.meta.url), {
+          type: 'module',
+        }) as WorkerTransport,
+    });
+    setState({ status: 'running', progress: 0, stage: 'Preparing' });
+    const job = runner.run(
+      {
+        id: `readiness-${Date.now()}`,
+        operationId: 'readiness',
+        input: new ArrayBuffer(8),
+      },
+      ({ progress, stage }) => setState({ status: 'running', progress, stage }),
+    );
+    handle.current = job;
+    void job.promise
+      .then(() => setState({ status: 'completed' }))
+      .catch((error: unknown) =>
+        setState({
+          status: 'error',
+          message: error instanceof Error ? error.message : 'Local readiness check failed.',
+        }),
+      );
+  }
+
+  const running = state.status === 'running';
+  return (
+    <section className="local-engine-status" aria-labelledby="local-engine-title">
+      <div>
+        <Badge variant={capability?.supported ? 'local' : 'neutral'}>
+          {capability === undefined
+            ? 'CHECKING'
+            : capability.supported
+              ? 'LOCAL ENGINE'
+              : 'UNAVAILABLE'}
+        </Badge>
+        <h3 id="local-engine-title">Browser worker readiness</h3>
+        <p>
+          {capability?.supported
+            ? `This device allows guarded local jobs up to ${formatFileSize(capability.maxInputBytes)}.`
+            : (capability?.reason ?? 'Checking browser capabilities…')}
+        </p>
+      </div>
+      <div className="local-engine-actions">
+        {running ? (
+          <Button type="button" variant="secondary" onClick={() => handle.current?.cancel()}>
+            Cancel check
+          </Button>
+        ) : (
+          <Button
+            type="button"
+            variant="secondary"
+            disabled={!capability?.supported}
+            onClick={runReadinessCheck}
+          >
+            Test local engine
+          </Button>
+        )}
+      </div>
+      <div className="local-engine-feedback" aria-live="polite">
+        {running ? (
+          <div>
+            <span>
+              <span style={{ width: `${state.progress}%` }} />
+            </span>
+            <small>
+              {state.stage} · {state.progress}%
+            </small>
+          </div>
+        ) : null}
+        {state.status === 'completed' ? (
+          <p className="engine-success">Local worker is ready.</p>
+        ) : null}
+        {state.status === 'error' ? (
+          <p className="input-error" role="alert">
+            {state.message}
+          </p>
+        ) : null}
+      </div>
+    </section>
   );
 }
 

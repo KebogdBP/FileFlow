@@ -918,7 +918,7 @@ AI-agent tool layer
 
 ## 27. Текущий статус
 
-На текущем этапе M01–M07 завершены:
+На текущем этапе M01–M08 завершены:
 
 - repository foundation и CI работают;
 - design tokens и типографическая шкала определены;
@@ -929,12 +929,13 @@ AI-agent tool layer
 - accessible file и URL input валидирует источник без скрытой загрузки;
 - local file inspector сверяет header, extension и browser-provided MIME;
 - recommendation engine объясняет outcome, defaults, trade-offs и execution mode;
+- local processing core управляет guarded worker lifecycle, progress и cancellation;
 - responsive и accessibility foundation готовы;
 - unit tests, lint, typecheck и build проходят.
 
 Следующая цель:
 
-> Перейти к M08 — Local Processing Core.
+> Перейти к M09 — Local Image Tools.
 
 ## 28. Ближайший результат
 
@@ -952,13 +953,13 @@ pnpm build
 
 Все команды должны завершаться успешно.
 
-Следующий этап — M08:
+Следующий этап — M09:
 
-- browser worker foundation;
-- cancellable local job lifecycle;
-- progress и error propagation;
-- memory и capability guards;
-- execution contract для local operations.
+- JPG/PNG → WebP local conversion;
+- resize и quality controls;
+- metadata removal;
+- result validation и size comparison;
+- download lifecycle и object URL cleanup.
 
 ## 29. Итог
 

@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@fileflow/contracts": "workspace:*",
+    "@fileflow/local-processing": "workspace:*",
     "@fileflow/operation-registry": "workspace:*",
     "@fileflow/shared-types": "workspace:*",
     "@fileflow/ui": "workspace:*",
