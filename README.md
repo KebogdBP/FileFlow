@@ -14,6 +14,7 @@ The current foundation includes:
 - M07 — recommendation and explainability engine.
 - M08 — guarded browser-worker processing core.
 - M09 — local JPG/PNG to WebP image tools.
+- M10 — FastAPI backend foundation.
 
 ## Development
 
@@ -28,6 +29,7 @@ Routes:
 - design system: `http://localhost:3000/design-system`;
 - audiovisual system: `http://localhost:3000/audiovisual-system`.
 - workspace input: `http://localhost:3000/workspace`.
+- API health: `http://localhost:8000/api/v1/health/live`.
 
 ## Quality checks
 
@@ -39,4 +41,4 @@ pnpm test
 pnpm build
 ```
 
-The next product module is M10 — Backend API Foundation.
+The next product module is M11 — Storage and Upload Engine.

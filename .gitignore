@@ -11,5 +11,12 @@ coverage
 .DS_Store
 *.log
 *.tsbuildinfo
+__pycache__
+*.py[cod]
+.pytest_cache
+.mypy_cache
+.ruff_cache
+*.egg-info
+.venv
 tmp
 temp

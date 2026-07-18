@@ -9,12 +9,14 @@
   },
   "scripts": {
     "dev": "turbo dev",
-    "build": "turbo build",
-    "lint": "turbo lint",
-    "typecheck": "turbo typecheck",
-    "test": "turbo test",
-    "format": "prettier --write .",
-    "format:check": "prettier --check .",
+    "build": "turbo build && apps/api/.venv/bin/python -m compileall -q apps/api/src",
+    "lint": "turbo lint && apps/api/.venv/bin/python -m ruff check apps/api",
+    "typecheck": "turbo typecheck && apps/api/.venv/bin/python -m mypy --config-file apps/api/pyproject.toml",
+    "test": "turbo test && apps/api/.venv/bin/python -m pytest -c apps/api/pyproject.toml apps/api/tests",
+    "format": "prettier --write . && apps/api/.venv/bin/python -m ruff format apps/api",
+    "format:check": "prettier --check . && apps/api/.venv/bin/python -m ruff format --check apps/api",
+    "api:dev": "apps/api/.venv/bin/python -m uvicorn fileflow_api.main:app --app-dir apps/api/src --reload --port 8000",
+    "api:setup": "python3 -m venv apps/api/.venv && apps/api/.venv/bin/python -m pip install -e './apps/api[dev]'",
     "clean": "turbo clean && rimraf node_modules"
   },
   "devDependencies": {
