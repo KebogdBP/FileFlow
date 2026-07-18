@@ -10,13 +10,19 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from fileflow_api.config import Settings, get_settings
 from fileflow_api.contracts import MessageResponse
+from fileflow_api.database import build_engine, build_session_factory
 from fileflow_api.errors import http_error_handler, validation_error_handler
 from fileflow_api.health import router as health_router
+from fileflow_api.uploads.router import router as uploads_router
+from fileflow_api.uploads.service import UploadService
+from fileflow_api.uploads.storage import S3ObjectStorage
 
 REQUEST_ID_PATTERN = re.compile(r"^[A-Za-z0-9._-]{1,64}$")
 
 
-def create_app(settings: Settings | None = None) -> FastAPI:
+def create_app(
+    settings: Settings | None = None, upload_service: UploadService | None = None
+) -> FastAPI:
     current = settings or get_settings()
     app = FastAPI(
         title=current.app_name,
@@ -26,11 +32,22 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         openapi_url="/openapi.json" if current.docs_enabled else None,
     )
     app.state.settings = current
+    app.state.upload_service = upload_service or UploadService(
+        build_session_factory(build_engine(current.database_url)),
+        S3ObjectStorage(
+            endpoint_url=current.s3_endpoint_url,
+            access_key=current.s3_access_key,
+            secret_key=current.s3_secret_key,
+            bucket=current.s3_bucket,
+            region=current.s3_region,
+        ),
+        current,
+    )
     app.add_middleware(
         CORSMiddleware,
         allow_origins=[str(origin).rstrip("/") for origin in current.allowed_origins],
         allow_credentials=False,
-        allow_methods=["GET", "POST", "OPTIONS"],
+        allow_methods=["GET", "POST", "DELETE", "OPTIONS"],
         allow_headers=["Content-Type", "X-Request-ID"],
     )
 
@@ -51,6 +68,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.add_exception_handler(StarletteHTTPException, http_error_handler)
     app.add_exception_handler(RequestValidationError, validation_error_handler)
     app.include_router(health_router, prefix=current.api_prefix)
+    app.include_router(uploads_router, prefix=current.api_prefix)
 
     @app.get("/", response_model=MessageResponse, include_in_schema=False)
     def root() -> MessageResponse:

@@ -918,7 +918,7 @@ AI-agent tool layer
 
 ## 27. Текущий статус
 
-На текущем этапе M01–M10 завершены:
+На текущем этапе M01–M11 завершены:
 
 - repository foundation и CI работают;
 - design tokens и типографическая шкала определены;
@@ -932,12 +932,13 @@ AI-agent tool layer
 - local processing core управляет guarded worker lifecycle, progress и cancellation;
 - local image tools создают проверенный WebP без загрузки source;
 - FastAPI foundation предоставляет versioned health, settings и error contracts;
+- PostgreSQL и S3-compatible upload engine управляет безопасным multipart lifecycle;
 - responsive и accessibility foundation готовы;
 - unit tests, lint, typecheck и build проходят.
 
 Следующая цель:
 
-> Перейти к M11 — Storage and Upload Engine.
+> Перейти к M12 — Abuse and Content Safety Foundation.
 
 ## 28. Ближайший результат
 
@@ -955,13 +956,15 @@ pnpm build
 
 Все команды должны завершаться успешно.
 
-Следующий этап — M11:
+M11 завершён:
 
 - PostgreSQL metadata persistence;
 - S3-compatible temporary object storage;
 - secure multipart upload lifecycle;
 - retention и cleanup metadata;
 - upload validation и quotas.
+
+Следующий этап — M12: abuse controls, file-signature verification и malware scanning boundary.
 
 ## 29. Итог
 

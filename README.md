@@ -41,4 +41,4 @@ pnpm test
 pnpm build
 ```
 
-The next product module is M11 — Storage and Upload Engine.
+The next product module is M12 — Abuse and Content Safety Foundation.
