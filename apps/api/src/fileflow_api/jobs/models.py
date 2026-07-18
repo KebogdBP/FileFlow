@@ -1,7 +1,7 @@
 from datetime import datetime
 from enum import StrEnum
 
-from sqlalchemy import JSON, DateTime, Enum, ForeignKey, Integer, String
+from sqlalchemy import JSON, BigInteger, DateTime, Enum, ForeignKey, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column
 
 from fileflow_api.database import Base
@@ -30,3 +30,6 @@ class Job(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)
     started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    result_object_key: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    result_content_type: Mapped[str | None] = mapped_column(String(127), nullable=True)
+    result_size_bytes: Mapped[int | None] = mapped_column(BigInteger, nullable=True)

@@ -1,4 +1,5 @@
 from collections.abc import Iterator
+from pathlib import Path
 from typing import Any, Protocol
 
 import boto3
@@ -21,6 +22,8 @@ class ObjectStorage(Protocol):
     def iter_object(self, key: str, chunk_size: int = 1024 * 1024) -> Iterator[bytes]: ...
 
     def delete_object(self, key: str) -> None: ...
+
+    def upload_file(self, key: str, source: Path, content_type: str) -> None: ...
 
 
 class S3ObjectStorage:
@@ -91,3 +94,8 @@ class S3ObjectStorage:
 
     def delete_object(self, key: str) -> None:
         self._client.delete_object(Bucket=self._bucket, Key=key)
+
+    def upload_file(self, key: str, source: Path, content_type: str) -> None:
+        self._client.upload_file(
+            str(source), self._bucket, key, ExtraArgs={"ContentType": content_type}
+        )

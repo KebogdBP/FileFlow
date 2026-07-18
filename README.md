@@ -41,4 +41,4 @@ pnpm test
 pnpm build
 ```
 
-The next product module is M14 — Cloud Worker Foundation.
+The next product module is M15 — Unit Economics and Benchmarking.

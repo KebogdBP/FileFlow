@@ -52,6 +52,9 @@ class JobService:
                 created_at=datetime.now(UTC),
                 started_at=None,
                 finished_at=None,
+                result_object_key=None,
+                result_content_type=None,
+                result_size_bytes=None,
             )
             session.add(job)
         try:
@@ -96,6 +99,18 @@ class JobService:
 
     def succeed(self, job_id: str) -> Job:
         return self._finish(job_id, JobStatus.SUCCEEDED, None)
+
+    def attach_result(
+        self, job_id: str, object_key: str, content_type: str, size_bytes: int
+    ) -> Job:
+        with self._sessions.begin() as session:
+            job = session.get(Job, job_id)
+            if job is None or job.status != JobStatus.RUNNING:
+                raise HTTPException(status_code=409, detail="Job is not running.")
+            job.result_object_key = object_key
+            job.result_content_type = content_type
+            job.result_size_bytes = size_bytes
+        return self.get(job_id)
 
     def fail(self, job_id: str, error_code: str) -> Job:
         return self._finish(job_id, JobStatus.FAILED, error_code[:64])

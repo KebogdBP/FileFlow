@@ -918,7 +918,7 @@ AI-agent tool layer
 
 ## 27. Текущий статус
 
-На текущем этапе M01–M13 завершены:
+На текущем этапе M01–M14 завершены:
 
 - repository foundation и CI работают;
 - design tokens и типографическая шкала определены;
@@ -935,12 +935,13 @@ AI-agent tool layer
 - PostgreSQL и S3-compatible upload engine управляет безопасным multipart lifecycle;
 - server-side signature и malware checks удерживают cloud uploads в карантине до clean verdict;
 - durable Celery orchestration разделяет safety и processing queues и сохраняет lifecycle jobs;
+- isolated cloud worker lifecycle безопасно материализует input и сохраняет проверенный result;
 - responsive и accessibility foundation готовы;
 - unit tests, lint, typecheck и build проходят.
 
 Следующая цель:
 
-> Перейти к M14 — Cloud Worker Foundation.
+> Перейти к M15 — Unit Economics and Benchmarking.
 
 ## 28. Ближайший результат
 
@@ -970,7 +971,9 @@ M12 завершён: file-signature verification, streaming malware scanning и
 
 M13 завершён: durable jobs, Redis/Celery routing, cancellation и safety-gated orchestration готовы.
 
-Следующий этап — M14: Cloud Worker Foundation.
+M14 завершён: operation registry, isolated workspace, resource-bounded execution и result persistence готовы.
+
+Следующий этап — M15: Unit Economics and Benchmarking.
 
 ## 29. Итог
 

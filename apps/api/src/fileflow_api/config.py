@@ -34,6 +34,10 @@ class Settings(BaseSettings):
     job_soft_time_limit_seconds: int = Field(default=14 * 60, ge=30)
     job_time_limit_seconds: int = Field(default=15 * 60, ge=60)
     max_active_jobs_per_upload: int = Field(default=1, ge=1, le=10)
+    worker_max_output_bytes: int = Field(default=2 * 1024 * 1024 * 1024, gt=0)
+    worker_memory_limit_bytes: int = Field(default=2 * 1024 * 1024 * 1024, ge=128 * 1024 * 1024)
+    worker_cpu_limit_seconds: int = Field(default=15 * 60, ge=10)
+    worker_file_limit: int = Field(default=64, ge=8, le=1024)
     allowed_origins: list[AnyHttpUrl] = Field(
         default_factory=lambda: [AnyHttpUrl("http://localhost:3000")]
     )

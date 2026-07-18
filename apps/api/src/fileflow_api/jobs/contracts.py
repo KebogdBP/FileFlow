@@ -33,3 +33,5 @@ class JobResponse(BaseModel):
     created_at: datetime
     started_at: datetime | None
     finished_at: datetime | None
+    result_content_type: str | None
+    result_size_bytes: int | None
