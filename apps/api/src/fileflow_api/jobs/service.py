@@ -55,6 +55,8 @@ class JobService:
                 result_object_key=None,
                 result_content_type=None,
                 result_size_bytes=None,
+                runtime_ms=None,
+                peak_memory_bytes=None,
             )
             session.add(job)
         try:
@@ -110,6 +112,15 @@ class JobService:
             job.result_object_key = object_key
             job.result_content_type = content_type
             job.result_size_bytes = size_bytes
+        return self.get(job_id)
+
+    def record_metrics(self, job_id: str, runtime_ms: int, peak_memory_bytes: int) -> Job:
+        with self._sessions.begin() as session:
+            job = session.get(Job, job_id)
+            if job is None:
+                raise HTTPException(status_code=404, detail="Job was not found.")
+            job.runtime_ms = max(0, runtime_ms)
+            job.peak_memory_bytes = max(0, peak_memory_bytes)
         return self.get(job_id)
 
     def fail(self, job_id: str, error_code: str) -> Job:

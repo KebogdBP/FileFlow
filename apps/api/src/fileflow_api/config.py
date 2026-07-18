@@ -1,3 +1,4 @@
+from decimal import Decimal
 from functools import lru_cache
 from typing import Literal
 
@@ -38,6 +39,12 @@ class Settings(BaseSettings):
     worker_memory_limit_bytes: int = Field(default=2 * 1024 * 1024 * 1024, ge=128 * 1024 * 1024)
     worker_cpu_limit_seconds: int = Field(default=15 * 60, ge=10)
     worker_file_limit: int = Field(default=64, ge=8, le=1024)
+    cost_compute_per_second_usd: Decimal = Field(default=Decimal("0.00002"), ge=0)
+    cost_memory_gib_second_usd: Decimal = Field(default=Decimal("0.000002"), ge=0)
+    cost_storage_gib_month_usd: Decimal = Field(default=Decimal("0.023"), ge=0)
+    cost_egress_gib_usd: Decimal = Field(default=Decimal("0.09"), ge=0)
+    cost_request_usd: Decimal = Field(default=Decimal("0.00001"), ge=0)
+    cost_retention_hours: Decimal = Field(default=Decimal("1"), ge=0)
     allowed_origins: list[AnyHttpUrl] = Field(
         default_factory=lambda: [AnyHttpUrl("http://localhost:3000")]
     )

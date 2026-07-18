@@ -33,3 +33,5 @@ class Job(Base):
     result_object_key: Mapped[str | None] = mapped_column(String(255), nullable=True)
     result_content_type: Mapped[str | None] = mapped_column(String(127), nullable=True)
     result_size_bytes: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
+    runtime_ms: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
+    peak_memory_bytes: Mapped[int | None] = mapped_column(BigInteger, nullable=True)

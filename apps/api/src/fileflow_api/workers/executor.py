@@ -1,5 +1,8 @@
+import resource
+import sys
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from time import monotonic
 
 from fileflow_api.config import Settings
 from fileflow_api.jobs.models import JobStatus
@@ -30,6 +33,7 @@ class CloudJobExecutor:
         if handler is None:
             return self._jobs.fail(job_id, "unsupported_operation").status
         upload = self._safety.require_clean(job.upload_id)
+        started = monotonic()
         try:
             with TemporaryDirectory(prefix=f"fileflow-{job.id}-") as directory:
                 workspace = Path(directory)
@@ -66,6 +70,11 @@ class CloudJobExecutor:
         except Exception:
             self._jobs.fail(job.id, "worker_execution_failed")
             raise
+        finally:
+            current_peak = max(0, resource.getrusage(resource.RUSAGE_SELF).ru_maxrss)
+            # Linux reports KiB while macOS reports bytes.
+            peak_bytes = current_peak if sys.platform == "darwin" else current_peak * 1024
+            self._jobs.record_metrics(job.id, int((monotonic() - started) * 1000), peak_bytes)
 
     def _materialize(self, key: str, destination: Path) -> None:
         written = 0

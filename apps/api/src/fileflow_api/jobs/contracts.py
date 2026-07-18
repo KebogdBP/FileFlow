@@ -35,3 +35,5 @@ class JobResponse(BaseModel):
     finished_at: datetime | None
     result_content_type: str | None
     result_size_bytes: int | None
+    runtime_ms: int | None
+    peak_memory_bytes: int | None

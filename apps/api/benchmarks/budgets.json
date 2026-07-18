@@ -1,0 +1,20 @@
+{
+  "image.compress": {
+    "max_runtime_ms": 30000,
+    "max_peak_memory_bytes": 1073741824,
+    "max_output_ratio": 1.0,
+    "max_cost_usd": 0.01
+  },
+  "video.compress": {
+    "max_runtime_ms": 900000,
+    "max_peak_memory_bytes": 2147483648,
+    "max_output_ratio": 1.0,
+    "max_cost_usd": 0.25
+  },
+  "document.to-pdf": {
+    "max_runtime_ms": 120000,
+    "max_peak_memory_bytes": 2147483648,
+    "max_output_ratio": 4.0,
+    "max_cost_usd": 0.05
+  }
+}

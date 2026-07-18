@@ -41,4 +41,4 @@ pnpm test
 pnpm build
 ```
 
-The next product module is M15 — Unit Economics and Benchmarking.
+The next product module is M16 — Media Processing.
