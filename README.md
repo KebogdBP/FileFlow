@@ -13,6 +13,7 @@ The current foundation includes:
 - M06 — local file inspector.
 - M07 — recommendation and explainability engine.
 - M08 — guarded browser-worker processing core.
+- M09 — local JPG/PNG to WebP image tools.
 
 ## Development
 
@@ -38,4 +39,4 @@ pnpm test
 pnpm build
 ```
 
-The next product module is M09 — Local Image Tools.
+The next product module is M10 — Backend API Foundation.

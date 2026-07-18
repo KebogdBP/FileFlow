@@ -4,6 +4,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import { FileUrlInput } from './file-url-input';
 import { inspectFile } from './file-inspector';
+import { savingPercent, validateWebPResult, webPFileName } from './image-result';
 import {
   formatFileSize,
   MAX_INPUT_BYTES,
@@ -151,6 +152,25 @@ describe('M06 local file inspector', () => {
   });
 });
 
+describe('M09 local image result validation', () => {
+  it('accepts only a non-empty RIFF WebP result', () => {
+    const valid = new Uint8Array(16);
+    valid.set(new TextEncoder().encode('RIFF'), 0);
+    valid.set(new TextEncoder().encode('WEBP'), 8);
+    expect(validateWebPResult(valid.buffer)).toEqual({ ok: true, size: 16 });
+    expect(validateWebPResult(new TextEncoder().encode('not-webp').buffer)).toMatchObject({
+      ok: false,
+    });
+  });
+
+  it('creates safe output names and honest size comparisons', () => {
+    expect(webPFileName('holiday.photo.JPG')).toBe('holiday.photo.webp');
+    expect(webPFileName('.hidden')).toBe('image.webp');
+    expect(savingPercent(1000, 620)).toBe(38);
+    expect(savingPercent(1000, 1200)).toBe(-20);
+  });
+});
+
 describe('M05 file and URL input UI', () => {
   const markup = renderToStaticMarkup(<FileUrlInput />);
 
@@ -191,6 +211,8 @@ describe('M05 file and URL input UI', () => {
     expect(container.textContent).toContain('Format verified from the local file header');
     expect(container.textContent).toContain('Make this image lighter');
     expect(container.textContent).toContain('Plan only · nothing has started');
+    expect(container.textContent).toContain('Create a lighter WebP');
+    expect(container.textContent).toContain('Create WebP locally');
     await act(async () => root.unmount());
   });
 

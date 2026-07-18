@@ -22,6 +22,7 @@ import {
   validateSourceUrl,
 } from './input-policy';
 import { inspectFile, type FileInspection, type FileInspectionResult } from './file-inspector';
+import { LocalImageTool } from './local-image-tool';
 
 type Source = { kind: 'file'; file: File } | { kind: 'url'; url: string; platform: InputPlatform };
 type InspectionState =
@@ -201,7 +202,9 @@ export function FileUrlInput() {
           </p>
         ) : null}
         {source ? <SelectedSource source={source} onRemove={reset} /> : null}
-        {source?.kind === 'file' ? <FileInspectorPanel state={inspection} /> : null}
+        {source?.kind === 'file' ? (
+          <FileInspectorPanel state={inspection} file={source.file} />
+        ) : null}
       </div>
 
       <div className="input-privacy-note">
@@ -331,7 +334,7 @@ function toInspectionState(result: FileInspectionResult): InspectionState {
     : { status: 'error', error: result.error };
 }
 
-function FileInspectorPanel({ state }: { state: InspectionState }) {
+function FileInspectorPanel({ state, file }: { state: InspectionState; file: File }) {
   if (state.status === 'idle') return null;
   if (state.status === 'loading') {
     return (
@@ -405,6 +408,10 @@ function FileInspectorPanel({ state }: { state: InspectionState }) {
           confidence: item.confidence,
         })}
       />
+      {item.confidence !== 'mismatch' &&
+      (item.detectedMime === 'image/jpeg' || item.detectedMime === 'image/png') ? (
+        <LocalImageTool file={file} sourceMime={item.detectedMime} />
+      ) : null}
     </>
   );
 }

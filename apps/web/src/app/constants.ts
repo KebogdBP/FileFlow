@@ -1,1 +1,1 @@
-export const MODULE_MARKER = 'M08';
+export const MODULE_MARKER = 'M09';
