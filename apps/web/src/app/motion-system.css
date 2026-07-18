@@ -1,3 +1,14 @@
+@keyframes ff-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 @keyframes ff-stage-pulse {
   0%,
   100% {
@@ -8,6 +19,18 @@
     transform: scale(0.88);
     opacity: 0.65;
   }
+}
+
+[data-ff-reveal] {
+  animation: ff-reveal var(--ff-motion-slow) var(--ff-ease-enter) both;
+}
+
+[data-ff-reveal='2'] {
+  animation-delay: var(--ff-motion-fast);
+}
+
+[data-ff-reveal='3'] {
+  animation-delay: var(--ff-motion-base);
 }
 
 @keyframes ff-waveform-play {
@@ -70,10 +93,12 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  [data-ff-reveal],
   [data-ff-processing] [data-ff-stage-symbol],
   [data-ff-transform-arrow],
   [data-ff-waveform='active'] > span {
     animation: none;
     transform: none;
+    opacity: 1;
   }
 }

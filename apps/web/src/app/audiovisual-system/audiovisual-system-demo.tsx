@@ -26,13 +26,13 @@ export function AudiovisualSystemDemo() {
 
   return (
     <main className="av-shell">
-      <header className="av-header">
+      <header className="av-header" data-ff-reveal="1">
         <p className="av-eyebrow">FILEFLOW · M03</p>
         <h1>Audiovisual Experience</h1>
         <p>Motion and feedback that explain what FileFlow is doing without demanding attention.</p>
       </header>
 
-      <section className="av-section" aria-labelledby="processing-title">
+      <section className="av-section" aria-labelledby="processing-title" data-ff-reveal="2">
         <div className="av-section-heading">
           <div>
             <h2 id="processing-title">Processing states</h2>
@@ -64,7 +64,11 @@ export function AudiovisualSystemDemo() {
         </div>
       </section>
 
-      <section className="av-grid" aria-label="Transformation and audio previews">
+      <section
+        className="av-grid"
+        aria-label="Transformation and audio previews"
+        data-ff-reveal="3"
+      >
         <FileTransformation
           sourceFormat="JPG"
           resultFormat="WebP"
@@ -91,7 +95,7 @@ export function AudiovisualSystemDemo() {
         </Card>
       </section>
 
-      <Card className="av-note">
+      <Card className="av-note" data-ff-reveal="3">
         <strong>Reduced motion is automatic.</strong>
         <p>
           When the operating system requests reduced motion, animation stops while every label,

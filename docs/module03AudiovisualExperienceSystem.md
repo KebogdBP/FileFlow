@@ -92,6 +92,15 @@ M03 завершён, если:
 - tests, lint, typecheck и build проходят;
 - документация обновлена.
 
+## Проверка завершения
+
+- reveal, state-change и progress motion используют semantic tokens;
+- reduced-motion отключает reveal, processing, progress и waveform animations;
+- responsive layout переходит в одну колонку на ширине до `768px`;
+- Web Audio completion tone создаётся только после opt-in и освобождает AudioContext;
+- unit tests покрывают состояния, accessibility, motion contracts, mobile breakpoint и звук;
+- `test`, `lint`, `typecheck`, `build` и `format:check` проходят.
+
 ## Следующий модуль
 
 ```text
