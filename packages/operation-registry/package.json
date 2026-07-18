@@ -13,6 +13,9 @@
     "test": "vitest run --passWithNoTests",
     "clean": "rimraf dist"
   },
+  "dependencies": {
+    "@fileflow/shared-types": "workspace:*"
+  },
   "devDependencies": {
     "@fileflow/eslint-config": "workspace:*",
     "@fileflow/typescript-config": "workspace:*",

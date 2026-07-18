@@ -11,6 +11,7 @@ The current foundation includes:
 - M04 — privacy-first landing page.
 - M05 — accessible file and URL input.
 - M06 — local file inspector.
+- M07 — recommendation and explainability engine.
 
 ## Development
 
@@ -36,4 +37,4 @@ pnpm test
 pnpm build
 ```
 
-The next product module is M07 — Recommendation and Explainability Engine.
+The next product module is M08 — Local Processing Core.

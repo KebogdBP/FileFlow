@@ -1,6 +1,11 @@
 'use client';
 
 import React, { useId, useRef, useState } from 'react';
+import {
+  recommendOperation,
+  type RecommendationPlan,
+  type RecommendationResult,
+} from '@fileflow/operation-registry';
 import { Badge, Button, Card } from '@fileflow/ui';
 import {
   FILE_ACCEPT,
@@ -236,47 +241,156 @@ function FileInspectorPanel({ state }: { state: InspectionState }) {
   }
   const item = state.value;
   return (
-    <section className="file-inspector" aria-labelledby="file-inspector-title">
-      <div className="file-inspector-heading">
-        <div>
-          <Badge variant={item.confidence === 'mismatch' ? 'warning' : 'success'}>
-            {item.confidence === 'verified' ? 'VERIFIED' : item.confidence.toUpperCase()}
-          </Badge>
-          <h3 id="file-inspector-title">File summary</h3>
+    <>
+      <section className="file-inspector" aria-labelledby="file-inspector-title">
+        <div className="file-inspector-heading">
+          <div>
+            <Badge variant={item.confidence === 'mismatch' ? 'warning' : 'success'}>
+              {item.confidence === 'verified' ? 'VERIFIED' : item.confidence.toUpperCase()}
+            </Badge>
+            <h3 id="file-inspector-title">File summary</h3>
+          </div>
+          <span>{item.bytesRead} bytes read locally</span>
         </div>
-        <span>{item.bytesRead} bytes read locally</span>
+        <dl className="file-metadata-grid">
+          <div>
+            <dt>Category</dt>
+            <dd>{item.category}</dd>
+          </div>
+          <div>
+            <dt>Format</dt>
+            <dd>{item.detectedFormat ?? item.extension.toUpperCase()}</dd>
+          </div>
+          <div>
+            <dt>Declared MIME</dt>
+            <dd>{item.declaredMime}</dd>
+          </div>
+          <div>
+            <dt>Detected MIME</dt>
+            <dd>{item.detectedMime ?? 'Not verified'}</dd>
+          </div>
+          <div>
+            <dt>Extension</dt>
+            <dd>{item.extension === 'none' ? 'None' : `.${item.extension}`}</dd>
+          </div>
+          <div>
+            <dt>Modified</dt>
+            <dd>{item.lastModified ?? 'Not provided'}</dd>
+          </div>
+        </dl>
+        <p
+          className={
+            item.confidence === 'mismatch' ? 'inspector-notice warning' : 'inspector-notice'
+          }
+        >
+          {item.notice}
+        </p>
+      </section>
+      <RecommendationPanel
+        result={recommendOperation({
+          category: item.category,
+          mime:
+            item.detectedMime ??
+            (item.declaredMime === 'Not provided' ? undefined : item.declaredMime),
+          size: item.size,
+          confidence: item.confidence,
+        })}
+      />
+    </>
+  );
+}
+
+function RecommendationPanel({ result }: { result: RecommendationResult }) {
+  if (result.status !== 'ready') {
+    return (
+      <section className="recommendation-blocked" aria-labelledby="recommendation-title">
+        <Badge variant={result.status === 'blocked' ? 'warning' : 'neutral'}>
+          {result.status === 'blocked' ? 'REVIEW NEEDED' : 'NO SAFE MATCH'}
+        </Badge>
+        <h3 id="recommendation-title">Recommendation paused</h3>
+        <p>{result.reason}</p>
+      </section>
+    );
+  }
+
+  return <RecommendationPlanView plan={result.plan} />;
+}
+
+function RecommendationPlanView({ plan }: { plan: RecommendationPlan }) {
+  return (
+    <section className="recommendation-panel" aria-labelledby="recommendation-title">
+      <div className="recommendation-heading">
+        <div>
+          <Badge variant="private">RECOMMENDED</Badge>
+          <h3 id="recommendation-title">{plan.title}</h3>
+          <p>{plan.outcome}</p>
+        </div>
+        <Badge variant={plan.mode === 'local' ? 'local' : 'cloud'}>{plan.mode.toUpperCase()}</Badge>
       </div>
-      <dl className="file-metadata-grid">
+
+      <div className="recommendation-explanation">
         <div>
-          <dt>Category</dt>
-          <dd>{item.category}</dd>
+          <strong>Why this fits</strong>
+          <p>{plan.reason}</p>
         </div>
         <div>
-          <dt>Format</dt>
-          <dd>{item.detectedFormat ?? item.extension.toUpperCase()}</dd>
+          <strong>What to expect</strong>
+          <p>{plan.expectation}</p>
         </div>
         <div>
-          <dt>Declared MIME</dt>
-          <dd>{item.declaredMime}</dd>
+          <strong>Where it runs</strong>
+          <p>{plan.privacy}</p>
         </div>
-        <div>
-          <dt>Detected MIME</dt>
-          <dd>{item.detectedMime ?? 'Not verified'}</dd>
+      </div>
+
+      <div>
+        <h4>Safe defaults</h4>
+        <dl className="recommendation-defaults">
+          {plan.defaults.map((item) => (
+            <div key={item.label}>
+              <dt>{item.label}</dt>
+              <dd>
+                <strong>{item.value}</strong>
+                <span>{item.reason}</span>
+              </dd>
+            </div>
+          ))}
+        </dl>
+      </div>
+
+      <div className="recommendation-tradeoffs">
+        <strong>Trade-offs</strong>
+        <ul>
+          {plan.tradeoffs.map((tradeoff) => (
+            <li key={tradeoff}>{tradeoff}</li>
+          ))}
+        </ul>
+      </div>
+
+      {plan.alternatives.length ? (
+        <div className="recommendation-alternatives">
+          <h4>Alternative</h4>
+          {plan.alternatives.map((alternative) => (
+            <div key={alternative.operationId}>
+              <span>
+                <strong>{alternative.title}</strong>
+                <small>{alternative.outcome}</small>
+              </span>
+              <Badge variant={alternative.mode === 'local' ? 'local' : 'cloud'}>
+                {alternative.mode.toUpperCase()}
+              </Badge>
+            </div>
+          ))}
         </div>
-        <div>
-          <dt>Extension</dt>
-          <dd>.{item.extension}</dd>
-        </div>
-        <div>
-          <dt>Modified</dt>
-          <dd>{item.lastModified ?? 'Not provided'}</dd>
-        </div>
-      </dl>
-      <p
-        className={item.confidence === 'mismatch' ? 'inspector-notice warning' : 'inspector-notice'}
-      >
-        {item.notice}
-      </p>
+      ) : null}
+
+      <div className="recommendation-plan-status">
+        <span aria-hidden="true">◇</span>
+        <p>
+          <strong>Plan only · nothing has started.</strong> You will confirm settings before any
+          processing.
+        </p>
+      </div>
     </section>
   );
 }

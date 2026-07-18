@@ -17,7 +17,7 @@ export default function WorkspacePage() {
         <Link className="landing-brand" href="/" aria-label="FileFlow home">
           <span className="landing-mark" aria-hidden="true" /> FileFlow
         </Link>
-        <Badge variant="local">M06 · INSPECTOR</Badge>
+        <Badge variant="private">M07 · RECOMMENDATIONS</Badge>
       </header>
       <section className="input-hero" aria-labelledby="input-page-title" data-ff-reveal="1">
         <p className="input-eyebrow">NEW WORKSPACE</p>
@@ -30,10 +30,10 @@ export default function WorkspacePage() {
         <FileUrlInput />
       </section>
       <aside className="input-scope-note" aria-label="What happens next">
-        <strong>Next: safe inspection</strong>
+        <strong>Review before processing</strong>
         <p>
-          After input, FileFlow will identify the source and show metadata before suggesting any
-          action.
+          FileFlow identifies the source, explains its recommendation and shows where the operation
+          would run. Nothing starts without confirmation.
         </p>
       </aside>
     </main>

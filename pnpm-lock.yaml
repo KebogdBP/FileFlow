@@ -26,6 +26,9 @@ importers:
       '@fileflow/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts
+      '@fileflow/operation-registry':
+        specifier: workspace:*
+        version: link:../../packages/operation-registry
       '@fileflow/shared-types':
         specifier: workspace:*
         version: link:../../packages/shared-types
@@ -113,6 +116,10 @@ importers:
         version: 8.64.0(eslint@9.39.5)(typescript@5.9.3)
 
   packages/operation-registry:
+    dependencies:
+      '@fileflow/shared-types':
+        specifier: workspace:*
+        version: link:../shared-types
     devDependencies:
       '@fileflow/eslint-config':
         specifier: workspace:*

@@ -187,6 +187,8 @@ describe('M05 file and URL input UI', () => {
     expect(container.textContent).toContain('Ready for inspection');
     expect(container.textContent).toContain('1 source ready');
     expect(container.textContent).toContain('Format verified from the local file header');
+    expect(container.textContent).toContain('Make this image lighter');
+    expect(container.textContent).toContain('Plan only · nothing has started');
     await act(async () => root.unmount());
   });
 
