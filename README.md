@@ -10,6 +10,7 @@ The current foundation includes:
 - M03 — audiovisual experience system;
 - M04 — privacy-first landing page.
 - M05 — accessible file and URL input.
+- M06 — local file inspector.
 
 ## Development
 
@@ -35,4 +36,4 @@ pnpm test
 pnpm build
 ```
 
-The next product module is M06 — File Inspector.
+The next product module is M07 — Recommendation and Explainability Engine.

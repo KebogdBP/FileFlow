@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import { FileUrlInput } from './file-url-input';
+import { inspectFile } from './file-inspector';
 import {
   formatFileSize,
   MAX_INPUT_BYTES,
@@ -12,6 +13,18 @@ import {
 
 (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT =
   true;
+
+function mockFile(name: string, type: string, bytes: readonly number[], lastModified = 0) {
+  return {
+    name,
+    type,
+    size: bytes.length,
+    lastModified,
+    slice: () => ({
+      arrayBuffer: async () => Uint8Array.from(bytes).buffer,
+    }),
+  } as unknown as File;
+}
 
 describe('M05 file input policy', () => {
   it('accepts supported file categories', () => {
@@ -79,6 +92,65 @@ describe('M05 file input policy', () => {
   });
 });
 
+describe('M06 local file inspector', () => {
+  it('verifies category and MIME from a file signature', async () => {
+    const file = mockFile(
+      'photo.png',
+      'image/png',
+      [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a],
+    );
+
+    await expect(inspectFile(file)).resolves.toMatchObject({
+      ok: true,
+      inspection: {
+        category: 'image',
+        detectedFormat: 'PNG',
+        detectedMime: 'image/png',
+        confidence: 'verified',
+      },
+    });
+  });
+
+  it('warns when the header conflicts with the file name and declared MIME', async () => {
+    const pdfHeader = [...new TextEncoder().encode('%PDF-1.7')];
+    const file = mockFile('photo.jpg', 'image/jpeg', pdfHeader);
+
+    await expect(inspectFile(file)).resolves.toMatchObject({
+      ok: true,
+      inspection: {
+        category: 'pdf',
+        detectedFormat: 'PDF',
+        confidence: 'mismatch',
+        notice: expect.stringContaining('does not match'),
+      },
+    });
+  });
+
+  it('falls back safely when a supported signature is unavailable', async () => {
+    const file = mockFile('camera.heic', 'image/heic', [0, 1, 2, 3]);
+
+    await expect(inspectFile(file)).resolves.toMatchObject({
+      ok: true,
+      inspection: { category: 'image', confidence: 'unverified' },
+    });
+  });
+
+  it('returns a damaged or unavailable state when local reading fails', async () => {
+    const file = {
+      name: 'broken.pdf',
+      type: 'application/pdf',
+      size: 12,
+      lastModified: 0,
+      slice: () => ({ arrayBuffer: async () => Promise.reject(new Error('read failed')) }),
+    } as unknown as File;
+
+    await expect(inspectFile(file)).resolves.toMatchObject({
+      ok: false,
+      error: expect.stringContaining('damaged'),
+    });
+  });
+});
+
 describe('M05 file and URL input UI', () => {
   const markup = renderToStaticMarkup(<FileUrlInput />);
 
@@ -102,14 +174,19 @@ describe('M05 file and URL input UI', () => {
     const input = container.querySelector('input[type="file"]') as HTMLInputElement;
     Object.defineProperty(input, 'files', {
       configurable: true,
-      value: [new File(['photo'], 'holiday.jpg', { type: 'image/jpeg' })],
+      value: [mockFile('holiday.jpg', 'image/jpeg', [0xff, 0xd8, 0xff, 0x00])],
     });
 
-    await act(async () => input.dispatchEvent(new Event('change', { bubbles: true })));
+    await act(async () => {
+      input.dispatchEvent(new Event('change', { bubbles: true }));
+      await Promise.resolve();
+      await Promise.resolve();
+    });
 
     expect(container.textContent).toContain('holiday.jpg');
     expect(container.textContent).toContain('Ready for inspection');
     expect(container.textContent).toContain('1 source ready');
+    expect(container.textContent).toContain('Format verified from the local file header');
     await act(async () => root.unmount());
   });
 

@@ -9,8 +9,14 @@ import {
   validateInputFile,
   validateSourceUrl,
 } from './input-policy';
+import { inspectFile, type FileInspection, type FileInspectionResult } from './file-inspector';
 
 type Source = { kind: 'file'; file: File } | { kind: 'url'; url: string; platform: InputPlatform };
+type InspectionState =
+  | { status: 'idle' }
+  | { status: 'loading' }
+  | { status: 'ready'; value: FileInspection }
+  | { status: 'error'; error: string };
 
 export function FileUrlInput() {
   const [tab, setTab] = useState<'file' | 'url'>('file');
@@ -18,21 +24,29 @@ export function FileUrlInput() {
   const [error, setError] = useState('');
   const [dragActive, setDragActive] = useState(false);
   const [urlValue, setUrlValue] = useState('');
+  const [inspection, setInspection] = useState<InspectionState>({ status: 'idle' });
   const inputRef = useRef<HTMLInputElement>(null);
+  const inspectionRequest = useRef(0);
   const id = useId();
 
-  function chooseFile(file?: File) {
+  async function chooseFile(file?: File) {
     setDragActive(false);
     if (!file) return;
     const result = validateInputFile(file);
     if (!result.ok) {
       setSource(undefined);
+      setInspection({ status: 'idle' });
       setError(result.error);
       if (inputRef.current) inputRef.current.value = '';
       return;
     }
     setError('');
     setSource({ kind: 'file', file: result.value });
+    setInspection({ status: 'loading' });
+    const request = ++inspectionRequest.current;
+    const nextInspection = await inspectFile(result.value);
+    if (request !== inspectionRequest.current) return;
+    setInspection(toInspectionState(nextInspection));
   }
 
   function chooseUrl(event: React.FormEvent<HTMLFormElement>) {
@@ -45,12 +59,15 @@ export function FileUrlInput() {
     }
     setError('');
     setSource({ kind: 'url', ...result.value });
+    setInspection({ status: 'idle' });
   }
 
   function reset() {
     setSource(undefined);
     setError('');
     setUrlValue('');
+    inspectionRequest.current += 1;
+    setInspection({ status: 'idle' });
     if (inputRef.current) inputRef.current.value = '';
   }
 
@@ -172,6 +189,7 @@ export function FileUrlInput() {
           </p>
         ) : null}
         {source ? <SelectedSource source={source} onRemove={reset} /> : null}
+        {source?.kind === 'file' ? <FileInspectorPanel state={inspection} /> : null}
       </div>
 
       <div className="input-privacy-note">
@@ -190,6 +208,76 @@ export function FileUrlInput() {
         </div>
       </div>
     </Card>
+  );
+}
+
+function toInspectionState(result: FileInspectionResult): InspectionState {
+  return result.ok
+    ? { status: 'ready', value: result.inspection }
+    : { status: 'error', error: result.error };
+}
+
+function FileInspectorPanel({ state }: { state: InspectionState }) {
+  if (state.status === 'idle') return null;
+  if (state.status === 'loading') {
+    return (
+      <div className="file-inspector file-inspector-loading" aria-busy="true">
+        <span className="inspector-spinner" aria-hidden="true" />
+        <strong>Inspecting locally…</strong>
+      </div>
+    );
+  }
+  if (state.status === 'error') {
+    return (
+      <p className="input-error" role="alert">
+        {state.error}
+      </p>
+    );
+  }
+  const item = state.value;
+  return (
+    <section className="file-inspector" aria-labelledby="file-inspector-title">
+      <div className="file-inspector-heading">
+        <div>
+          <Badge variant={item.confidence === 'mismatch' ? 'warning' : 'success'}>
+            {item.confidence === 'verified' ? 'VERIFIED' : item.confidence.toUpperCase()}
+          </Badge>
+          <h3 id="file-inspector-title">File summary</h3>
+        </div>
+        <span>{item.bytesRead} bytes read locally</span>
+      </div>
+      <dl className="file-metadata-grid">
+        <div>
+          <dt>Category</dt>
+          <dd>{item.category}</dd>
+        </div>
+        <div>
+          <dt>Format</dt>
+          <dd>{item.detectedFormat ?? item.extension.toUpperCase()}</dd>
+        </div>
+        <div>
+          <dt>Declared MIME</dt>
+          <dd>{item.declaredMime}</dd>
+        </div>
+        <div>
+          <dt>Detected MIME</dt>
+          <dd>{item.detectedMime ?? 'Not verified'}</dd>
+        </div>
+        <div>
+          <dt>Extension</dt>
+          <dd>.{item.extension}</dd>
+        </div>
+        <div>
+          <dt>Modified</dt>
+          <dd>{item.lastModified ?? 'Not provided'}</dd>
+        </div>
+      </dl>
+      <p
+        className={item.confidence === 'mismatch' ? 'inspector-notice warning' : 'inspector-notice'}
+      >
+        {item.notice}
+      </p>
+    </section>
   );
 }
 
