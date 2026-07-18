@@ -918,18 +918,21 @@ AI-agent tool layer
 
 ## 27. Текущий статус
 
-На текущем этапе M01 и M02 завершены:
+На текущем этапе M01–M05 завершены:
 
 - repository foundation и CI работают;
 - design tokens и типографическая шкала определены;
 - system/light/dark themes реализованы;
 - основные UI-компоненты и их состояния доступны;
+- meaningful motion, processing feedback и reduced-motion alternatives готовы;
+- privacy-first landing page объясняет local/cloud модель до начала операции;
+- accessible file и URL input валидирует источник без скрытой загрузки;
 - responsive и accessibility foundation готовы;
 - unit tests, lint, typecheck и build проходят.
 
 Следующая цель:
 
-> Перейти к M03 — Audiovisual Experience System.
+> Перейти к M06 — File Inspector.
 
 ## 28. Ближайший результат
 
@@ -947,13 +950,13 @@ pnpm build
 
 Все команды должны завершаться успешно.
 
-Следующий этап — M03:
+Следующий этап — M06:
 
-- meaningful motion;
-- file transformation states;
-- progress and completion feedback;
-- reduced-motion alternatives;
-- audiovisual interaction foundations.
+- определение file category и MIME;
+- чтение безопасной metadata;
+- понятный file summary;
+- unsupported и damaged file states;
+- подготовка данных для recommendation engine.
 
 ## 29. Итог
 
