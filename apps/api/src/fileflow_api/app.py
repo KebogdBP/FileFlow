@@ -13,6 +13,9 @@ from fileflow_api.contracts import MessageResponse
 from fileflow_api.database import build_engine, build_session_factory
 from fileflow_api.errors import http_error_handler, validation_error_handler
 from fileflow_api.health import router as health_router
+from fileflow_api.jobs.queue import CeleryTaskQueue, TaskQueue, create_celery
+from fileflow_api.jobs.router import router as jobs_router
+from fileflow_api.jobs.service import JobService
 from fileflow_api.safety.scanner import ClamAVScanner
 from fileflow_api.safety.service import SafetyService
 from fileflow_api.uploads.router import router as uploads_router
@@ -26,6 +29,8 @@ def create_app(
     settings: Settings | None = None,
     upload_service: UploadService | None = None,
     safety_service: SafetyService | None = None,
+    task_queue: TaskQueue | None = None,
+    job_service: JobService | None = None,
 ) -> FastAPI:
     current = settings or get_settings()
     app = FastAPI(
@@ -44,8 +49,8 @@ def create_app(
         bucket=current.s3_bucket,
         region=current.s3_region,
     )
-    app.state.upload_service = upload_service or UploadService(sessions, storage, current)
-    app.state.safety_service = safety_service or SafetyService(
+    queue = task_queue or CeleryTaskQueue(create_celery(current))
+    current_safety = safety_service or SafetyService(
         sessions,
         storage,
         ClamAVScanner(
@@ -55,6 +60,9 @@ def create_app(
         ),
         current,
     )
+    app.state.upload_service = upload_service or UploadService(sessions, storage, current, queue)
+    app.state.safety_service = current_safety
+    app.state.job_service = job_service or JobService(sessions, current_safety, queue, current)
     app.add_middleware(
         CORSMiddleware,
         allow_origins=[str(origin).rstrip("/") for origin in current.allowed_origins],
@@ -81,6 +89,7 @@ def create_app(
     app.add_exception_handler(RequestValidationError, validation_error_handler)
     app.include_router(health_router, prefix=current.api_prefix)
     app.include_router(uploads_router, prefix=current.api_prefix)
+    app.include_router(jobs_router, prefix=current.api_prefix)
 
     @app.get("/", response_model=MessageResponse, include_in_schema=False)
     def root() -> MessageResponse:

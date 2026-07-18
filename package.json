@@ -16,6 +16,7 @@
     "format": "prettier --write . && apps/api/.venv/bin/python -m ruff format apps/api",
     "format:check": "prettier --check . && apps/api/.venv/bin/python -m ruff format --check apps/api",
     "api:dev": "apps/api/.venv/bin/python -m uvicorn fileflow_api.main:app --app-dir apps/api/src --reload --port 8000",
+    "api:worker:safety": "cd apps/api && .venv/bin/celery -A fileflow_api.jobs.worker:celery_app worker --queues safety --loglevel INFO",
     "api:setup": "python3 -m venv apps/api/.venv && apps/api/.venv/bin/python -m pip install -e './apps/api[dev]'",
     "clean": "turbo clean && rimraf node_modules"
   },

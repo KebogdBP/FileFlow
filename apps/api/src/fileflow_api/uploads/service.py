@@ -7,6 +7,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session, sessionmaker
 
 from fileflow_api.config import Settings
+from fileflow_api.jobs.queue import NullTaskQueue, TaskQueue
 from fileflow_api.uploads.contracts import CompletedPart, UploadCreate
 from fileflow_api.uploads.models import SafetyStatus, Upload, UploadPart, UploadStatus
 from fileflow_api.uploads.storage import ObjectStorage
@@ -24,10 +25,12 @@ class UploadService:
         sessions: sessionmaker[Session],
         storage: ObjectStorage,
         settings: Settings,
+        queue: TaskQueue | None = None,
     ) -> None:
         self._sessions = sessions
         self._storage = storage
         self._settings = settings
+        self._queue = queue or NullTaskQueue()
 
     def create(self, request: UploadCreate) -> Upload:
         if request.size_bytes > self._settings.max_upload_bytes:
@@ -103,6 +106,15 @@ class UploadService:
             )
             stored.status = UploadStatus.COMPLETED
             stored.completed_at = now
+        try:
+            self._queue.enqueue_safety(upload_id)
+        except Exception:
+            # Completion is already durable. Preserve a retryable fail-closed verdict.
+            with self._sessions.begin() as session:
+                stored = session.get(Upload, upload_id)
+                assert stored is not None
+                stored.safety_status = SafetyStatus.ERROR
+                stored.rejection_reason = "queue_unavailable"
         return self.get(upload_id)
 
     def abort(self, upload_id: str) -> Upload:

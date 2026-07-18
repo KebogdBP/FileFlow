@@ -41,4 +41,4 @@ pnpm test
 pnpm build
 ```
 
-The next product module is M13 — Job Queue and Orchestrator.
+The next product module is M14 — Cloud Worker Foundation.

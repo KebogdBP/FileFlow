@@ -22,3 +22,5 @@ Apply the metadata migration from this directory with:
 ```
 
 The upload API uses PostgreSQL and S3-compatible storage configured through `FILEFLOW_DATABASE_URL` and `FILEFLOW_S3_*` environment variables.
+
+Start the safety queue consumer from the repository root with `pnpm api:worker:safety`. Processing-queue consumers are introduced by M14; M13 only persists, validates, routes and cancels their jobs.

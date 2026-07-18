@@ -56,9 +56,10 @@ class SafetyService:
                 raise HTTPException(status_code=404, detail="Upload was not found.")
             if upload.status != UploadStatus.COMPLETED:
                 raise HTTPException(status_code=409, detail="Upload is not complete.")
-            if upload.safety_status != SafetyStatus.PENDING:
+            if upload.safety_status not in (SafetyStatus.PENDING, SafetyStatus.ERROR):
                 raise HTTPException(status_code=409, detail="Safety check already started.")
             upload.safety_status = SafetyStatus.SCANNING
+            upload.rejection_reason = None
         return self._get(upload_id)
 
     def _reject(self, upload: Upload, reason: str, detected: str | None) -> Upload:
