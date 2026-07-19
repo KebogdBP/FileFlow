@@ -9,6 +9,7 @@ Parameter = str | int | float | bool | None
 @dataclass(frozen=True)
 class WorkRequest:
     input_path: Path
+    input_paths: tuple[Path, ...]
     output_path: Path
     parameters: Mapping[str, Parameter]
     report_progress: Callable[[int], None]

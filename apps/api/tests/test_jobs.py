@@ -140,3 +140,27 @@ def test_completed_upload_stays_fail_closed_when_queue_is_unavailable() -> None:
     upload = uploads.get(upload_id)
     assert upload.safety_status.value == "error"
     assert upload.rejection_reason == "queue_unavailable"
+
+
+def test_multi_source_job_requires_every_upload_to_be_clean() -> None:
+    jobs, safety, uploads, _ = services()
+    primary = completed_upload(uploads)
+    additional = completed_upload(uploads)
+    safety.inspect(primary)
+    with pytest.raises(HTTPException, match="not passed"):
+        jobs.create(
+            JobCreate(
+                upload_id=primary,
+                source_upload_ids=[additional],
+                operation="merge-pdf",
+            )
+        )
+    safety.inspect(additional)
+    job = jobs.create(
+        JobCreate(
+            upload_id=primary,
+            source_upload_ids=[additional],
+            operation="merge-pdf",
+        )
+    )
+    assert job.source_upload_ids == [additional]

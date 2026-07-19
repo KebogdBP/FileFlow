@@ -1,5 +1,6 @@
 from fileflow_api.config import get_settings
 from fileflow_api.database import build_engine, build_session_factory
+from fileflow_api.documents.registry import register_document_operations
 from fileflow_api.imports.downloader import YtDlpClient
 from fileflow_api.imports.service import SocialImportService
 from fileflow_api.jobs.queue import CeleryTaskQueue, create_celery
@@ -45,6 +46,16 @@ runner = SafeSubprocessRunner(
     )
 )
 register_media_operations(operations, settings.ffmpeg_path, runner)
+register_document_operations(
+    operations,
+    {
+        "libreoffice": settings.libreoffice_path,
+        "qpdf": settings.qpdf_path,
+        "ghostscript": settings.ghostscript_path,
+        "pdftoppm": settings.pdftoppm_path,
+    },
+    runner,
+)
 executor = CloudJobExecutor(jobs, safety, storage, operations, settings)
 imports = SocialImportService(sessions, storage, queue, YtDlpClient(), settings)
 

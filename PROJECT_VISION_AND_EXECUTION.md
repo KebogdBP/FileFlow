@@ -918,7 +918,7 @@ AI-agent tool layer
 
 ## 27. Текущий статус
 
-На текущем этапе M01–M17 завершены:
+На текущем этапе M01–M18 завершены:
 
 - repository foundation и CI работают;
 - design tokens и типографическая шкала определены;
@@ -939,12 +939,13 @@ AI-agent tool layer
 - measured unit economics связывает worker telemetry с per-operation regression budgets;
 - validated FFmpeg handlers выполняют основные video/audio операции через cloud worker;
 - rights-aware public YouTube, Instagram и TikTok imports входят в общий safety pipeline;
+- isolated DOCX и PDF handlers конвертируют, объединяют, разделяют и оптимизируют документы;
 - responsive и accessibility foundation готовы;
 - unit tests, lint, typecheck и build проходят.
 
 Следующая цель:
 
-> Перейти к M18 — Document and PDF Processing.
+> Перейти к M19 — Unified Intent-Based Workspace.
 
 ## 28. Ближайший результат
 
@@ -982,7 +983,9 @@ M16 завершён: MP4 conversion/compression/resize, audio extraction/conver
 
 M17 завершён: public platform URL policy, rights attestation, isolated import queue и yt-dlp pipeline готовы.
 
-Следующий этап — M18: Document and PDF Processing.
+M18 завершён: DOCX conversion, multi-source PDF merge, range extraction, compression и page rendering готовы.
+
+Следующий этап — M19: Unified Intent-Based Workspace.
 
 ## 29. Итог
 

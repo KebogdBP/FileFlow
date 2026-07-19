@@ -20,6 +20,7 @@ class Job(Base):
 
     id: Mapped[str] = mapped_column(String(32), primary_key=True)
     upload_id: Mapped[str] = mapped_column(ForeignKey("uploads.id", ondelete="CASCADE"), index=True)
+    source_upload_ids: Mapped[list[str]] = mapped_column(JSON, default=list)
     operation: Mapped[str] = mapped_column(String(64), index=True)
     parameters: Mapped[dict[str, str | int | float | bool | None]] = mapped_column(JSON)
     status: Mapped[JobStatus] = mapped_column(Enum(JobStatus), index=True)

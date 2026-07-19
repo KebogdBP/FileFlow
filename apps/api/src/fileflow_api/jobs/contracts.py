@@ -10,6 +10,7 @@ OPERATION_PATTERN = re.compile(r"^[a-z][a-z0-9]*(?:[._-][a-z0-9]+)*$")
 
 class JobCreate(BaseModel):
     upload_id: str = Field(pattern=r"^[a-f0-9]{32}$")
+    source_upload_ids: list[str] = Field(default_factory=list, max_length=19)
     operation: str = Field(min_length=2, max_length=64)
     parameters: dict[str, str | int | float | bool | None] = Field(default_factory=dict)
 
@@ -20,10 +21,20 @@ class JobCreate(BaseModel):
             raise ValueError("operation must be a stable lowercase identifier")
         return value
 
+    @field_validator("source_upload_ids")
+    @classmethod
+    def valid_sources(cls, values: list[str]) -> list[str]:
+        if any(not re.fullmatch(r"^[a-f0-9]{32}$", value) for value in values):
+            raise ValueError("source upload ids must be stable identifiers")
+        if len(values) != len(set(values)):
+            raise ValueError("source upload ids must be unique")
+        return values
+
 
 class JobResponse(BaseModel):
     id: str
     upload_id: str
+    source_upload_ids: list[str]
     operation: str
     parameters: dict[str, str | int | float | bool | None]
     status: JobStatus

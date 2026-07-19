@@ -30,6 +30,7 @@ def request(tmp_path: Path, parameters: dict[str, str | int] | None = None) -> W
     source.write_bytes(b"source")
     return WorkRequest(
         input_path=source,
+        input_paths=(source,),
         output_path=tmp_path / "result",
         parameters=parameters or {},
         report_progress=lambda _: None,

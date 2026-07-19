@@ -42,6 +42,14 @@ class CloudJobExecutor:
                 source = workspace / "source"
                 result_path = workspace / "result"
                 self._materialize(upload.object_key, source)
+                sources = [source]
+                for index, upload_id in enumerate(job.source_upload_ids, start=1):
+                    additional = self._safety.require_clean(upload_id)
+                    if not handler.accepts(additional.content_type):
+                        raise ValueError("additional source has an unsupported input type")
+                    path = workspace / f"source-{index}"
+                    self._materialize(additional.object_key, path)
+                    sources.append(path)
 
                 def report_progress(value: int) -> None:
                     self._jobs.progress(job.id, value)
@@ -49,6 +57,7 @@ class CloudJobExecutor:
                 result = handler.execute(
                     WorkRequest(
                         input_path=source,
+                        input_paths=tuple(sources),
                         output_path=result_path,
                         parameters=job.parameters,
                         report_progress=report_progress,

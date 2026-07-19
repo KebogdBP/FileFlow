@@ -29,6 +29,10 @@ class JobService:
 
     def create(self, request: JobCreate) -> Job:
         self._safety.require_clean(request.upload_id)
+        if request.upload_id in request.source_upload_ids:
+            raise HTTPException(status_code=422, detail="Source uploads must be unique.")
+        for upload_id in request.source_upload_ids:
+            self._safety.require_clean(upload_id)
         with self._sessions.begin() as session:
             active = session.scalar(
                 select(func.count())
@@ -42,6 +46,7 @@ class JobService:
             job = Job(
                 id=uuid4().hex,
                 upload_id=request.upload_id,
+                source_upload_ids=request.source_upload_ids,
                 operation=request.operation,
                 parameters=request.parameters,
                 status=JobStatus.QUEUED,
@@ -84,6 +89,8 @@ class JobService:
             if job is None or job.status != JobStatus.QUEUED:
                 raise HTTPException(status_code=409, detail="Job cannot be started.")
             self._safety.require_clean(job.upload_id)
+            for upload_id in job.source_upload_ids:
+                self._safety.require_clean(upload_id)
             job.status = JobStatus.RUNNING
             job.attempts += 1
             job.started_at = datetime.now(UTC)
