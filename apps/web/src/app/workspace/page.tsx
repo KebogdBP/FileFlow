@@ -17,12 +17,15 @@ export default function WorkspacePage() {
         <Link className="landing-brand" href="/" aria-label="FileFlow home">
           <span className="landing-mark" aria-hidden="true" /> FileFlow
         </Link>
-        <Badge variant="private">M19 · UNIFIED WORKSPACE</Badge>
+        <Badge variant="private">M20 · BATCH PROCESSING</Badge>
       </header>
       <section className="input-hero" aria-labelledby="input-page-title" data-ff-reveal="1">
         <p className="input-eyebrow">NEW WORKSPACE</p>
         <h1 id="input-page-title">What are you working with?</h1>
-        <p>Add one source, choose your intent and review exactly where the operation will run.</p>
+        <p>
+          Add one source or a matching image batch, choose your intent and review exactly where the
+          operation will run.
+        </p>
       </section>
       <section aria-label="File and URL input" data-ff-reveal="2">
         <FileUrlInput />

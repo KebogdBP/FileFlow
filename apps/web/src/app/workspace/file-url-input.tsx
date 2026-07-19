@@ -25,8 +25,11 @@ import {
 } from './input-policy';
 import { inspectFile, type FileInspection, type FileInspectionResult } from './file-inspector';
 import { LocalImageTool } from './local-image-tool';
+import { BatchImageTool } from './batch-image-tool';
+import { MAX_BATCH_FILES, validateBatchCount } from './batch-model';
 
 type Source = { kind: 'file'; file: File } | { kind: 'url'; url: string; platform: InputPlatform };
+type BatchInspection = { file: File; result: FileInspectionResult };
 type InspectionState =
   | { status: 'idle' }
   | { status: 'loading' }
@@ -40,13 +43,34 @@ export function FileUrlInput() {
   const [dragActive, setDragActive] = useState(false);
   const [urlValue, setUrlValue] = useState('');
   const [inspection, setInspection] = useState<InspectionState>({ status: 'idle' });
+  const [batch, setBatch] = useState<BatchInspection[]>();
   const inputRef = useRef<HTMLInputElement>(null);
   const inspectionRequest = useRef(0);
   const id = useId();
 
-  async function chooseFile(file?: File) {
+  async function chooseFiles(files: readonly File[]) {
     setDragActive(false);
+    const file = files[0];
     if (!file) return;
+    if (files.length > 1) {
+      const countError = validateBatchCount(files);
+      const invalid = files.map(validateInputFile).find((result) => !result.ok);
+      if (countError || (invalid && !invalid.ok)) {
+        setBatch(undefined);
+        setSource(undefined);
+        setError(countError ?? (invalid && !invalid.ok ? invalid.error : 'Invalid batch.'));
+        return;
+      }
+      setError('');
+      setSource(undefined);
+      setInspection({ status: 'idle' });
+      setBatch(
+        await Promise.all(
+          files.map(async (item) => ({ file: item, result: await inspectFile(item) })),
+        ),
+      );
+      return;
+    }
     const result = validateInputFile(file);
     if (!result.ok) {
       setSource(undefined);
@@ -56,6 +80,7 @@ export function FileUrlInput() {
       return;
     }
     setError('');
+    setBatch(undefined);
     setSource({ kind: 'file', file: result.value });
     setInspection({ status: 'loading' });
     const request = ++inspectionRequest.current;
@@ -73,12 +98,14 @@ export function FileUrlInput() {
       return;
     }
     setError('');
+    setBatch(undefined);
     setSource({ kind: 'url', ...result.value });
     setInspection({ status: 'idle' });
   }
 
   function reset() {
     setSource(undefined);
+    setBatch(undefined);
     setError('');
     setUrlValue('');
     inspectionRequest.current += 1;
@@ -98,7 +125,9 @@ export function FileUrlInput() {
           <Badge variant="private">PRIVATE INPUT</Badge>
           <h2 id={`${id}-title`}>Start with a file or link</h2>
         </div>
-        <span className="input-empty-status">{source ? '1 source ready' : 'Nothing uploaded'}</span>
+        <span className="input-empty-status">
+          {batch ? `${batch.length} files ready` : source ? '1 source ready' : 'Nothing uploaded'}
+        </span>
       </div>
 
       <div className="input-tabs" role="tablist" aria-label="Input source">
@@ -147,7 +176,7 @@ export function FileUrlInput() {
             }}
             onDrop={(event) => {
               event.preventDefault();
-              chooseFile(event.dataTransfer.files[0]);
+              void chooseFiles([...event.dataTransfer.files]);
             }}
           >
             <input
@@ -155,15 +184,18 @@ export function FileUrlInput() {
               className="file-input-native"
               id={`${id}-file`}
               type="file"
+              multiple
               accept={FILE_ACCEPT.join(',')}
               aria-describedby={`${id}-file-help`}
-              onChange={(event) => chooseFile(event.target.files?.[0])}
+              onChange={(event) => void chooseFiles([...(event.target.files ?? [])])}
             />
             <span className="file-drop-icon" aria-hidden="true">
               ↥
             </span>
             <strong>{dragActive ? 'Release to add your file' : 'Drop a file here'}</strong>
-            <span id={`${id}-file-help`}>Images, video, audio, PDF or DOCX · up to 2 GB</span>
+            <span id={`${id}-file-help`}>
+              Images, video, audio, PDF or DOCX · select up to {MAX_BATCH_FILES}
+            </span>
             <label className="input-picker-button" htmlFor={`${id}-file`}>
               Choose a file
             </label>
@@ -204,6 +236,7 @@ export function FileUrlInput() {
           </p>
         ) : null}
         {source ? <SelectedSource source={source} onRemove={reset} /> : null}
+        {batch ? <BatchPanel batch={batch} onRemove={reset} /> : null}
         {source?.kind === 'file' ? (
           <FileInspectorPanel state={inspection} file={source.file} />
         ) : null}
@@ -227,6 +260,44 @@ export function FileUrlInput() {
       </div>
       <LocalEngineStatus />
     </Card>
+  );
+}
+
+function BatchPanel({
+  batch,
+  onRemove,
+}: {
+  batch: readonly BatchInspection[];
+  onRemove: () => void;
+}) {
+  const images: { file: File; sourceMime: 'image/jpeg' | 'image/png' }[] = [];
+  for (const { file, result } of batch) {
+    if (!result.ok || result.inspection.confidence === 'mismatch') continue;
+    const sourceMime = result.inspection.detectedMime;
+    if (sourceMime === 'image/jpeg' || sourceMime === 'image/png')
+      images.push({ file, sourceMime });
+  }
+  const ready = images.length === batch.length;
+  return (
+    <>
+      <div className="batch-summary">
+        <div>
+          <Badge variant={ready ? 'success' : 'warning'}>
+            {ready ? 'BATCH VERIFIED' : 'REVIEW NEEDED'}
+          </Badge>
+          <strong>{batch.length} files inspected locally</strong>
+          <p>
+            {ready
+              ? 'All files are compatible JPG or PNG images and can share one local operation.'
+              : `${batch.length - images.length} file(s) cannot join this image batch. Use matching verified JPG or PNG files.`}
+          </p>
+        </div>
+        <Button type="button" size="sm" variant="ghost" onClick={onRemove}>
+          Clear batch
+        </Button>
+      </div>
+      {ready ? <BatchImageTool images={images} /> : null}
+    </>
   );
 }
 

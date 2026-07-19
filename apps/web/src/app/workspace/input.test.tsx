@@ -11,6 +11,7 @@ import {
   validateInputFile,
   validateSourceUrl,
 } from './input-policy';
+import { batchOverallProgress, MAX_BATCH_FILES, validateBatchCount } from './batch-model';
 
 (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT =
   true;
@@ -90,6 +91,25 @@ describe('M05 file input policy', () => {
     expect(formatFileSize(512)).toBe('512 B');
     expect(formatFileSize(1536)).toBe('1.5 KB');
     expect(formatFileSize(12 * 1024 * 1024)).toBe('12 MB');
+  });
+});
+
+describe('M20 batch planning', () => {
+  it('limits batches and calculates deterministic grouped progress', () => {
+    expect(validateBatchCount([new File(['a'], 'a.jpg')])).toContain('at least two');
+    expect(
+      validateBatchCount(
+        Array.from({ length: MAX_BATCH_FILES + 1 }, (_, index) => new File(['a'], `${index}.jpg`)),
+      ),
+    ).toContain(`${MAX_BATCH_FILES}`);
+    expect(
+      batchOverallProgress([
+        { status: 'completed', progress: 100 },
+        { status: 'running', progress: 50 },
+        { status: 'queued', progress: 0 },
+        { status: 'failed', progress: 20 },
+      ]),
+    ).toBe(63);
   });
 });
 
@@ -216,6 +236,32 @@ describe('M05 file and URL input UI', () => {
     expect(container.textContent).toContain('Plan only · nothing has started');
     expect(container.textContent).toContain('Create a lighter WebP');
     expect(container.textContent).toContain('Create WebP locally');
+    await act(async () => root.unmount());
+  });
+
+  it('creates one verified local plan for a matching image batch', async () => {
+    const container = document.createElement('div');
+    const root = createRoot(container);
+    await act(async () => root.render(<FileUrlInput />));
+    const input = container.querySelector('input[type="file"]') as HTMLInputElement;
+    Object.defineProperty(input, 'files', {
+      configurable: true,
+      value: [
+        mockFile('one.jpg', 'image/jpeg', [0xff, 0xd8, 0xff, 0x00]),
+        mockFile('two.png', 'image/png', [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
+      ],
+    });
+    await act(async () => {
+      input.dispatchEvent(new Event('change', { bubbles: true }));
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+    expect(container.textContent).toContain('2 files ready');
+    expect(container.textContent).toContain('BATCH VERIFIED');
+    expect(container.textContent).toContain('Optimize 2 images together');
+    expect(container.textContent).toContain('Process batch locally');
+    expect(container.textContent).toContain('one.jpg');
+    expect(container.textContent).toContain('two.png');
     await act(async () => root.unmount());
   });
 

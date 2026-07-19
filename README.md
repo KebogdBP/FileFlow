@@ -15,6 +15,9 @@ The current foundation includes:
 - M08 — guarded browser-worker processing core.
 - M09 — local JPG/PNG to WebP image tools.
 - M10 — FastAPI backend foundation.
+- M11–M18 — secure storage, safety, orchestration and media/document workers.
+- M19 — unified intent-based workspace.
+- M20 — verified local image batches with grouped progress and cancellation.
 
 ## Development
 
@@ -41,4 +44,4 @@ pnpm test
 pnpm build
 ```
 
-The next product module is M20 — Batch Processing.
+The next product module is M21 — Authentication, History and Limits.
