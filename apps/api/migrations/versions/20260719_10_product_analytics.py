@@ -4,6 +4,7 @@ from collections.abc import Sequence
 
 import sqlalchemy as sa
 from alembic import op
+from sqlalchemy.dialects import postgresql
 
 revision: str = "20260719_10"
 down_revision: str | None = "20260719_09"
@@ -12,7 +13,9 @@ depends_on: str | Sequence[str] | None = None
 
 
 def upgrade() -> None:
-    event_name = sa.Enum("INTENT_VIEWED", "WORKSPACE_OPENED", name="eventname")
+    event_name = postgresql.ENUM(
+        "INTENT_VIEWED", "WORKSPACE_OPENED", name="eventname", create_type=False
+    )
     event_name.create(op.get_bind(), checkfirst=True)
     op.create_table(
         "product_events",

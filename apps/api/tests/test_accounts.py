@@ -67,3 +67,39 @@ def test_empty_history_and_limits_require_authentication() -> None:
     limits = api.get("/api/v1/account/limits", headers=headers).json()
     assert limits["cloud_jobs_used"] == 0
     assert limits["cloud_jobs_limit"] == 3
+
+
+def test_developer_api_keys_are_shown_once_and_revocable() -> None:
+    api = client()
+    registered = api.post(
+        "/api/v1/account/register",
+        json={"email": "developer@example.com", "password": "long-test-password"},
+    ).json()
+    session_headers = {"Authorization": f"Bearer {registered['access_token']}"}
+
+    created = api.post(
+        "/api/v1/account/api-keys", json={"name": "Local MCP"}, headers=session_headers
+    )
+    assert created.status_code == 201
+    key = created.json()["key"]
+    assert key.startswith("ff_live_")
+
+    listed = api.get("/api/v1/account/api-keys", headers=session_headers).json()["items"]
+    assert len(listed) == 1
+    assert listed[0]["id"] == created.json()["id"]
+    assert listed[0]["name"] == "Local MCP"
+    assert listed[0]["prefix"] == key[:16]
+    assert listed[0]["last_used_at"] is None
+    assert (
+        api.get("/api/v1/account/me", headers={"Authorization": f"Bearer {key}"}).status_code == 200
+    )
+
+    assert (
+        api.delete(
+            f"/api/v1/account/api-keys/{created.json()['id']}", headers=session_headers
+        ).status_code
+        == 204
+    )
+    assert (
+        api.get("/api/v1/account/me", headers={"Authorization": f"Bearer {key}"}).status_code == 401
+    )

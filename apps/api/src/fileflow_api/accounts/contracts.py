@@ -49,3 +49,23 @@ class HistoryResponse(BaseModel):
     items: list[JobResponse]
     limit: int
     offset: int
+
+
+class ApiKeyCreate(BaseModel):
+    name: str = Field(min_length=1, max_length=80)
+
+
+class ApiKeyResponse(BaseModel):
+    id: str
+    name: str
+    prefix: str
+    created_at: datetime
+    last_used_at: datetime | None
+
+
+class ApiKeyCreated(ApiKeyResponse):
+    key: str
+
+
+class ApiKeyList(BaseModel):
+    items: list[ApiKeyResponse]

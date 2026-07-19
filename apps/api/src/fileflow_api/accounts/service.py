@@ -9,7 +9,7 @@ from sqlalchemy import delete, func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, sessionmaker
 
-from fileflow_api.accounts.models import Account, AccountPlan, AccountSession
+from fileflow_api.accounts.models import Account, AccountPlan, AccountSession, DeveloperApiKey
 from fileflow_api.config import Settings
 from fileflow_api.jobs.models import Job
 
@@ -69,7 +69,20 @@ class AccountService:
 
     def authenticate(self, token: str) -> Account:
         now = datetime.now(UTC)
-        with self._sessions() as session:
+        with self._sessions.begin() as session:
+            if token.startswith("ff_live_"):
+                api_key = session.scalar(
+                    select(DeveloperApiKey).where(
+                        DeveloperApiKey.token_hash == _token_hash(token),
+                        DeveloperApiKey.revoked_at.is_(None),
+                    )
+                )
+                if api_key is not None:
+                    api_key.last_used_at = now
+                    account = session.get(Account, api_key.account_id)
+                    if account is not None:
+                        session.expunge(account)
+                        return account
             account = session.scalar(
                 select(Account)
                 .join(AccountSession, AccountSession.account_id == Account.id)
@@ -82,6 +95,51 @@ class AccountService:
                 raise HTTPException(status_code=401, detail="Authentication is required.")
             session.expunge(account)
             return account
+
+    def create_api_key(self, account_id: str, name: str) -> tuple[DeveloperApiKey, str]:
+        token = f"ff_live_{secrets.token_urlsafe(32)}"
+        api_key = DeveloperApiKey(
+            id=uuid4().hex,
+            account_id=account_id,
+            name=name.strip(),
+            prefix=token[:16],
+            token_hash=_token_hash(token),
+            created_at=datetime.now(UTC),
+            last_used_at=None,
+            revoked_at=None,
+        )
+        with self._sessions.begin() as session:
+            session.add(api_key)
+        return api_key, token
+
+    def api_keys(self, account_id: str) -> list[DeveloperApiKey]:
+        with self._sessions() as session:
+            keys = list(
+                session.scalars(
+                    select(DeveloperApiKey)
+                    .where(
+                        DeveloperApiKey.account_id == account_id,
+                        DeveloperApiKey.revoked_at.is_(None),
+                    )
+                    .order_by(DeveloperApiKey.created_at.desc())
+                )
+            )
+            for api_key in keys:
+                session.expunge(api_key)
+            return keys
+
+    def revoke_api_key(self, account_id: str, key_id: str) -> None:
+        with self._sessions.begin() as session:
+            api_key = session.scalar(
+                select(DeveloperApiKey).where(
+                    DeveloperApiKey.id == key_id,
+                    DeveloperApiKey.account_id == account_id,
+                    DeveloperApiKey.revoked_at.is_(None),
+                )
+            )
+            if api_key is None:
+                raise HTTPException(status_code=404, detail="API key was not found.")
+            api_key.revoked_at = datetime.now(UTC)
 
     def logout(self, token: str) -> None:
         with self._sessions.begin() as session:

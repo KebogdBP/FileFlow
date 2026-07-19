@@ -6,6 +6,10 @@ from fileflow_api.accounts.contracts import (
     AccountCreate,
     AccountLogin,
     AccountResponse,
+    ApiKeyCreate,
+    ApiKeyCreated,
+    ApiKeyList,
+    ApiKeyResponse,
     HistoryResponse,
     LimitResponse,
     SessionResponse,
@@ -96,3 +100,37 @@ def limits(
         cloud_jobs_limit=request.app.state.settings.free_daily_cloud_jobs,
         resets_at=resets_at,
     )
+
+
+@router.post("/api-keys", response_model=ApiKeyCreated, status_code=status.HTTP_201_CREATED)
+def create_api_key(
+    payload: ApiKeyCreate,
+    request: Request,
+    authorization: Annotated[str | None, Header()] = None,
+) -> ApiKeyCreated:
+    account = current_account(request, authorization)
+    api_key, token = service(request).create_api_key(account.id, payload.name)
+    return ApiKeyCreated(
+        **ApiKeyResponse.model_validate(api_key, from_attributes=True).model_dump(), key=token
+    )
+
+
+@router.get("/api-keys", response_model=ApiKeyList)
+def api_keys(request: Request, authorization: Annotated[str | None, Header()] = None) -> ApiKeyList:
+    account = current_account(request, authorization)
+    return ApiKeyList(
+        items=[
+            ApiKeyResponse.model_validate(item, from_attributes=True)
+            for item in service(request).api_keys(account.id)
+        ]
+    )
+
+
+@router.delete("/api-keys/{key_id}", status_code=status.HTTP_204_NO_CONTENT)
+def revoke_api_key(
+    key_id: str,
+    request: Request,
+    authorization: Annotated[str | None, Header()] = None,
+) -> None:
+    account = current_account(request, authorization)
+    service(request).revoke_api_key(account.id, key_id)

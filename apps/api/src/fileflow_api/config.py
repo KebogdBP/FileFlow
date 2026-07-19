@@ -56,10 +56,24 @@ class Settings(BaseSettings):
     allowed_origins: list[AnyHttpUrl] = Field(
         default_factory=lambda: [AnyHttpUrl("http://localhost:3000")]
     )
+    trusted_hosts: list[str] = Field(default_factory=lambda: ["localhost", "testserver"])
 
     @property
     def docs_enabled(self) -> bool:
         return self.environment != "production"
+
+    @property
+    def beta_readiness_checks(self) -> dict[str, bool]:
+        origins = [str(origin).rstrip("/") for origin in self.allowed_origins]
+        return {
+            "production_environment": self.environment == "production",
+            "non_default_storage_credentials": self.s3_secret_key != "fileflow-local-only",
+            "https_origins_only": bool(origins)
+            and all(origin.startswith("https://") for origin in origins),
+            "restricted_trusted_hosts": bool(self.trusted_hosts)
+            and "*" not in self.trusted_hosts
+            and all(host not in {"localhost", "testserver"} for host in self.trusted_hosts),
+        }
 
 
 @lru_cache

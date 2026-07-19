@@ -45,3 +45,32 @@ def test_not_found_uses_shared_error_contract() -> None:
 
 def test_docs_are_disabled_in_production() -> None:
     assert client("production").get("/docs").status_code == 404
+
+
+def test_security_headers_are_applied_to_every_response() -> None:
+    response = client().get("/")
+
+    assert (
+        response.headers["content-security-policy"] == "default-src 'none'; frame-ancestors 'none'"
+    )
+    assert response.headers["permissions-policy"] == "camera=(), microphone=(), geolocation=()"
+    assert response.headers["cross-origin-resource-policy"] == "same-site"
+    assert response.headers["x-frame-options"] == "DENY"
+
+
+def test_production_enables_transport_security() -> None:
+    response = client("production").get("/")
+
+    assert response.headers["strict-transport-security"] == "max-age=31536000; includeSubDomains"
+
+
+def test_beta_readiness_is_machine_readable_and_fail_closed() -> None:
+    response = client("production").get("/api/v1/health/beta")
+
+    assert response.status_code == 503
+    body = response.json()
+    assert body["status"] == "blocked"
+    assert body["checks"]["production_environment"] is True
+    assert body["checks"]["non_default_storage_credentials"] is False
+    assert body["checks"]["https_origins_only"] is False
+    assert "checked_at" in body

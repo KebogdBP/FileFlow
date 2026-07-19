@@ -907,7 +907,7 @@ AI-agent tool layer
 
 ## 27. Текущий статус
 
-На текущем этапе M01–M22 завершены:
+На текущем этапе M01–M24 завершены:
 
 - repository foundation и CI работают;
 - design tokens и типографическая шкала определены;
@@ -933,12 +933,14 @@ AI-agent tool layer
 - image batch связывает multi-file inspection, общие настройки, последовательную local обработку, grouped progress и cancellation;
 - приватные аккаунты связывают cloud job ownership, историю и серверные дневные лимиты;
 - registry-driven intent pages, sitemap, structured data и bounded first-party analytics готовы;
+- production security headers, machine-readable beta gate, legal pages и launch runbook готовы;
+- revocable developer API keys и bounded stdio MCP adapter используют общие quotas и ownership;
 - responsive и accessibility foundation готовы;
 - unit tests, lint, typecheck и build проходят.
 
 Следующая цель:
 
-> Перейти к M23 — Security, Compliance and Beta Launch.
+> Проверить beta usage и developer feedback перед определением следующего модуля.
 
 ## 28. Ближайший результат
 
@@ -986,7 +988,11 @@ M21 завершён: private accounts, revocable sessions, authenticated cloud 
 
 M22 завершён: intent SEO pages, canonical discovery metadata и privacy-safe product analytics готовы.
 
-Следующий этап — M23: Security, Compliance and Beta Launch.
+M23 завершён: production security posture, compliance pages и fail-closed closed-beta launch gate готовы.
+
+M24 завершён: revocable API keys, developer authentication и bounded MCP tools готовы.
+
+Последовательность M01–M24 завершена; следующий этап определяется по результатам beta.
 
 ## 29. Итог
 

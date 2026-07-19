@@ -23,9 +23,15 @@ def create_job(payload: JobCreate, request: Request) -> JobResponse:
 
 @router.get("/{job_id}", response_model=JobResponse)
 def get_job(job_id: str, request: Request) -> JobResponse:
-    return JobResponse.model_validate(service(request).get(job_id), from_attributes=True)
+    account = current_account(request, request.headers.get("Authorization"))
+    return JobResponse.model_validate(
+        service(request).get_for_account(job_id, account.id), from_attributes=True
+    )
 
 
 @router.delete("/{job_id}", response_model=JobResponse)
 def cancel_job(job_id: str, request: Request) -> JobResponse:
-    return JobResponse.model_validate(service(request).cancel(job_id), from_attributes=True)
+    account = current_account(request, request.headers.get("Authorization"))
+    return JobResponse.model_validate(
+        service(request).cancel_for_account(job_id, account.id), from_attributes=True
+    )

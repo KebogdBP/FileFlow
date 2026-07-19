@@ -84,6 +84,16 @@ class JobService:
             session.expunge(job)
             return job
 
+    def get_for_account(self, job_id: str, account_id: str) -> Job:
+        job = self.get(job_id)
+        if job.account_id != account_id:
+            raise HTTPException(status_code=404, detail="Job was not found.")
+        return job
+
+    def cancel_for_account(self, job_id: str, account_id: str) -> Job:
+        self.get_for_account(job_id, account_id)
+        return self.cancel(job_id)
+
     def start(self, job_id: str) -> Job:
         with self._sessions.begin() as session:
             job = session.get(Job, job_id)

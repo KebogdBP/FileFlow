@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Any, Literal
 
 from pydantic import BaseModel, Field
@@ -7,6 +8,12 @@ class ServiceStatus(BaseModel):
     status: Literal["ok", "ready"]
     service: str = "fileflow-api"
     version: str = "0.1.0"
+
+
+class BetaReadiness(BaseModel):
+    status: Literal["ready", "blocked"]
+    checks: dict[str, bool]
+    checked_at: datetime
 
 
 class ErrorBody(BaseModel):

@@ -205,6 +205,13 @@ export default function HomePage() {
           <span className="landing-mark" aria-hidden="true" /> FileFlow
         </Link>
         <p>Private file tools that explain every step.</p>
+        <nav aria-label="Legal">
+          <Link href="/legal/privacy">Privacy</Link>
+          {' · '}
+          <Link href="/legal/terms">Terms</Link>
+          {' · '}
+          <Link href="/legal/security">Security</Link>
+        </nav>
         <span>{MODULE_MARKER}</span>
       </footer>
     </main>

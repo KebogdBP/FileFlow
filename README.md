@@ -20,6 +20,8 @@ The current foundation includes:
 - M20 — verified local image batches with grouped progress and cancellation.
 - M21 — private accounts, authenticated cloud history and daily plan limits.
 - M22 — registry-driven intent SEO and bounded first-party product analytics.
+- M23 — production security posture, legal pages and closed-beta launch gates.
+- M24 — revocable developer API keys and a bounded stdio MCP adapter.
 
 ## Development
 
@@ -48,4 +50,12 @@ pnpm test
 pnpm build
 ```
 
-The next product module is M23 — Security, Compliance and Beta Launch.
+The planned module sequence through post-MVP M24 is complete.
+
+## MCP adapter
+
+Create a developer key from `/api/v1/account/api-keys`, then run:
+
+```bash
+FILEFLOW_API_KEY=ff_live_... FILEFLOW_API_URL=http://localhost:8000 pnpm api:mcp
+```

@@ -2,6 +2,54 @@
 @import './ui-components.css';
 @import './motion-system.css';
 
+.legal-shell {
+  min-height: 100vh;
+  background: var(--ff-color-bg);
+  color: var(--ff-color-text);
+}
+
+.legal-header,
+.legal-document {
+  width: min(100% - 2rem, 52rem);
+  margin-inline: auto;
+}
+
+.legal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-block: 1.5rem;
+}
+
+.legal-document {
+  padding-block: clamp(3rem, 8vw, 6rem);
+}
+
+.legal-document h1 {
+  max-width: 16ch;
+  margin: 0.5rem 0 1rem;
+  font-size: clamp(2.5rem, 8vw, 5rem);
+  line-height: 0.96;
+}
+
+.legal-document h2 {
+  margin-top: 2.5rem;
+}
+
+.legal-document p {
+  max-width: 68ch;
+  line-height: 1.7;
+}
+
+.legal-eyebrow,
+.legal-updated {
+  color: var(--ff-color-text-muted);
+}
+
+.legal-intro {
+  font-size: 1.2rem;
+}
+
 * {
   box-sizing: border-box;
 }

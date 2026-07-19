@@ -7,6 +7,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response
 from starlette.exceptions import HTTPException as StarletteHTTPException
+from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 from fileflow_api.accounts.router import router as account_router
 from fileflow_api.accounts.service import AccountService
@@ -78,6 +79,7 @@ def create_app(
     )
     app.state.account_service = account_service or AccountService(sessions, current)
     app.state.analytics_service = analytics_service or AnalyticsService(sessions)
+    app.add_middleware(TrustedHostMiddleware, allowed_hosts=current.trusted_hosts)
     app.add_middleware(
         CORSMiddleware,
         allow_origins=[str(origin).rstrip("/") for origin in current.allowed_origins],
@@ -98,6 +100,13 @@ def create_app(
         response.headers["X-Request-ID"] = request.state.request_id
         response.headers["X-Content-Type-Options"] = "nosniff"
         response.headers["Referrer-Policy"] = "no-referrer"
+        response.headers["X-Frame-Options"] = "DENY"
+        response.headers["Content-Security-Policy"] = "default-src 'none'; frame-ancestors 'none'"
+        response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
+        response.headers["Cross-Origin-Resource-Policy"] = "same-site"
+        response.headers["Cache-Control"] = "no-store"
+        if current.environment == "production":
+            response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
         return response
 
     app.add_exception_handler(StarletteHTTPException, http_error_handler)

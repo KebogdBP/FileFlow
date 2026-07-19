@@ -4,6 +4,7 @@ from collections.abc import Sequence
 
 import sqlalchemy as sa
 from alembic import op
+from sqlalchemy.dialects import postgresql
 
 revision: str = "20260719_09"
 down_revision: str | None = "20260719_08"
@@ -12,7 +13,7 @@ depends_on: str | Sequence[str] | None = None
 
 
 def upgrade() -> None:
-    plan = sa.Enum("FREE", name="accountplan")
+    plan = postgresql.ENUM("FREE", name="accountplan", create_type=False)
     plan.create(op.get_bind(), checkfirst=True)
     op.create_table(
         "accounts",
