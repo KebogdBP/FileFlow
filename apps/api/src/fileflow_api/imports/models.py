@@ -20,7 +20,6 @@ class SocialImport(Base):
     id: Mapped[str] = mapped_column(String(32), primary_key=True)
     source_url: Mapped[str] = mapped_column(String(2048))
     provider: Mapped[str] = mapped_column(String(32), index=True)
-    rights_basis: Mapped[str] = mapped_column(String(32))
     status: Mapped[ImportStatus] = mapped_column(Enum(ImportStatus), index=True)
     task_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
     upload_id: Mapped[str | None] = mapped_column(

@@ -23,7 +23,6 @@ class YtDlpClient:
             "format": "bv*[ext=mp4]+ba[ext=m4a]/b[ext=mp4]",
             "merge_output_format": "mp4",
             "outtmpl": str(workspace / "source.%(ext)s"),
-            "noplaylist": True,
             "max_filesize": max_bytes,
             "socket_timeout": 20,
             "retries": 3,
@@ -35,13 +34,8 @@ class YtDlpClient:
         }
         with YoutubeDL(options) as downloader:
             raw = downloader.extract_info(url, download=True)
-        blocked_availability = {"private", "premium_only", "subscriber_only", "needs_auth"}
-        if (
-            not isinstance(raw, dict)
-            or raw.get("is_live")
-            or raw.get("availability") in blocked_availability
-        ):
-            raise ValueError("live or invalid media is not importable")
+        if not isinstance(raw, dict):
+            raise ValueError("extractor returned invalid media metadata")
         files = [path for path in workspace.iterdir() if path.is_file() and not path.is_symlink()]
         if len(files) != 1 or files[0].suffix.lower() != ".mp4":
             raise ValueError("import did not produce one MP4 artifact")

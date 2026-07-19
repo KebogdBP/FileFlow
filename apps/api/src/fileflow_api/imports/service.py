@@ -37,7 +37,6 @@ class SocialImportService:
             id=uuid4().hex,
             source_url=url,
             provider=provider,
-            rights_basis=request.rights_basis,
             status=ImportStatus.QUEUED,
             task_id=None,
             upload_id=None,

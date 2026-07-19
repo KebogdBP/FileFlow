@@ -183,27 +183,17 @@ MVP должен проверить три главные гипотезы:
 - базовая metadata;
 - subtitles, когда они доступны и допустимы.
 
-## 7. Ограничения платформенных загрузчиков
+## 7. Политика платформенных загрузчиков
 
-FileFlow не должен позиционироваться как инструмент обхода ограничений.
+Importer принимает URL поддерживаемой платформы без обязательного подтверждения прав и без предварительных ограничений по типу пути, playlist/live или availability metadata.
 
-Поддерживается:
+Сохраняются только инфраструктурные гарантии:
 
-- публично доступный контент;
-- контент пользователя;
-- контент, на использование которого есть разрешение.
-
-Не поддерживается:
-
-- DRM bypass;
-- private accounts;
-- stolen cookies;
-- пароли пользователей;
-- paywall bypass;
-- обход возрастных и региональных ограничений;
-- массовый scraping;
-- playlists в первой версии;
-- постоянное хранение импортированного source.
+- HTTPS и точный platform host;
+- запрет credentials, custom ports и lookalike domains;
+- ограничение размера и времени выполнения;
+- проверка выходного контейнера;
+- временное хранение и обязательный safety pipeline.
 
 Каждый importer должен быть независимым и отключаемым через feature flag.
 
@@ -221,8 +211,7 @@ FileFlow не должен позиционироваться как инстр�
 - background removal;
 - полноценный видеоредактор;
 - multitrack audio editor;
-- playlists и channel monitoring;
-- private-account imports;
+- channel monitoring;
 - team workspaces;
 - native mobile app;
 - desktop app;
@@ -938,7 +927,7 @@ AI-agent tool layer
 - isolated cloud worker lifecycle безопасно материализует input и сохраняет проверенный result;
 - measured unit economics связывает worker telemetry с per-operation regression budgets;
 - validated FFmpeg handlers выполняют основные video/audio операции через cloud worker;
-- rights-aware public YouTube, Instagram и TikTok imports входят в общий safety pipeline;
+- URL-based YouTube, Instagram и TikTok imports без обязательной rights attestation входят в общий safety pipeline;
 - isolated DOCX и PDF handlers конвертируют, объединяют, разделяют и оптимизируют документы;
 - responsive и accessibility foundation готовы;
 - unit tests, lint, typecheck и build проходят.
@@ -981,7 +970,7 @@ M15 завершён: runtime/memory telemetry, Decimal cost model и machine-re
 
 M16 завершён: MP4 conversion/compression/resize, audio extraction/conversion/compression/trim готовы.
 
-M17 завершён: public platform URL policy, rights attestation, isolated import queue и yt-dlp pipeline готовы.
+M17 завершён: unrestricted platform paths, URL-only import contract, isolated import queue и yt-dlp pipeline готовы.
 
 M18 завершён: DOCX conversion, multi-source PDF merge, range extraction, compression и page rendering готовы.
 

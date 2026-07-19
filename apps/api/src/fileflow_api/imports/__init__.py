@@ -1,1 +1,1 @@
-"""Rights-aware public social media imports."""
+"""YouTube, Instagram and TikTok media imports."""

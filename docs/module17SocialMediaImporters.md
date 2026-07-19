@@ -1,12 +1,13 @@
 # M17 — Social Media Importers
 
-M17 adds rights-aware imports for public YouTube, Instagram and TikTok media.
+M17 adds YouTube, Instagram and TikTok media imports.
 
 ## Delivered
 
-- explicit `owned`, `authorized` or `public_domain` rights basis and mandatory confirmation;
-- exact HTTPS host and public-content path allowlists;
-- rejection of credentials, custom ports, lookalike domains, playlists, live streams and access-controlled media;
+- URL-only creation contract without mandatory rights attestation;
+- unrestricted paths on supported platform hosts, including profile, playlist and live URLs;
+- no importer-level availability, live-stream or playlist rejection before extraction;
+- exact HTTPS host checks and rejection of credentials, custom ports and lookalike domains;
 - dedicated asynchronous import queue and persisted lifecycle;
 - maintained yt-dlp release with the upstream default security extras;
 - fixed MP4-only format selection, byte ceiling, timeouts and bounded retries;
@@ -16,6 +17,6 @@ M17 adds rights-aware imports for public YouTube, Instagram and TikTok media.
 - imported media enters the same temporary retention, quarantine and malware-scan pipeline as direct uploads;
 - downstream M16 operations provide audio extraction and conversion after a clean verdict.
 
-No browser cookies, account login, private profiles, DRM bypass, playlists or live capture are supported. Platform availability and terms can change independently, so extractor failures are expected to fail closed and must be monitored.
+Platform extraction is attempted without product-level content restrictions. Availability still depends on what the upstream extractor can access without credentials and on the single-result media contract. Extractor failures fail closed and must be monitored.
 
 The importer image includes Node 22 because current yt-dlp YouTube extraction requires a supported external JavaScript runtime. Network policy should allow only required platform/CDN destinations and deny private address ranges at the infrastructure layer.

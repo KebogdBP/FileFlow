@@ -48,7 +48,7 @@ class FakeQueue:
 
 class FakeClient:
     def download(self, url: str, workspace: Path, max_bytes: int) -> ImportedMedia:
-        assert url.startswith("https://www.youtube.com/watch")
+        assert url.startswith("https://www.youtube.com/")
         path = workspace / "source.mp4"
         path.write_bytes(b"\x00\x00\x00\x18ftypisom-public-video")
         return ImportedMedia(path, "My video", "Creator", "https://i.ytimg.com/cover.jpg")
@@ -76,9 +76,13 @@ def import_service() -> tuple[SocialImportService, FakeStorage, FakeQueue]:
         ("https://youtu.be/abc", "youtube"),
         ("https://www.instagram.com/reel/abc/", "instagram"),
         ("https://www.tiktok.com/@creator/video/123", "tiktok"),
+        ("https://www.youtube.com/playlist?list=abc", "youtube"),
+        ("https://www.youtube.com/@creator/live", "youtube"),
+        ("https://www.instagram.com/creator/", "instagram"),
+        ("https://www.tiktok.com/@creator", "tiktok"),
     ],
 )
-def test_supported_public_urls_are_classified(url: str, provider: str) -> None:
+def test_platform_urls_are_classified_without_path_restrictions(url: str, provider: str) -> None:
     assert validate_social_url(url)[0] == provider
 
 
@@ -97,15 +101,9 @@ def test_untrusted_or_private_destinations_are_rejected(url: str) -> None:
         validate_social_url(url)
 
 
-def test_import_requires_rights_and_enters_existing_safety_pipeline() -> None:
+def test_import_without_rights_attestation_enters_existing_safety_pipeline() -> None:
     service, storage, queue = import_service()
-    item = service.create(
-        ImportCreate(
-            url="https://www.youtube.com/watch?v=abc",
-            rights_basis="owned",
-            rights_confirmed=True,
-        )
-    )
+    item = service.create(ImportCreate(url="https://www.youtube.com/watch?v=abc"))
     assert item.status == ImportStatus.QUEUED
     assert queue.imports == [item.id]
     completed = service.execute(item.id)
@@ -117,12 +115,5 @@ def test_import_requires_rights_and_enters_existing_safety_pipeline() -> None:
     assert next(iter(storage.objects.values())).startswith(b"\x00\x00\x00\x18ftyp")
 
 
-def test_rights_confirmation_cannot_be_omitted() -> None:
-    with pytest.raises(ValueError):
-        ImportCreate.model_validate(
-            {
-                "url": "https://youtu.be/abc",
-                "rights_basis": "owned",
-                "rights_confirmed": False,
-            }
-        )
+def test_import_contract_only_requires_a_platform_url() -> None:
+    assert str(ImportCreate(url="https://youtu.be/abc").url) == "https://youtu.be/abc"
