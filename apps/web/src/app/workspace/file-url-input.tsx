@@ -9,7 +9,9 @@ import {
   type WorkerTransport,
 } from '@fileflow/local-processing';
 import {
+  availableOperations,
   recommendOperation,
+  type RecommendationContext,
   type RecommendationPlan,
   type RecommendationResult,
 } from '@fileflow/operation-registry';
@@ -205,6 +207,7 @@ export function FileUrlInput() {
         {source?.kind === 'file' ? (
           <FileInspectorPanel state={inspection} file={source.file} />
         ) : null}
+        {source?.kind === 'url' ? <UrlIntentPanel platform={source.platform} /> : null}
       </div>
 
       <div className="input-privacy-note">
@@ -352,6 +355,13 @@ function FileInspectorPanel({ state, file }: { state: InspectionState; file: Fil
     );
   }
   const item = state.value;
+  const context: RecommendationContext = {
+    category: item.category,
+    mime:
+      item.detectedMime ?? (item.declaredMime === 'Not provided' ? undefined : item.declaredMime),
+    size: item.size,
+    confidence: item.confidence,
+  };
   return (
     <>
       <section className="file-inspector" aria-labelledby="file-inspector-title">
@@ -398,16 +408,7 @@ function FileInspectorPanel({ state, file }: { state: InspectionState; file: Fil
           {item.notice}
         </p>
       </section>
-      <RecommendationPanel
-        result={recommendOperation({
-          category: item.category,
-          mime:
-            item.detectedMime ??
-            (item.declaredMime === 'Not provided' ? undefined : item.declaredMime),
-          size: item.size,
-          confidence: item.confidence,
-        })}
-      />
+      <RecommendationPanel context={context} />
       {item.confidence !== 'mismatch' &&
       (item.detectedMime === 'image/jpeg' || item.detectedMime === 'image/png') ? (
         <LocalImageTool file={file} sourceMime={item.detectedMime} />
@@ -416,7 +417,12 @@ function FileInspectorPanel({ state, file }: { state: InspectionState; file: Fil
   );
 }
 
-function RecommendationPanel({ result }: { result: RecommendationResult }) {
+function RecommendationPanel({ context }: { context: RecommendationContext }) {
+  const [operationId, setOperationId] = useState<string>();
+  const [confirmed, setConfirmed] = useState(false);
+  const result: RecommendationResult = recommendOperation(context, operationId);
+  const options = availableOperations(context);
+
   if (result.status !== 'ready') {
     return (
       <section className="recommendation-blocked" aria-labelledby="recommendation-title">
@@ -429,7 +435,96 @@ function RecommendationPanel({ result }: { result: RecommendationResult }) {
     );
   }
 
-  return <RecommendationPlanView plan={result.plan} />;
+  return (
+    <section className="intent-workspace" aria-labelledby="intent-title">
+      <div className="intent-heading">
+        <div>
+          <Badge variant="private">CHOOSE INTENT</Badge>
+          <h3 id="intent-title">What would you like to do?</h3>
+        </div>
+        <span>{options.length} available</span>
+      </div>
+      <div className="intent-options" role="group" aria-label="Available operations">
+        {options.map((option) => {
+          const selected = result.plan.operationId === option.id;
+          return (
+            <button
+              type="button"
+              key={option.id}
+              aria-pressed={selected}
+              onClick={() => {
+                setOperationId(option.id);
+                setConfirmed(false);
+              }}
+            >
+              <span aria-hidden="true">{selected ? '●' : '○'}</span>
+              <strong>{option.displayName}</strong>
+              <small>
+                {option.executionMode === 'local' ? 'On this device' : 'Protected cloud'}
+              </small>
+            </button>
+          );
+        })}
+      </div>
+      <RecommendationPlanView plan={result.plan} />
+      <div className="intent-confirmation" data-confirmed={confirmed || undefined}>
+        <div>
+          <strong>{confirmed ? 'Intent confirmed' : 'Review this plan'}</strong>
+          <p>
+            {confirmed
+              ? result.plan.mode === 'local'
+                ? 'The local tool is ready below. Your source stays on this device.'
+                : 'This operation is ready for the protected upload and job workflow.'
+              : 'Confirm the operation after reviewing its mode, defaults and trade-offs.'}
+          </p>
+        </div>
+        <Button type="button" onClick={() => setConfirmed(true)} disabled={confirmed}>
+          {confirmed ? 'Confirmed' : 'Confirm intent'}
+        </Button>
+      </div>
+    </section>
+  );
+}
+
+function UrlIntentPanel({ platform }: { platform: InputPlatform }) {
+  const [confirmed, setConfirmed] = useState(false);
+  return (
+    <section className="intent-workspace url-intent" aria-labelledby="url-intent-title">
+      <div className="intent-heading">
+        <div>
+          <Badge variant="cloud">CLOUD IMPORT</Badge>
+          <h3 id="url-intent-title">Import media from {platform}</h3>
+        </div>
+      </div>
+      <div className="recommendation-explanation">
+        <div>
+          <strong>Outcome</strong>
+          <p>A compatible video plus available title, creator and thumbnail metadata.</p>
+        </div>
+        <div>
+          <strong>Where it runs</strong>
+          <p>The platform import runs in an isolated cloud worker.</p>
+        </div>
+        <div>
+          <strong>Safety</strong>
+          <p>The imported result enters quarantine and malware scanning before processing.</p>
+        </div>
+      </div>
+      <div className="intent-confirmation" data-confirmed={confirmed || undefined}>
+        <div>
+          <strong>{confirmed ? 'Import intent confirmed' : 'Nothing has been imported yet'}</strong>
+          <p>
+            {confirmed
+              ? 'The URL is ready for the asynchronous import workflow.'
+              : 'Confirm after reviewing the cloud and safety lifecycle.'}
+          </p>
+        </div>
+        <Button type="button" onClick={() => setConfirmed(true)} disabled={confirmed}>
+          {confirmed ? 'Confirmed' : 'Confirm import'}
+        </Button>
+      </div>
+    </section>
+  );
 }
 
 function RecommendationPlanView({ plan }: { plan: RecommendationPlan }) {

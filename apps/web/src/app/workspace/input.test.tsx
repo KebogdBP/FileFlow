@@ -210,9 +210,35 @@ describe('M05 file and URL input UI', () => {
     expect(container.textContent).toContain('1 source ready');
     expect(container.textContent).toContain('Format verified from the local file header');
     expect(container.textContent).toContain('Make this image lighter');
+    expect(container.textContent).toContain('What would you like to do?');
+    expect(container.textContent).toContain('Remove private metadata');
+    expect(container.textContent).toContain('Confirm intent');
     expect(container.textContent).toContain('Plan only · nothing has started');
     expect(container.textContent).toContain('Create a lighter WebP');
     expect(container.textContent).toContain('Create WebP locally');
+    await act(async () => root.unmount());
+  });
+
+  it('turns a validated platform URL into a reviewable import intent', async () => {
+    const container = document.createElement('div');
+    const root = createRoot(container);
+    await act(async () => root.render(<FileUrlInput />));
+    const tabs = [...container.querySelectorAll('[role="tab"]')] as HTMLButtonElement[];
+    await act(async () => tabs[1]?.click());
+    const input = container.querySelector('input[type="url"]') as HTMLInputElement;
+    const valueSetter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set;
+    await act(async () => {
+      valueSetter?.call(input, 'https://youtube.com/playlist?list=abc');
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+    });
+    await act(async () =>
+      container
+        .querySelector('form')
+        ?.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true })),
+    );
+    expect(container.textContent).toContain('Import media from youtube');
+    expect(container.textContent).toContain('Confirm import');
+    expect(container.textContent).toContain('Nothing has been imported yet');
     await act(async () => root.unmount());
   });
 

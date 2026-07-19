@@ -367,6 +367,99 @@
   background: color-mix(in srgb, var(--ff-color-primary-soft) 28%, var(--ff-color-surface));
 }
 
+.intent-workspace {
+  display: grid;
+  gap: var(--ff-space-5);
+  padding: var(--ff-space-5);
+  border: 1px solid var(--ff-color-border);
+  border-radius: var(--ff-radius-xl);
+  background: var(--ff-color-surface-raised);
+}
+
+.intent-heading,
+.intent-confirmation {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ff-space-4);
+}
+
+.intent-heading h3 {
+  margin: var(--ff-space-2) 0 0;
+  font-size: var(--ff-font-heading-2-size);
+  letter-spacing: -0.04em;
+}
+
+.intent-heading > span {
+  color: var(--ff-color-text-muted);
+  font-size: var(--ff-font-caption-size);
+  font-weight: 750;
+}
+
+.intent-options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--ff-space-2);
+}
+
+.intent-options button {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 2px var(--ff-space-3);
+  padding: var(--ff-space-4);
+  border: 1px solid var(--ff-color-border);
+  border-radius: var(--ff-radius-md);
+  color: var(--ff-color-text);
+  background: var(--ff-color-surface);
+  text-align: left;
+  cursor: pointer;
+}
+
+.intent-options button[aria-pressed='true'] {
+  border-color: var(--ff-color-primary);
+  background: var(--ff-color-primary-soft);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--ff-color-primary) 16%, transparent);
+}
+
+.intent-options button > span {
+  grid-row: 1 / 3;
+  color: var(--ff-color-primary);
+}
+
+.intent-options button strong,
+.intent-options button small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.intent-options button small {
+  color: var(--ff-color-text-muted);
+}
+
+.intent-confirmation {
+  padding: var(--ff-space-4);
+  border: 1px solid var(--ff-color-border);
+  border-radius: var(--ff-radius-md);
+  background: var(--ff-color-surface);
+}
+
+.intent-confirmation[data-confirmed='true'] {
+  border-color: color-mix(in srgb, var(--ff-color-success) 45%, var(--ff-color-border));
+  background: var(--ff-color-success-soft);
+}
+
+.intent-confirmation p {
+  margin: 4px 0 0;
+  color: var(--ff-color-text-muted);
+  font-size: var(--ff-font-body-sm-size);
+}
+
+.url-intent {
+  border-color: color-mix(in srgb, var(--ff-color-info) 40%, var(--ff-color-border));
+}
+
 .recommendation-heading {
   display: flex;
   align-items: flex-start;
@@ -787,6 +880,17 @@
   }
   .recommendation-heading {
     flex-direction: column;
+  }
+  .intent-heading,
+  .intent-confirmation {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .intent-options {
+    grid-template-columns: 1fr;
+  }
+  .intent-confirmation > button {
+    width: 100%;
   }
   .recommendation-explanation {
     grid-template-columns: 1fr;

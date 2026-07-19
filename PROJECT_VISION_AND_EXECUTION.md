@@ -907,7 +907,7 @@ AI-agent tool layer
 
 ## 27. Текущий статус
 
-На текущем этапе M01–M18 завершены:
+На текущем этапе M01–M19 завершены:
 
 - repository foundation и CI работают;
 - design tokens и типографическая шкала определены;
@@ -929,12 +929,13 @@ AI-agent tool layer
 - validated FFmpeg handlers выполняют основные video/audio операции через cloud worker;
 - URL-based YouTube, Instagram и TikTok imports без обязательной rights attestation входят в общий safety pipeline;
 - isolated DOCX и PDF handlers конвертируют, объединяют, разделяют и оптимизируют документы;
+- единый intent-based workspace связывает input, inspection, operation choice и confirmation;
 - responsive и accessibility foundation готовы;
 - unit tests, lint, typecheck и build проходят.
 
 Следующая цель:
 
-> Перейти к M19 — Unified Intent-Based Workspace.
+> Перейти к M20 — Batch Processing.
 
 ## 28. Ближайший результат
 
@@ -974,7 +975,9 @@ M17 завершён: unrestricted platform paths, URL-only import contract, iso
 
 M18 завершён: DOCX conversion, multi-source PDF merge, range extraction, compression и page rendering готовы.
 
-Следующий этап — M19: Unified Intent-Based Workspace.
+M19 завершён: unified source flow, category-aware intents, explainable plans и explicit confirmation готовы.
+
+Следующий этап — M20: Batch Processing.
 
 ## 29. Итог
 

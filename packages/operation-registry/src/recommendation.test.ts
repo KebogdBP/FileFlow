@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { operations, recommendOperation } from './index';
+import { availableOperations, operations, recommendOperation } from './index';
 
 describe('M07 recommendation and explainability engine', () => {
   it('keeps operation identifiers unique', () => {
@@ -87,5 +87,19 @@ describe('M07 recommendation and explainability engine', () => {
     expect(
       recommendOperation({ category: 'archive', size: 10_000, confidence: 'unverified' }),
     ).toMatchObject({ status: 'unsupported' });
+  });
+
+  it('exposes reviewed intents and builds a plan for the selected backend operation', () => {
+    const context = { category: 'pdf' as const, size: 10_000, confidence: 'verified' as const };
+    expect(availableOperations(context).map((operation) => operation.id)).toEqual([
+      'compress-pdf',
+      'split-pdf',
+      'pdf-to-jpg',
+    ]);
+    expect(recommendOperation(context, 'pdf-to-jpg')).toMatchObject({
+      status: 'ready',
+      plan: { operationId: 'pdf-to-jpg', mode: 'cloud' },
+    });
+    expect(recommendOperation(context, 'trim-audio')).toMatchObject({ status: 'unsupported' });
   });
 });

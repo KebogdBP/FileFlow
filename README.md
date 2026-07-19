@@ -41,4 +41,4 @@ pnpm test
 pnpm build
 ```
 
-The next product module is M19 — Unified Intent-Based Workspace.
+The next product module is M20 — Batch Processing.

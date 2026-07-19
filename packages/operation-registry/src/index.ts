@@ -31,6 +31,20 @@ export const operations = [
     supportedOutputs: ['mp4'],
   },
   {
+    id: 'video-to-mp4',
+    displayName: 'Convert to compatible MP4',
+    executionMode: 'cloud',
+    supportedInputs: ['video'],
+    supportedOutputs: ['mp4'],
+  },
+  {
+    id: 'resize-video',
+    displayName: 'Resize this video',
+    executionMode: 'cloud',
+    supportedInputs: ['video'],
+    supportedOutputs: ['mp4'],
+  },
+  {
     id: 'extract-audio',
     displayName: 'Extract the audio track',
     executionMode: 'cloud',
@@ -45,6 +59,27 @@ export const operations = [
     supportedOutputs: ['mp3', 'original'],
   },
   {
+    id: 'audio-to-mp3',
+    displayName: 'Convert to MP3',
+    executionMode: 'cloud',
+    supportedInputs: ['audio'],
+    supportedOutputs: ['mp3'],
+  },
+  {
+    id: 'audio-to-wav',
+    displayName: 'Convert to WAV',
+    executionMode: 'cloud',
+    supportedInputs: ['audio'],
+    supportedOutputs: ['wav'],
+  },
+  {
+    id: 'trim-audio',
+    displayName: 'Trim this audio',
+    executionMode: 'cloud',
+    supportedInputs: ['audio'],
+    supportedOutputs: ['mp3'],
+  },
+  {
     id: 'compress-pdf',
     displayName: 'Make this PDF smaller',
     executionMode: 'cloud',
@@ -52,7 +87,21 @@ export const operations = [
     supportedOutputs: ['pdf'],
   },
   {
-    id: 'document-to-pdf',
+    id: 'split-pdf',
+    displayName: 'Extract PDF pages',
+    executionMode: 'cloud',
+    supportedInputs: ['pdf'],
+    supportedOutputs: ['pdf'],
+  },
+  {
+    id: 'pdf-to-jpg',
+    displayName: 'Turn a PDF page into an image',
+    executionMode: 'cloud',
+    supportedInputs: ['pdf'],
+    supportedOutputs: ['jpg'],
+  },
+  {
+    id: 'docx-to-pdf',
     displayName: 'Create a shareable PDF',
     executionMode: 'cloud',
     supportedInputs: ['document'],
@@ -100,13 +149,35 @@ export type RecommendationResult =
 
 const LOCAL_AUDIO_LIMIT = 250 * 1024 * 1024;
 
-export function recommendOperation(context: RecommendationContext): RecommendationResult {
+export function availableOperations(
+  context: RecommendationContext,
+): readonly OperationDefinition[] {
+  return operations.filter((operation) =>
+    operation.supportedInputs.some((category) => category === context.category),
+  );
+}
+
+export function recommendOperation(
+  context: RecommendationContext,
+  operationId?: string,
+): RecommendationResult {
   if (context.confidence === 'mismatch') {
     return {
       status: 'blocked',
       reason:
         'Confirm the file identity before choosing an operation. Its header conflicts with its name or MIME type.',
     };
+  }
+
+  if (operationId) {
+    const operation = availableOperations(context).find((item) => item.id === operationId);
+    if (!operation) {
+      return {
+        status: 'unsupported',
+        reason: 'This operation does not support the selected file.',
+      };
+    }
+    return { status: 'ready', plan: selectedPlan(context, operation) };
   }
 
   switch (context.category) {
@@ -126,6 +197,37 @@ export function recommendOperation(context: RecommendationContext): Recommendati
         reason: 'FileFlow does not have a safe recommendation for this file category yet.',
       };
   }
+}
+
+function selectedPlan(
+  context: RecommendationContext,
+  operation: OperationDefinition,
+): RecommendationPlan {
+  if (operation.id === 'optimize-image') return imagePlan(context);
+  if (operation.id === 'compress-video') return videoPlan();
+  if (operation.id === 'optimize-audio') return audioPlan(context.size);
+  if (operation.id === 'compress-pdf') return pdfPlan();
+  if (operation.id === 'docx-to-pdf') return documentPlan();
+  const mode: ProcessingMode = operation.executionMode === 'local' ? 'local' : 'cloud';
+  const output = operation.supportedOutputs[0]?.toUpperCase() ?? 'new file';
+  return {
+    operationId: operation.id,
+    title: operation.displayName,
+    outcome: `A checked ${output} result created from the selected source.`,
+    mode,
+    reason: 'This intent matches the file category and a reviewed FileFlow operation.',
+    expectation: 'FileFlow uses bounded defaults and validates the output before it is returned.',
+    privacy:
+      mode === 'local'
+        ? 'Runs on this device. The source file is not uploaded.'
+        : 'Requires encrypted cloud processing with automatic temporary-file cleanup.',
+    defaults: [
+      { label: 'Output', value: output, reason: 'Matches the selected intent.' },
+      { label: 'Safety', value: 'Validated', reason: 'The result signature is checked.' },
+    ],
+    tradeoffs: mode === 'cloud' ? ['The source must be uploaded temporarily.'] : [],
+    alternatives: [],
+  };
 }
 
 function imagePlan(context: RecommendationContext): RecommendationPlan {
@@ -258,7 +360,7 @@ function pdfPlan(): RecommendationPlan {
 
 function documentPlan(): RecommendationPlan {
   return {
-    operationId: 'document-to-pdf',
+    operationId: 'docx-to-pdf',
     title: 'Create a shareable PDF',
     outcome: 'A fixed-layout document that is easier to open and send.',
     mode: 'cloud',

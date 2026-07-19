@@ -17,14 +17,12 @@ export default function WorkspacePage() {
         <Link className="landing-brand" href="/" aria-label="FileFlow home">
           <span className="landing-mark" aria-hidden="true" /> FileFlow
         </Link>
-        <Badge variant="local">M09 · LOCAL IMAGES</Badge>
+        <Badge variant="private">M19 · UNIFIED WORKSPACE</Badge>
       </header>
       <section className="input-hero" aria-labelledby="input-page-title" data-ff-reveal="1">
         <p className="input-eyebrow">NEW WORKSPACE</p>
         <h1 id="input-page-title">What are you working with?</h1>
-        <p>
-          Add one source. Nothing is uploaded or processed until FileFlow explains the next step.
-        </p>
+        <p>Add one source, choose your intent and review exactly where the operation will run.</p>
       </section>
       <section aria-label="File and URL input" data-ff-reveal="2">
         <FileUrlInput />
