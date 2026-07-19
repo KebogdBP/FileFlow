@@ -1,5 +1,7 @@
 from fileflow_api.config import get_settings
 from fileflow_api.database import build_engine, build_session_factory
+from fileflow_api.imports.downloader import YtDlpClient
+from fileflow_api.imports.service import SocialImportService
 from fileflow_api.jobs.queue import CeleryTaskQueue, create_celery
 from fileflow_api.jobs.service import JobService
 from fileflow_api.media.registry import register_media_operations
@@ -44,6 +46,7 @@ runner = SafeSubprocessRunner(
 )
 register_media_operations(operations, settings.ffmpeg_path, runner)
 executor = CloudJobExecutor(jobs, safety, storage, operations, settings)
+imports = SocialImportService(sessions, storage, queue, YtDlpClient(), settings)
 
 
 @celery_app.task(  # type: ignore[untyped-decorator]
@@ -60,3 +63,8 @@ def inspect_upload(upload_id: str) -> str:
 @celery_app.task(name="fileflow.jobs.execute")  # type: ignore[untyped-decorator]
 def execute_job(job_id: str) -> str:
     return executor.execute(job_id).value
+
+
+@celery_app.task(name="fileflow.imports.execute")  # type: ignore[untyped-decorator]
+def execute_import(import_id: str) -> str:
+    return imports.execute(import_id).status.value

@@ -10,6 +10,8 @@ class TaskQueue(Protocol):
 
     def enqueue_job(self, job_id: str) -> str: ...
 
+    def enqueue_import(self, import_id: str) -> str: ...
+
     def revoke(self, task_id: str) -> None: ...
 
 
@@ -19,6 +21,9 @@ class NullTaskQueue:
 
     def enqueue_job(self, job_id: str) -> str:
         return f"local-job-{job_id}"
+
+    def enqueue_import(self, import_id: str) -> str:
+        return f"local-import-{import_id}"
 
     def revoke(self, task_id: str) -> None:
         pass
@@ -40,6 +45,7 @@ def create_celery(settings: Settings) -> Celery:
         task_routes={
             "fileflow.safety.inspect": {"queue": "safety"},
             "fileflow.jobs.execute": {"queue": "processing"},
+            "fileflow.imports.execute": {"queue": "imports"},
         },
     )
     return app
@@ -55,6 +61,10 @@ class CeleryTaskQueue:
 
     def enqueue_job(self, job_id: str) -> str:
         task = self._app.send_task("fileflow.jobs.execute", args=[job_id], task_id=job_id)
+        return str(task.id)
+
+    def enqueue_import(self, import_id: str) -> str:
+        task = self._app.send_task("fileflow.imports.execute", args=[import_id])
         return str(task.id)
 
     def revoke(self, task_id: str) -> None:

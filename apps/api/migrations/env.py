@@ -5,6 +5,8 @@ from sqlalchemy import engine_from_config, pool
 
 from fileflow_api.config import get_settings
 from fileflow_api.database import Base
+from fileflow_api.imports import models as import_models  # noqa: F401
+from fileflow_api.jobs import models as job_models  # noqa: F401
 from fileflow_api.uploads import models  # noqa: F401
 
 config = context.config

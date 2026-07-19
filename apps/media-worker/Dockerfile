@@ -1,3 +1,5 @@
+FROM node:22-bookworm-slim AS javascript-runtime
+
 FROM python:3.14-slim-bookworm
 
 RUN apt-get update \
@@ -8,6 +10,7 @@ RUN apt-get update \
 WORKDIR /app
 COPY apps/api /app/apps/api
 RUN python -m pip install --no-cache-dir /app/apps/api
+COPY --from=javascript-runtime /usr/local/bin/node /usr/local/bin/node
 
 USER fileflow
 WORKDIR /app/apps/api
@@ -16,4 +19,4 @@ ENV FILEFLOW_FFMPEG_PATH=/usr/bin/ffmpeg \
     PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1
 
-CMD ["celery", "-A", "fileflow_api.jobs.worker:celery_app", "worker", "--queues", "processing", "--loglevel", "INFO"]
+CMD ["celery", "-A", "fileflow_api.jobs.worker:celery_app", "worker", "--queues", "processing,imports", "--loglevel", "INFO"]

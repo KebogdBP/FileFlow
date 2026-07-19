@@ -13,6 +13,9 @@ from fileflow_api.contracts import MessageResponse
 from fileflow_api.database import build_engine, build_session_factory
 from fileflow_api.errors import http_error_handler, validation_error_handler
 from fileflow_api.health import router as health_router
+from fileflow_api.imports.downloader import YtDlpClient
+from fileflow_api.imports.router import router as imports_router
+from fileflow_api.imports.service import SocialImportService
 from fileflow_api.jobs.queue import CeleryTaskQueue, TaskQueue, create_celery
 from fileflow_api.jobs.router import router as jobs_router
 from fileflow_api.jobs.service import JobService
@@ -31,6 +34,7 @@ def create_app(
     safety_service: SafetyService | None = None,
     task_queue: TaskQueue | None = None,
     job_service: JobService | None = None,
+    import_service: SocialImportService | None = None,
 ) -> FastAPI:
     current = settings or get_settings()
     app = FastAPI(
@@ -63,6 +67,9 @@ def create_app(
     app.state.upload_service = upload_service or UploadService(sessions, storage, current, queue)
     app.state.safety_service = current_safety
     app.state.job_service = job_service or JobService(sessions, current_safety, queue, current)
+    app.state.import_service = import_service or SocialImportService(
+        sessions, storage, queue, YtDlpClient(), current
+    )
     app.add_middleware(
         CORSMiddleware,
         allow_origins=[str(origin).rstrip("/") for origin in current.allowed_origins],
@@ -90,6 +97,7 @@ def create_app(
     app.include_router(health_router, prefix=current.api_prefix)
     app.include_router(uploads_router, prefix=current.api_prefix)
     app.include_router(jobs_router, prefix=current.api_prefix)
+    app.include_router(imports_router, prefix=current.api_prefix)
 
     @app.get("/", response_model=MessageResponse, include_in_schema=False)
     def root() -> MessageResponse:

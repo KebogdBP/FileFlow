@@ -918,7 +918,7 @@ AI-agent tool layer
 
 ## 27. Текущий статус
 
-На текущем этапе M01–M16 завершены:
+На текущем этапе M01–M17 завершены:
 
 - repository foundation и CI работают;
 - design tokens и типографическая шкала определены;
@@ -938,12 +938,13 @@ AI-agent tool layer
 - isolated cloud worker lifecycle безопасно материализует input и сохраняет проверенный result;
 - measured unit economics связывает worker telemetry с per-operation regression budgets;
 - validated FFmpeg handlers выполняют основные video/audio операции через cloud worker;
+- rights-aware public YouTube, Instagram и TikTok imports входят в общий safety pipeline;
 - responsive и accessibility foundation готовы;
 - unit tests, lint, typecheck и build проходят.
 
 Следующая цель:
 
-> Перейти к M17 — Social Media Importers.
+> Перейти к M18 — Document and PDF Processing.
 
 ## 28. Ближайший результат
 
@@ -979,7 +980,9 @@ M15 завершён: runtime/memory telemetry, Decimal cost model и machine-re
 
 M16 завершён: MP4 conversion/compression/resize, audio extraction/conversion/compression/trim готовы.
 
-Следующий этап — M17: Social Media Importers.
+M17 завершён: public platform URL policy, rights attestation, isolated import queue и yt-dlp pipeline готовы.
+
+Следующий этап — M18: Document and PDF Processing.
 
 ## 29. Итог
 
