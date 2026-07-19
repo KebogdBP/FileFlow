@@ -10,6 +10,8 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from fileflow_api.accounts.router import router as account_router
 from fileflow_api.accounts.service import AccountService
+from fileflow_api.analytics.router import router as analytics_router
+from fileflow_api.analytics.service import AnalyticsService
 from fileflow_api.config import Settings, get_settings
 from fileflow_api.contracts import MessageResponse
 from fileflow_api.database import build_engine, build_session_factory
@@ -38,6 +40,7 @@ def create_app(
     job_service: JobService | None = None,
     import_service: SocialImportService | None = None,
     account_service: AccountService | None = None,
+    analytics_service: AnalyticsService | None = None,
 ) -> FastAPI:
     current = settings or get_settings()
     app = FastAPI(
@@ -74,6 +77,7 @@ def create_app(
         sessions, storage, queue, YtDlpClient(), current
     )
     app.state.account_service = account_service or AccountService(sessions, current)
+    app.state.analytics_service = analytics_service or AnalyticsService(sessions)
     app.add_middleware(
         CORSMiddleware,
         allow_origins=[str(origin).rstrip("/") for origin in current.allowed_origins],
@@ -103,6 +107,7 @@ def create_app(
     app.include_router(jobs_router, prefix=current.api_prefix)
     app.include_router(imports_router, prefix=current.api_prefix)
     app.include_router(account_router, prefix=current.api_prefix)
+    app.include_router(analytics_router, prefix=current.api_prefix)
 
     @app.get("/", response_model=MessageResponse, include_in_schema=False)
     def root() -> MessageResponse:

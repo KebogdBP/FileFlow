@@ -29,6 +29,7 @@ export default function HomePage() {
           <a href="#how-it-works">How it works</a>
           <a href="#privacy">Privacy</a>
           <a href="#tools">Tools</a>
+          <Link href="/tools">All tools</Link>
         </nav>
         <Link className="landing-header-cta" href="/workspace">
           Open workspace
@@ -185,6 +186,9 @@ export default function HomePage() {
             </Card>
           ))}
         </div>
+        <Link className="landing-button landing-button-secondary" href="/tools">
+          Browse all file tools
+        </Link>
       </section>
 
       <section className="landing-final" aria-labelledby="final-title">

@@ -239,6 +239,27 @@ describe('M05 file and URL input UI', () => {
     await act(async () => root.unmount());
   });
 
+  it('preserves a compatible intent from an SEO entry page', async () => {
+    const container = document.createElement('div');
+    const root = createRoot(container);
+    await act(async () => root.render(<FileUrlInput initialIntent="remove-image-metadata" />));
+    const input = container.querySelector('input[type="file"]') as HTMLInputElement;
+    Object.defineProperty(input, 'files', {
+      configurable: true,
+      value: [mockFile('holiday.jpg', 'image/jpeg', [0xff, 0xd8, 0xff, 0x00])],
+    });
+    await act(async () => {
+      input.dispatchEvent(new Event('change', { bubbles: true }));
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+    const selected = [...container.querySelectorAll('.intent-options button')].find((button) =>
+      button.textContent?.includes('Remove private metadata'),
+    );
+    expect(selected?.getAttribute('aria-pressed')).toBe('true');
+    await act(async () => root.unmount());
+  });
+
   it('creates one verified local plan for a matching image batch', async () => {
     const container = document.createElement('div');
     const root = createRoot(container);

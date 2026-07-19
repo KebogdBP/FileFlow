@@ -907,7 +907,7 @@ AI-agent tool layer
 
 ## 27. Текущий статус
 
-На текущем этапе M01–M21 завершены:
+На текущем этапе M01–M22 завершены:
 
 - repository foundation и CI работают;
 - design tokens и типографическая шкала определены;
@@ -932,12 +932,13 @@ AI-agent tool layer
 - единый intent-based workspace связывает input, inspection, operation choice и confirmation;
 - image batch связывает multi-file inspection, общие настройки, последовательную local обработку, grouped progress и cancellation;
 - приватные аккаунты связывают cloud job ownership, историю и серверные дневные лимиты;
+- registry-driven intent pages, sitemap, structured data и bounded first-party analytics готовы;
 - responsive и accessibility foundation готовы;
 - unit tests, lint, typecheck и build проходят.
 
 Следующая цель:
 
-> Перейти к M22 — Intent SEO and Product Analytics.
+> Перейти к M23 — Security, Compliance and Beta Launch.
 
 ## 28. Ближайший результат
 
@@ -983,7 +984,9 @@ M20 завершён: verified image batches, shared settings, bounded sequentia
 
 M21 завершён: private accounts, revocable sessions, authenticated cloud history и daily limits готовы.
 
-Следующий этап — M22: Intent SEO and Product Analytics.
+M22 завершён: intent SEO pages, canonical discovery metadata и privacy-safe product analytics готовы.
+
+Следующий этап — M23: Security, Compliance and Beta Launch.
 
 ## 29. Итог
 

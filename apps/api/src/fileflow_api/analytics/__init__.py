@@ -1,0 +1,1 @@
+"""Privacy-safe product analytics."""

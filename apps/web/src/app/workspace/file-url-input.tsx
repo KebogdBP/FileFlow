@@ -36,7 +36,7 @@ type InspectionState =
   | { status: 'ready'; value: FileInspection }
   | { status: 'error'; error: string };
 
-export function FileUrlInput() {
+export function FileUrlInput({ initialIntent }: { initialIntent?: string }) {
   const [tab, setTab] = useState<'file' | 'url'>('file');
   const [source, setSource] = useState<Source>();
   const [error, setError] = useState('');
@@ -238,7 +238,7 @@ export function FileUrlInput() {
         {source ? <SelectedSource source={source} onRemove={reset} /> : null}
         {batch ? <BatchPanel batch={batch} onRemove={reset} /> : null}
         {source?.kind === 'file' ? (
-          <FileInspectorPanel state={inspection} file={source.file} />
+          <FileInspectorPanel state={inspection} file={source.file} initialIntent={initialIntent} />
         ) : null}
         {source?.kind === 'url' ? <UrlIntentPanel platform={source.platform} /> : null}
       </div>
@@ -408,7 +408,15 @@ function toInspectionState(result: FileInspectionResult): InspectionState {
     : { status: 'error', error: result.error };
 }
 
-function FileInspectorPanel({ state, file }: { state: InspectionState; file: File }) {
+function FileInspectorPanel({
+  state,
+  file,
+  initialIntent,
+}: {
+  state: InspectionState;
+  file: File;
+  initialIntent?: string;
+}) {
   if (state.status === 'idle') return null;
   if (state.status === 'loading') {
     return (
@@ -479,7 +487,7 @@ function FileInspectorPanel({ state, file }: { state: InspectionState; file: Fil
           {item.notice}
         </p>
       </section>
-      <RecommendationPanel context={context} />
+      <RecommendationPanel context={context} initialIntent={initialIntent} />
       {item.confidence !== 'mismatch' &&
       (item.detectedMime === 'image/jpeg' || item.detectedMime === 'image/png') ? (
         <LocalImageTool file={file} sourceMime={item.detectedMime} />
@@ -488,11 +496,22 @@ function FileInspectorPanel({ state, file }: { state: InspectionState; file: Fil
   );
 }
 
-function RecommendationPanel({ context }: { context: RecommendationContext }) {
+function RecommendationPanel({
+  context,
+  initialIntent,
+}: {
+  context: RecommendationContext;
+  initialIntent?: string;
+}) {
   const [operationId, setOperationId] = useState<string>();
   const [confirmed, setConfirmed] = useState(false);
-  const result: RecommendationResult = recommendOperation(context, operationId);
   const options = availableOperations(context);
+  const selectedOperation = options.some((option) => option.id === operationId)
+    ? operationId
+    : options.some((option) => option.id === initialIntent)
+      ? initialIntent
+      : undefined;
+  const result: RecommendationResult = recommendOperation(context, selectedOperation);
 
   if (result.status !== 'ready') {
     return (

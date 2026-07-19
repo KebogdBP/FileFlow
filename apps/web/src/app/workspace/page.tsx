@@ -10,7 +10,12 @@ export const metadata: Metadata = {
   description: 'Add a local file or supported public media URL to your private FileFlow workspace.',
 };
 
-export default function WorkspacePage() {
+export default async function WorkspacePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ intent?: string }>;
+}) {
+  const { intent } = await searchParams;
   return (
     <main className="input-shell">
       <header className="input-header">
@@ -29,7 +34,7 @@ export default function WorkspacePage() {
         </p>
       </section>
       <section aria-label="File and URL input" data-ff-reveal="2">
-        <FileUrlInput />
+        <FileUrlInput initialIntent={intent} />
       </section>
       <aside className="input-scope-note" aria-label="What happens next">
         <strong>Review before processing</strong>

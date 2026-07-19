@@ -19,6 +19,7 @@ The current foundation includes:
 - M19 — unified intent-based workspace.
 - M20 — verified local image batches with grouped progress and cancellation.
 - M21 — private accounts, authenticated cloud history and daily plan limits.
+- M22 — registry-driven intent SEO and bounded first-party product analytics.
 
 ## Development
 
@@ -34,6 +35,7 @@ Routes:
 - audiovisual system: `http://localhost:3000/audiovisual-system`.
 - workspace input: `http://localhost:3000/workspace`.
 - account and cloud history: `http://localhost:3000/account`.
+- intent tool directory: `http://localhost:3000/tools`.
 - API health: `http://localhost:8000/api/v1/health/live`.
 
 ## Quality checks
@@ -46,4 +48,4 @@ pnpm test
 pnpm build
 ```
 
-The next product module is M22 — Intent SEO and Product Analytics.
+The next product module is M23 — Security, Compliance and Beta Launch.
