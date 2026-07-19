@@ -35,6 +35,8 @@ class Settings(BaseSettings):
     job_soft_time_limit_seconds: int = Field(default=14 * 60, ge=30)
     job_time_limit_seconds: int = Field(default=15 * 60, ge=60)
     max_active_jobs_per_upload: int = Field(default=1, ge=1, le=10)
+    free_daily_cloud_jobs: int = Field(default=10, ge=1, le=1000)
+    account_session_ttl_seconds: int = Field(default=30 * 24 * 60 * 60, ge=300)
     worker_max_output_bytes: int = Field(default=2 * 1024 * 1024 * 1024, gt=0)
     worker_memory_limit_bytes: int = Field(default=2 * 1024 * 1024 * 1024, ge=128 * 1024 * 1024)
     worker_cpu_limit_seconds: int = Field(default=15 * 60, ge=10)

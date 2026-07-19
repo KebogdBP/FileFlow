@@ -18,6 +18,7 @@ export default function WorkspacePage() {
           <span className="landing-mark" aria-hidden="true" /> FileFlow
         </Link>
         <Badge variant="private">M20 · BATCH PROCESSING</Badge>
+        <Link href="/account">Account</Link>
       </header>
       <section className="input-hero" aria-labelledby="input-page-title" data-ff-reveal="1">
         <p className="input-eyebrow">NEW WORKSPACE</p>

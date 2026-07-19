@@ -4,6 +4,7 @@ from enum import StrEnum
 from sqlalchemy import JSON, BigInteger, DateTime, Enum, ForeignKey, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column
 
+from fileflow_api.accounts import models as account_models  # noqa: F401
 from fileflow_api.database import Base
 
 
@@ -19,6 +20,9 @@ class Job(Base):
     __tablename__ = "jobs"
 
     id: Mapped[str] = mapped_column(String(32), primary_key=True)
+    account_id: Mapped[str | None] = mapped_column(
+        ForeignKey("accounts.id", ondelete="SET NULL"), nullable=True, index=True
+    )
     upload_id: Mapped[str] = mapped_column(ForeignKey("uploads.id", ondelete="CASCADE"), index=True)
     source_upload_ids: Mapped[list[str]] = mapped_column(JSON, default=list)
     operation: Mapped[str] = mapped_column(String(64), index=True)

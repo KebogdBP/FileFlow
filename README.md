@@ -18,6 +18,7 @@ The current foundation includes:
 - M11–M18 — secure storage, safety, orchestration and media/document workers.
 - M19 — unified intent-based workspace.
 - M20 — verified local image batches with grouped progress and cancellation.
+- M21 — private accounts, authenticated cloud history and daily plan limits.
 
 ## Development
 
@@ -32,6 +33,7 @@ Routes:
 - design system: `http://localhost:3000/design-system`;
 - audiovisual system: `http://localhost:3000/audiovisual-system`.
 - workspace input: `http://localhost:3000/workspace`.
+- account and cloud history: `http://localhost:3000/account`.
 - API health: `http://localhost:8000/api/v1/health/live`.
 
 ## Quality checks
@@ -44,4 +46,4 @@ pnpm test
 pnpm build
 ```
 
-The next product module is M21 — Authentication, History and Limits.
+The next product module is M22 — Intent SEO and Product Analytics.

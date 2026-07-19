@@ -27,7 +27,7 @@ class JobService:
         self._queue = queue
         self._settings = settings
 
-    def create(self, request: JobCreate) -> Job:
+    def create(self, request: JobCreate, account_id: str | None = None) -> Job:
         self._safety.require_clean(request.upload_id)
         if request.upload_id in request.source_upload_ids:
             raise HTTPException(status_code=422, detail="Source uploads must be unique.")
@@ -45,6 +45,7 @@ class JobService:
                 )
             job = Job(
                 id=uuid4().hex,
+                account_id=account_id,
                 upload_id=request.upload_id,
                 source_upload_ids=request.source_upload_ids,
                 operation=request.operation,

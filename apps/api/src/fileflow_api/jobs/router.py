@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Request, status
 
+from fileflow_api.accounts.router import current_account
 from fileflow_api.jobs.contracts import JobCreate, JobResponse
 from fileflow_api.jobs.service import JobService
 
@@ -13,7 +14,11 @@ def service(request: Request) -> JobService:
 
 @router.post("", response_model=JobResponse, status_code=status.HTTP_202_ACCEPTED)
 def create_job(payload: JobCreate, request: Request) -> JobResponse:
-    return JobResponse.model_validate(service(request).create(payload), from_attributes=True)
+    account = current_account(request, request.headers.get("Authorization"))
+    request.app.state.account_service.require_available_job(account.id)
+    return JobResponse.model_validate(
+        service(request).create(payload, account.id), from_attributes=True
+    )
 
 
 @router.get("/{job_id}", response_model=JobResponse)

@@ -8,6 +8,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
+from fileflow_api.accounts.router import router as account_router
+from fileflow_api.accounts.service import AccountService
 from fileflow_api.config import Settings, get_settings
 from fileflow_api.contracts import MessageResponse
 from fileflow_api.database import build_engine, build_session_factory
@@ -35,6 +37,7 @@ def create_app(
     task_queue: TaskQueue | None = None,
     job_service: JobService | None = None,
     import_service: SocialImportService | None = None,
+    account_service: AccountService | None = None,
 ) -> FastAPI:
     current = settings or get_settings()
     app = FastAPI(
@@ -70,12 +73,13 @@ def create_app(
     app.state.import_service = import_service or SocialImportService(
         sessions, storage, queue, YtDlpClient(), current
     )
+    app.state.account_service = account_service or AccountService(sessions, current)
     app.add_middleware(
         CORSMiddleware,
         allow_origins=[str(origin).rstrip("/") for origin in current.allowed_origins],
         allow_credentials=False,
         allow_methods=["GET", "POST", "DELETE", "OPTIONS"],
-        allow_headers=["Content-Type", "X-Request-ID"],
+        allow_headers=["Authorization", "Content-Type", "X-Request-ID"],
     )
 
     @app.middleware("http")
@@ -98,6 +102,7 @@ def create_app(
     app.include_router(uploads_router, prefix=current.api_prefix)
     app.include_router(jobs_router, prefix=current.api_prefix)
     app.include_router(imports_router, prefix=current.api_prefix)
+    app.include_router(account_router, prefix=current.api_prefix)
 
     @app.get("/", response_model=MessageResponse, include_in_schema=False)
     def root() -> MessageResponse:

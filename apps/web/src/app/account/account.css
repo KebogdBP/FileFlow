@@ -1,0 +1,78 @@
+.account-shell {
+  width: min(100% - 2rem, 70rem);
+  margin: 0 auto;
+  padding: 1.5rem 0 5rem;
+}
+.account-header,
+.account-card-heading,
+.account-mode {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+.account-header a {
+  color: var(--ff-color-text);
+}
+.account-intro {
+  max-width: 44rem;
+  margin: 5rem 0 2.5rem;
+}
+.account-intro h1 {
+  margin: 0.4rem 0 1rem;
+  font-size: clamp(2.5rem, 7vw, 5.5rem);
+  line-height: 0.95;
+  letter-spacing: -0.055em;
+}
+.account-intro p:last-child {
+  color: var(--ff-color-text-muted);
+  font-size: 1.1rem;
+}
+.account-auth {
+  max-width: 34rem;
+}
+.account-auth form {
+  display: grid;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+.account-mode {
+  justify-content: flex-start;
+}
+.account-error {
+  color: var(--ff-color-danger);
+  margin: 0;
+}
+.account-dashboard {
+  display: grid;
+  gap: 1rem;
+}
+.account-card-heading h2 {
+  margin: 0.75rem 0;
+}
+.account-history {
+  list-style: none;
+  padding: 0;
+  margin: 1rem 0 0;
+}
+.account-history li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 0;
+  border-top: 1px solid var(--ff-color-border);
+}
+.account-history small {
+  display: block;
+  color: var(--ff-color-text-muted);
+  margin-top: 0.25rem;
+}
+@media (max-width: 38rem) {
+  .account-card-heading {
+    align-items: flex-start;
+  }
+  .account-intro {
+    margin-top: 3rem;
+  }
+}

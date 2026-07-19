@@ -907,7 +907,7 @@ AI-agent tool layer
 
 ## 27. Текущий статус
 
-На текущем этапе M01–M20 завершены:
+На текущем этапе M01–M21 завершены:
 
 - repository foundation и CI работают;
 - design tokens и типографическая шкала определены;
@@ -931,12 +931,13 @@ AI-agent tool layer
 - isolated DOCX и PDF handlers конвертируют, объединяют, разделяют и оптимизируют документы;
 - единый intent-based workspace связывает input, inspection, operation choice и confirmation;
 - image batch связывает multi-file inspection, общие настройки, последовательную local обработку, grouped progress и cancellation;
+- приватные аккаунты связывают cloud job ownership, историю и серверные дневные лимиты;
 - responsive и accessibility foundation готовы;
 - unit tests, lint, typecheck и build проходят.
 
 Следующая цель:
 
-> Перейти к M21 — Authentication, History and Limits.
+> Перейти к M22 — Intent SEO and Product Analytics.
 
 ## 28. Ближайший результат
 
@@ -980,7 +981,9 @@ M19 завершён: unified source flow, category-aware intents, explainable p
 
 M20 завершён: verified image batches, shared settings, bounded sequential execution, aggregate progress и cancellation готовы.
 
-Следующий этап — M21: Authentication, History and Limits.
+M21 завершён: private accounts, revocable sessions, authenticated cloud history и daily limits готовы.
+
+Следующий этап — M22: Intent SEO and Product Analytics.
 
 ## 29. Итог
 
