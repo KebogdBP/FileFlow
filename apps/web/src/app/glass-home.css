@@ -115,11 +115,11 @@
   letter-spacing: -0.035em;
 }
 
-.ff-logo > span {
-  color: var(--home-blue);
-  font-size: 23px;
-  font-weight: 950;
-  letter-spacing: -0.25em;
+.ff-logo-mark {
+  width: 34px;
+  height: 30px;
+  flex: 0 0 auto;
+  object-fit: contain;
 }
 
 .ff-sidebar nav {
@@ -235,6 +235,41 @@
   padding: 0 12px;
   border-radius: 14px;
   color: var(--home-muted);
+}
+
+.ff-language-switch {
+  min-height: 46px;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  padding: 5px 7px 5px 10px;
+  border-radius: 14px;
+  color: var(--home-muted);
+}
+
+.ff-language-switch > svg {
+  margin-right: 3px;
+}
+
+.ff-language-switch button {
+  min-width: 34px;
+  height: 30px;
+  padding: 0 6px;
+  border: 0;
+  border-radius: 9px;
+  color: var(--home-muted);
+  background: transparent;
+  font: inherit;
+  font-size: 10px;
+  font-weight: 850;
+  cursor: pointer;
+  transition: color 160ms ease, background 160ms ease, box-shadow 160ms ease;
+}
+
+.ff-language-switch button[data-active] {
+  color: white;
+  background: linear-gradient(135deg, var(--home-blue), var(--home-blue-2));
+  box-shadow: 0 6px 14px color-mix(in srgb, var(--home-blue) 28%, transparent);
 }
 
 .ff-theme-switch button {
@@ -511,12 +546,17 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 5px;
+  gap: 0;
   border: 1px solid var(--glass-border);
   border-radius: 10px;
   background: rgba(255, 255, 255, 0.16);
-  font-size: 10px;
+  font-size: 0;
   font-weight: 720;
+}
+
+.ff-platforms svg {
+  width: 21px;
+  height: 21px;
 }
 
 .ff-platforms .youtube {
@@ -592,7 +632,7 @@
 
 .ff-tool-card {
   position: relative;
-  min-height: 116px;
+  min-height: 150px;
   display: grid;
   grid-template-columns: 48px 1fr;
   align-items: center;
@@ -608,7 +648,8 @@
 
 .ff-tool-card h3 {
   margin: 0;
-  font-size: 14px;
+  font-size: 28px;
+  line-height: 1.05;
   letter-spacing: -0.02em;
 }
 
@@ -958,6 +999,9 @@
   .ff-sign-in {
     display: none;
   }
+  .ff-language-switch > svg {
+    display: none;
+  }
   .ff-intake-grid,
   .ff-status-grid {
     grid-template-columns: 1fr;
@@ -976,6 +1020,13 @@
 @media (max-width: 560px) {
   .ff-top-actions .compact {
     display: none;
+  }
+  .ff-language-switch {
+    min-height: 42px;
+    padding: 4px;
+  }
+  .ff-language-switch button {
+    min-width: 31px;
   }
   .ff-hero {
     padding-top: 10px;

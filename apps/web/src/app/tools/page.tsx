@@ -1,5 +1,6 @@
 import React from 'react';
 import type { Metadata } from 'next';
+import Image from 'next/image';
 import Link from 'next/link';
 import { Badge, Card } from '@fileflow/ui';
 import { intentCatalog } from './intent-catalog';
@@ -15,7 +16,8 @@ export default function ToolsPage() {
     <main className="tools-shell">
       <header className="tools-header">
         <Link className="landing-brand" href="/">
-          <span className="landing-mark" aria-hidden="true" /> FileFlow
+          <Image src="/brand/fileflow-mark.png" alt="" width={34} height={30} priority />
+          <strong>FileFlow</strong>
         </Link>
         <Link href="/workspace">Open workspace</Link>
       </header>

@@ -1,5 +1,6 @@
 import React from 'react';
 import type { Metadata } from 'next';
+import Image from 'next/image';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { Badge } from '@fileflow/ui';
@@ -49,7 +50,8 @@ export default async function IntentPage({ params }: PageProps) {
       <IntentAnalytics intent={entry.id} />
       <header className="tools-header">
         <Link className="landing-brand" href="/">
-          <span className="landing-mark" aria-hidden="true" /> FileFlow
+          <Image src="/brand/fileflow-mark.png" alt="" width={34} height={30} priority />
+          <strong>FileFlow</strong>
         </Link>
         <Link href="/tools">All tools</Link>
       </header>
