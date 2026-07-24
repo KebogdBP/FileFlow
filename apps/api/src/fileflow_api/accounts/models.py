@@ -16,6 +16,7 @@ class Account(Base):
 
     id: Mapped[str] = mapped_column(String(32), primary_key=True)
     email: Mapped[str] = mapped_column(String(320), unique=True, index=True)
+    display_name: Mapped[str] = mapped_column(String(80))
     password_hash: Mapped[str] = mapped_column(String(255))
     plan: Mapped[AccountPlan] = mapped_column(Enum(AccountPlan), default=AccountPlan.FREE)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))

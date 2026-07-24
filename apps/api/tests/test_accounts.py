@@ -24,11 +24,16 @@ def test_register_authenticate_and_revoke_session() -> None:
     api = client()
     registered = api.post(
         "/api/v1/account/register",
-        json={"email": "Person@Example.com", "password": "long-test-password"},
+        json={
+            "display_name": "  Flow   Tester  ",
+            "email": "Person@Example.com",
+            "password": "long-test-password",
+        },
     )
     assert registered.status_code == 201
     payload = registered.json()
     assert payload["account"]["email"] == "person@example.com"
+    assert payload["account"]["display_name"] == "Flow Tester"
     assert payload["account"]["plan"] == "free"
     headers = {"Authorization": f"Bearer {payload['access_token']}"}
     assert api.get("/api/v1/account/me", headers=headers).status_code == 200

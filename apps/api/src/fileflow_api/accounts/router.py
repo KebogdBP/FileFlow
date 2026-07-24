@@ -43,7 +43,9 @@ def current_account(
 
 @router.post("/register", response_model=SessionResponse, status_code=status.HTTP_201_CREATED)
 def register(payload: AccountCreate, request: Request) -> SessionResponse:
-    account, token, expires_at = service(request).register(payload.email, payload.password)
+    account, token, expires_at = service(request).register(
+        payload.email, payload.password, payload.display_name
+    )
     return SessionResponse(
         access_token=token,
         expires_at=expires_at,

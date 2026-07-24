@@ -5,7 +5,13 @@ import type { FormEvent } from 'react';
 import { Badge, Button, Card, Input } from '@fileflow/ui';
 import { ACCOUNT_TOKEN_KEY, API_URL, downloadJobResult } from '../cloud-api';
 
-type Account = { id: string; email: string; plan: 'free'; created_at: string };
+type Account = {
+  id: string;
+  email: string;
+  display_name: string;
+  plan: 'free';
+  created_at: string;
+};
 type Limits = {
   cloud_jobs_used: number;
   cloud_jobs_limit: number;
@@ -73,14 +79,23 @@ export function AccountDashboard() {
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setBusy(true);
     setMessage('');
     const data = new FormData(event.currentTarget);
+    const password = String(data.get('password') ?? '');
+    if (mode === 'register' && password !== String(data.get('confirmPassword') ?? '')) {
+      setMessage('Passwords do not match.');
+      return;
+    }
+    setBusy(true);
     try {
       const response = await fetch(`${API_URL}/account/${mode}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: data.get('email'), password: data.get('password') }),
+        body: JSON.stringify({
+          email: data.get('email'),
+          password,
+          ...(mode === 'register' ? { display_name: data.get('displayName') } : {}),
+        }),
       });
       const payload = (await response.json()) as {
         access_token?: string;
@@ -181,6 +196,16 @@ export function AccountDashboard() {
           </Button>
         </div>
         <form onSubmit={submit}>
+          {mode === 'register' ? (
+            <Input
+              label="Name or nickname"
+              name="displayName"
+              autoComplete="nickname"
+              minLength={2}
+              maxLength={80}
+              required
+            />
+          ) : null}
           <Input label="Email" name="email" type="email" autoComplete="email" required />
           <Input
             label="Password"
@@ -190,6 +215,16 @@ export function AccountDashboard() {
             minLength={mode === 'register' ? 12 : 1}
             required
           />
+          {mode === 'register' ? (
+            <Input
+              label="Confirm password"
+              name="confirmPassword"
+              type="password"
+              autoComplete="new-password"
+              minLength={12}
+              required
+            />
+          ) : null}
           {message && (
             <p className="account-error" role="alert">
               {message}
@@ -209,7 +244,8 @@ export function AccountDashboard() {
         <div className="account-card-heading">
           <div>
             <Badge variant="private">{account.plan}</Badge>
-            <h2>{account.email}</h2>
+            <h2>{account.display_name}</h2>
+            <p>{account.email}</p>
           </div>
           <Button variant="secondary" onClick={logout}>
             Sign out

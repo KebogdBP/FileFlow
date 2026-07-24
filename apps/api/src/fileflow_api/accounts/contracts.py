@@ -7,6 +7,7 @@ from fileflow_api.jobs.contracts import JobResponse
 
 
 class AccountCreate(BaseModel):
+    display_name: str = Field(default="FileFlow user", min_length=2, max_length=80)
     email: str = Field(min_length=3, max_length=320)
     password: str = Field(min_length=12, max_length=128)
 
@@ -18,6 +19,14 @@ class AccountCreate(BaseModel):
             raise ValueError("email must be a valid address")
         return normalized
 
+    @field_validator("display_name")
+    @classmethod
+    def valid_display_name(cls, value: str) -> str:
+        normalized = " ".join(value.split())
+        if len(normalized) < 2:
+            raise ValueError("display name must contain at least 2 characters")
+        return normalized
+
 
 class AccountLogin(BaseModel):
     email: str = Field(min_length=3, max_length=320)
@@ -27,6 +36,7 @@ class AccountLogin(BaseModel):
 class AccountResponse(BaseModel):
     id: str
     email: str
+    display_name: str
     plan: AccountPlan
     created_at: datetime
 

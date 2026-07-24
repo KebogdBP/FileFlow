@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import Image from 'next/image';
 import Link from 'next/link';
 import { AccountDashboard } from './account-dashboard';
 import './account.css';
@@ -13,7 +14,8 @@ export default function AccountPage() {
     <main className="account-shell">
       <header className="account-header">
         <Link className="landing-brand" href="/" aria-label="FileFlow home">
-          <span className="landing-mark" aria-hidden="true" /> FileFlow
+          <Image src="/brand/fileflow-mark.png" alt="" width={34} height={30} priority />
+          <strong>FileFlow</strong>
         </Link>
         <Link href="/workspace">Workspace</Link>
       </header>

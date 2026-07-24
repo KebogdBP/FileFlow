@@ -40,10 +40,13 @@ class AccountService:
         self._sessions = sessions
         self._settings = settings
 
-    def register(self, email: str, password: str) -> tuple[Account, str, datetime]:
+    def register(
+        self, email: str, password: str, display_name: str
+    ) -> tuple[Account, str, datetime]:
         account = Account(
             id=uuid4().hex,
             email=email.strip().lower(),
+            display_name=" ".join(display_name.split()),
             password_hash=_password_hash(password),
             plan=AccountPlan.FREE,
             created_at=datetime.now(UTC),
