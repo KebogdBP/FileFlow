@@ -55,6 +55,33 @@
   padding: 0;
   margin: 1rem 0 0;
 }
+
+.api-key-card form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: var(--ff-space-3);
+}
+
+.api-key-secret {
+  display: grid;
+  gap: var(--ff-space-2);
+  margin-top: var(--ff-space-4);
+  padding: var(--ff-space-4);
+  border-radius: var(--ff-radius-md);
+  background: var(--ff-color-warning-soft);
+}
+
+.api-key-secret code {
+  overflow-wrap: anywhere;
+  user-select: all;
+}
+
+.history-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--ff-space-2);
+}
 .account-history li {
   display: flex;
   justify-content: space-between;

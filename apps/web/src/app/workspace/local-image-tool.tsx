@@ -17,7 +17,15 @@ type ToolState =
   | { status: 'completed'; url: string; size: number; width: number; height: number }
   | { status: 'error'; message: string };
 
-export function LocalImageTool({ file, sourceMime }: { file: File; sourceMime: string }) {
+export function LocalImageTool({
+  file,
+  sourceMime,
+  operationId = 'optimize-image',
+}: {
+  file: File;
+  sourceMime: string;
+  operationId?: string;
+}) {
   const [quality, setQuality] = useState(82);
   const [maxDimension, setMaxDimension] = useState(0);
   const [state, setState] = useState<ToolState>({ status: 'idle' });
@@ -61,7 +69,7 @@ export function LocalImageTool({ file, sourceMime }: { file: File; sourceMime: s
       const job = runner.run(
         {
           id: `image-${Date.now()}`,
-          operationId: 'optimize-image',
+          operationId,
           input,
           options: { sourceMime, quality: quality / 100, maxDimension },
         },
@@ -91,7 +99,11 @@ export function LocalImageTool({ file, sourceMime }: { file: File; sourceMime: s
       <div className="image-tool-heading">
         <div>
           <Badge variant="local">LOCAL IMAGE TOOL</Badge>
-          <h3 id="local-image-title">Create a lighter WebP</h3>
+          <h3 id="local-image-title">
+            {operationId === 'remove-image-metadata'
+              ? 'Create a metadata-free WebP'
+              : 'Create a lighter WebP'}
+          </h3>
         </div>
         <span>Re-encoding removes embedded metadata</span>
       </div>
@@ -126,7 +138,9 @@ export function LocalImageTool({ file, sourceMime }: { file: File; sourceMime: s
           </Button>
         ) : (
           <Button type="button" onClick={() => void processImage()}>
-            Create WebP locally
+            {operationId === 'remove-image-metadata'
+              ? 'Remove metadata locally'
+              : 'Create WebP locally'}
           </Button>
         )}
         <span>Source: {formatFileSize(file.size)} · never uploaded</span>

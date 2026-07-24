@@ -21,7 +21,7 @@ export const operations = [
     displayName: 'Remove private metadata',
     executionMode: 'local',
     supportedInputs: ['image'],
-    supportedOutputs: ['original'],
+    supportedOutputs: ['webp'],
   },
   {
     id: 'compress-video',
@@ -54,7 +54,7 @@ export const operations = [
   {
     id: 'optimize-audio',
     displayName: 'Make this audio easier to share',
-    executionMode: 'hybrid',
+    executionMode: 'cloud',
     supportedInputs: ['audio'],
     supportedOutputs: ['mp3', 'original'],
   },
@@ -78,6 +78,13 @@ export const operations = [
     executionMode: 'cloud',
     supportedInputs: ['audio'],
     supportedOutputs: ['mp3'],
+  },
+  {
+    id: 'merge-pdf',
+    displayName: 'Merge PDF files',
+    executionMode: 'cloud',
+    supportedInputs: ['pdf'],
+    supportedOutputs: ['pdf'],
   },
   {
     id: 'compress-pdf',
@@ -147,8 +154,6 @@ export type RecommendationResult =
   | { status: 'blocked'; reason: string }
   | { status: 'unsupported'; reason: string };
 
-const LOCAL_AUDIO_LIMIT = 250 * 1024 * 1024;
-
 export function availableOperations(
   context: RecommendationContext,
 ): readonly OperationDefinition[] {
@@ -186,7 +191,7 @@ export function recommendOperation(
     case 'video':
       return { status: 'ready', plan: videoPlan() };
     case 'audio':
-      return { status: 'ready', plan: audioPlan(context.size) };
+      return { status: 'ready', plan: audioPlan() };
     case 'pdf':
       return { status: 'ready', plan: pdfPlan() };
     case 'document':
@@ -205,7 +210,7 @@ function selectedPlan(
 ): RecommendationPlan {
   if (operation.id === 'optimize-image') return imagePlan(context);
   if (operation.id === 'compress-video') return videoPlan();
-  if (operation.id === 'optimize-audio') return audioPlan(context.size);
+  if (operation.id === 'optimize-audio') return audioPlan();
   if (operation.id === 'compress-pdf') return pdfPlan();
   if (operation.id === 'docx-to-pdf') return documentPlan();
   const mode: ProcessingMode = operation.executionMode === 'local' ? 'local' : 'cloud';
@@ -303,22 +308,16 @@ function videoPlan(): RecommendationPlan {
   };
 }
 
-function audioPlan(size: number): RecommendationPlan {
-  const mode: ProcessingMode = size <= LOCAL_AUDIO_LIMIT ? 'local' : 'cloud';
+function audioPlan(): RecommendationPlan {
+  const mode: ProcessingMode = 'cloud';
   return {
     operationId: 'optimize-audio',
     title: 'Make this audio easier to share',
     outcome: 'A compact MP3 that keeps clear speech and music.',
     mode,
-    reason:
-      mode === 'local'
-        ? 'This file is within the safe on-device size range.'
-        : 'This file is too large for reliable in-browser encoding.',
+    reason: 'Reliable MP3 encoding currently runs in the protected processing worker.',
     expectation: 'A predictable balance of sound quality and file size.',
-    privacy:
-      mode === 'local'
-        ? 'Runs on this device. The source file is not uploaded.'
-        : 'Requires encrypted cloud processing with automatic temporary-file cleanup.',
+    privacy: 'Requires encrypted cloud processing with automatic temporary-file cleanup.',
     defaults: [
       {
         label: 'Bitrate',

@@ -11,6 +11,7 @@ const descriptions: Record<string, string> = {
   'audio-to-mp3': 'Convert audio to an MP3 that works across common players.',
   'audio-to-wav': 'Convert audio to an uncompressed WAV for editing and production.',
   'trim-audio': 'Keep the part of an audio file you need and remove the rest.',
+  'merge-pdf': 'Combine between two and twenty PDF files in the order you choose.',
   'compress-pdf': 'Make a PDF smaller while protecting text readability and page order.',
   'split-pdf': 'Extract selected PDF pages into a focused new document.',
   'pdf-to-jpg': 'Turn a PDF page into a checked JPG image.',

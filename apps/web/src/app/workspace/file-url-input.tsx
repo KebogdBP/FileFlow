@@ -27,6 +27,8 @@ import { inspectFile, type FileInspection, type FileInspectionResult } from './f
 import { LocalImageTool } from './local-image-tool';
 import { BatchImageTool } from './batch-image-tool';
 import { MAX_BATCH_FILES, validateBatchCount } from './batch-model';
+import { CloudJobTool } from './cloud-job-tool';
+import { SocialImportTool } from './social-import-tool';
 
 type Source = { kind: 'file'; file: File } | { kind: 'url'; url: string; platform: InputPlatform };
 type BatchInspection = { file: File; result: FileInspectionResult };
@@ -36,12 +38,18 @@ type InspectionState =
   | { status: 'ready'; value: FileInspection }
   | { status: 'error'; error: string };
 
-export function FileUrlInput({ initialIntent }: { initialIntent?: string }) {
-  const [tab, setTab] = useState<'file' | 'url'>('file');
+export function FileUrlInput({
+  initialIntent,
+  initialUrl,
+}: {
+  initialIntent?: string;
+  initialUrl?: string;
+}) {
+  const [tab, setTab] = useState<'file' | 'url'>(initialUrl ? 'url' : 'file');
   const [source, setSource] = useState<Source>();
   const [error, setError] = useState('');
   const [dragActive, setDragActive] = useState(false);
-  const [urlValue, setUrlValue] = useState('');
+  const [urlValue, setUrlValue] = useState(initialUrl ?? '');
   const [inspection, setInspection] = useState<InspectionState>({ status: 'idle' });
   const [batch, setBatch] = useState<BatchInspection[]>();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -240,7 +248,9 @@ export function FileUrlInput({ initialIntent }: { initialIntent?: string }) {
         {source?.kind === 'file' ? (
           <FileInspectorPanel state={inspection} file={source.file} initialIntent={initialIntent} />
         ) : null}
-        {source?.kind === 'url' ? <UrlIntentPanel platform={source.platform} /> : null}
+        {source?.kind === 'url' ? (
+          <UrlIntentPanel platform={source.platform} url={source.url} />
+        ) : null}
       </div>
 
       <div className="input-privacy-note">
@@ -271,13 +281,17 @@ function BatchPanel({
   onRemove: () => void;
 }) {
   const images: { file: File; sourceMime: 'image/jpeg' | 'image/png' }[] = [];
+  const pdfs: File[] = [];
   for (const { file, result } of batch) {
     if (!result.ok || result.inspection.confidence === 'mismatch') continue;
     const sourceMime = result.inspection.detectedMime;
     if (sourceMime === 'image/jpeg' || sourceMime === 'image/png')
       images.push({ file, sourceMime });
+    if (sourceMime === 'application/pdf') pdfs.push(file);
   }
-  const ready = images.length === batch.length;
+  const imageReady = images.length === batch.length;
+  const pdfReady = pdfs.length === batch.length;
+  const ready = imageReady || pdfReady;
   return (
     <>
       <div className="batch-summary">
@@ -287,16 +301,19 @@ function BatchPanel({
           </Badge>
           <strong>{batch.length} files inspected locally</strong>
           <p>
-            {ready
+            {imageReady
               ? 'All files are compatible JPG or PNG images and can share one local operation.'
-              : `${batch.length - images.length} file(s) cannot join this image batch. Use matching verified JPG or PNG files.`}
+              : pdfReady
+                ? 'All files are verified PDFs and can be merged in the selected order.'
+                : 'Use a matching batch of verified JPG/PNG images or PDF files.'}
           </p>
         </div>
         <Button type="button" size="sm" variant="ghost" onClick={onRemove}>
           Clear batch
         </Button>
       </div>
-      {ready ? <BatchImageTool images={images} /> : null}
+      {imageReady ? <BatchImageTool images={images} /> : null}
+      {pdfReady ? <CloudJobTool operationId="merge-pdf" files={pdfs} /> : null}
     </>
   );
 }
@@ -487,11 +504,12 @@ function FileInspectorPanel({
           {item.notice}
         </p>
       </section>
-      <RecommendationPanel context={context} initialIntent={initialIntent} />
-      {item.confidence !== 'mismatch' &&
-      (item.detectedMime === 'image/jpeg' || item.detectedMime === 'image/png') ? (
-        <LocalImageTool file={file} sourceMime={item.detectedMime} />
-      ) : null}
+      <RecommendationPanel
+        context={context}
+        initialIntent={initialIntent}
+        file={file}
+        sourceMime={item.detectedMime}
+      />
     </>
   );
 }
@@ -499,9 +517,13 @@ function FileInspectorPanel({
 function RecommendationPanel({
   context,
   initialIntent,
+  file,
+  sourceMime,
 }: {
   context: RecommendationContext;
   initialIntent?: string;
+  file: File;
+  sourceMime?: string;
 }) {
   const [operationId, setOperationId] = useState<string>();
   const [confirmed, setConfirmed] = useState(false);
@@ -572,11 +594,19 @@ function RecommendationPanel({
           {confirmed ? 'Confirmed' : 'Confirm intent'}
         </Button>
       </div>
+      {confirmed && result.plan.mode === 'cloud' ? (
+        <CloudJobTool operationId={result.plan.operationId} files={[file]} />
+      ) : null}
+      {confirmed &&
+      result.plan.mode === 'local' &&
+      (sourceMime === 'image/jpeg' || sourceMime === 'image/png') ? (
+        <LocalImageTool file={file} sourceMime={sourceMime} operationId={result.plan.operationId} />
+      ) : null}
     </section>
   );
 }
 
-function UrlIntentPanel({ platform }: { platform: InputPlatform }) {
+function UrlIntentPanel({ platform, url }: { platform: InputPlatform; url: string }) {
   const [confirmed, setConfirmed] = useState(false);
   return (
     <section className="intent-workspace url-intent" aria-labelledby="url-intent-title">
@@ -613,6 +643,7 @@ function UrlIntentPanel({ platform }: { platform: InputPlatform }) {
           {confirmed ? 'Confirmed' : 'Confirm import'}
         </Button>
       </div>
+      {confirmed ? <SocialImportTool url={url} /> : null}
     </section>
   );
 }

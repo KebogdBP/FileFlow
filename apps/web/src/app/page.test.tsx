@@ -6,43 +6,44 @@ import { describe, expect, it } from 'vitest';
 import HomePage, { metadata } from './page';
 import { MODULE_MARKER } from './constants';
 
-const landingCss = readFileSync(resolve('src/app/globals.css'), 'utf8');
+const landingCss = readFileSync(resolve('src/app/glass-home.css'), 'utf8');
 
-describe('privacy-first landing page', () => {
+describe('glass File Flow landing page', () => {
   const markup = renderToStaticMarkup(<HomePage />);
 
   it('presents the product positioning and current module', () => {
     expect(MODULE_MARKER).toBe('M22');
-    expect(markup).toContain('Your files. Your device. Your call.');
-    expect(markup).toContain('LOCAL-FIRST FILE TOOLS');
-    expect(metadata.description).toContain('local processing');
+    expect(markup).toContain('Convert, compress and download');
+    expect(markup).toContain('Private file workspace');
+    expect(metadata.description).toContain('Convert images, video, audio, PDF and DOCX');
   });
 
-  it('makes local, cloud and retention behavior explicit', () => {
-    expect(markup).toContain('On-device when possible');
-    expect(markup).toContain('Cloud only when necessary');
-    expect(markup).toContain('Temporary means temporary');
-    expect(markup).toContain('No hidden uploads');
+  it('makes privacy and processing behavior explicit', () => {
+    expect(markup).toContain('Inspect locally');
+    expect(markup).toContain('Review the plan');
+    expect(markup).toContain('Clean up');
+    expect(markup).toContain('Local processing whenever possible');
   });
 
-  it('has landmark navigation and a logical heading hierarchy', () => {
+  it('has functional inputs and landmark navigation', () => {
     expect(markup).toContain('aria-label="Primary navigation"');
+    expect(markup).toContain('type="file"');
+    expect(markup).toContain('type="url"');
     expect(markup.match(/<h1/g)).toHaveLength(1);
-    expect(markup).toContain('id="privacy-title"');
-    expect(markup).toContain('id="how-title"');
     expect(markup).toContain('id="tools-title"');
   });
 
-  it('keeps functional file input outside the M04 scope', () => {
-    expect(markup).toContain('Workspace preview');
-    expect(markup).not.toContain('type="file"');
+  it('distinguishes current actions from roadmap media tools', () => {
+    expect(markup).toContain('Compress PDF');
+    expect(markup).toContain('Compress video');
+    expect(markup).toContain('AI transcription');
+    expect(markup).toContain('Roadmap');
   });
 
-  it('defines responsive desktop, tablet and mobile layouts', () => {
-    expect(landingCss).toContain('@media (max-width: 900px)');
-    expect(landingCss).toContain('@media (max-width: 620px)');
-    expect(landingCss).toMatch(
-      /@media \(max-width: 900px\)[\s\S]*\.landing-hero\s*\{[^}]*grid-template-columns: 1fr;/,
-    );
+  it('defines light, dark and responsive layouts', () => {
+    expect(landingCss).toContain(":root[data-theme='dark']");
+    expect(landingCss).toContain('@media (max-width: 790px)');
+    expect(landingCss).toContain('@media (max-width: 560px)');
+    expect(landingCss).toContain('@media (prefers-reduced-motion: reduce)');
   });
 });

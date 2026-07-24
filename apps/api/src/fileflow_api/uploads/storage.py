@@ -11,6 +11,8 @@ class ObjectStorage(Protocol):
 
     def presign_part(self, key: str, upload_id: str, part_number: int, ttl: int) -> str: ...
 
+    def upload_part(self, key: str, upload_id: str, part_number: int, body: bytes) -> str: ...
+
     def complete_multipart(
         self, key: str, upload_id: str, parts: list[tuple[int, str]]
     ) -> None: ...
@@ -66,6 +68,16 @@ class S3ObjectStorage:
                 ExpiresIn=ttl,
             )
         )
+
+    def upload_part(self, key: str, upload_id: str, part_number: int, body: bytes) -> str:
+        response = self._client.upload_part(
+            Bucket=self._bucket,
+            Key=key,
+            UploadId=upload_id,
+            PartNumber=part_number,
+            Body=body,
+        )
+        return str(response["ETag"])
 
     def complete_multipart(self, key: str, upload_id: str, parts: list[tuple[int, str]]) -> None:
         self._client.complete_multipart_upload(

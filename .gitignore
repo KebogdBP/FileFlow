@@ -3,6 +3,7 @@ node_modules
 .turbo
 .next
 dist
+out
 coverage
 .env
 .env.local
@@ -20,3 +21,4 @@ __pycache__
 .venv
 tmp
 temp
+.openai/*.index

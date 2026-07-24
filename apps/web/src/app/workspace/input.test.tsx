@@ -234,6 +234,10 @@ describe('M05 file and URL input UI', () => {
     expect(container.textContent).toContain('Remove private metadata');
     expect(container.textContent).toContain('Confirm intent');
     expect(container.textContent).toContain('Plan only · nothing has started');
+    const confirm = [...container.querySelectorAll('button')].find(
+      (button) => button.textContent === 'Confirm intent',
+    );
+    await act(async () => confirm?.dispatchEvent(new MouseEvent('click', { bubbles: true })));
     expect(container.textContent).toContain('Create a lighter WebP');
     expect(container.textContent).toContain('Create WebP locally');
     await act(async () => root.unmount());
@@ -283,6 +287,53 @@ describe('M05 file and URL input UI', () => {
     expect(container.textContent).toContain('Process batch locally');
     expect(container.textContent).toContain('one.jpg');
     expect(container.textContent).toContain('two.png');
+    await act(async () => root.unmount());
+  });
+
+  it('reveals the connected cloud controls after confirming a video intent', async () => {
+    const container = document.createElement('div');
+    const root = createRoot(container);
+    await act(async () => root.render(<FileUrlInput initialIntent="compress-video" />));
+    const input = container.querySelector('input[type="file"]') as HTMLInputElement;
+    Object.defineProperty(input, 'files', {
+      configurable: true,
+      value: [mockFile('clip.mp4', 'video/mp4', [0, 0, 0, 0, 0x66, 0x74, 0x79, 0x70])],
+    });
+    await act(async () => {
+      input.dispatchEvent(new Event('change', { bubbles: true }));
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+    const confirm = [...container.querySelectorAll('button')].find(
+      (button) => button.textContent === 'Confirm intent',
+    );
+    await act(async () => confirm?.dispatchEvent(new MouseEvent('click', { bubbles: true })));
+    expect(container.textContent).toContain('Upload and process');
+    expect(container.textContent).toContain('Encoding speed');
+    expect(container.textContent).toContain('Sign in or create one');
+    await act(async () => root.unmount());
+  });
+
+  it('exposes merge PDF for a verified PDF batch', async () => {
+    const container = document.createElement('div');
+    const root = createRoot(container);
+    await act(async () => root.render(<FileUrlInput />));
+    const input = container.querySelector('input[type="file"]') as HTMLInputElement;
+    Object.defineProperty(input, 'files', {
+      configurable: true,
+      value: [
+        mockFile('one.pdf', 'application/pdf', [0x25, 0x50, 0x44, 0x46, 0x2d]),
+        mockFile('two.pdf', 'application/pdf', [0x25, 0x50, 0x44, 0x46, 0x2d]),
+      ],
+    });
+    await act(async () => {
+      input.dispatchEvent(new Event('change', { bubbles: true }));
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+    expect(container.textContent).toContain('All files are verified PDFs');
+    expect(container.textContent).toContain('Merge Pdf');
+    expect(container.textContent).toContain('Upload and process');
     await act(async () => root.unmount());
   });
 

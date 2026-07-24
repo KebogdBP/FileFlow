@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Request, Response, status
 
 from fileflow_api.uploads.contracts import (
+    PartUploadedResponse,
     PartUrlResponse,
     UploadComplete,
     UploadCreate,
@@ -30,6 +31,13 @@ def get_upload(upload_id: str, request: Request) -> UploadResponse:
 def create_part_url(upload_id: str, part_number: int, request: Request) -> PartUrlResponse:
     url, ttl = service(request).presign(upload_id, part_number)
     return PartUrlResponse(part_number=part_number, url=url, expires_in_seconds=ttl)
+
+
+@router.put("/{upload_id}/parts/{part_number}", response_model=PartUploadedResponse)
+async def upload_part(upload_id: str, part_number: int, request: Request) -> PartUploadedResponse:
+    body = await request.body()
+    etag = service(request).upload_part(upload_id, part_number, body)
+    return PartUploadedResponse(part_number=part_number, etag=etag)
 
 
 @router.post("/{upload_id}/complete", response_model=UploadResponse)

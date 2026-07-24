@@ -41,6 +41,11 @@ class PartUrlResponse(BaseModel):
     expires_in_seconds: int
 
 
+class PartUploadedResponse(BaseModel):
+    part_number: int
+    etag: str
+
+
 class CompletedPart(BaseModel):
     part_number: int = Field(ge=1, le=10_000)
     etag: str = Field(min_length=1, max_length=255)

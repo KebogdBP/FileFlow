@@ -2,7 +2,7 @@ import React from 'react';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { Badge } from '@fileflow/ui';
-import { FileUrlInput } from './file-url-input';
+import { WorkspaceLaunch } from './workspace-launch';
 import './workspace.css';
 
 export const metadata: Metadata = {
@@ -10,12 +10,7 @@ export const metadata: Metadata = {
   description: 'Add a local file or supported public media URL to your private FileFlow workspace.',
 };
 
-export default async function WorkspacePage({
-  searchParams,
-}: {
-  searchParams: Promise<{ intent?: string }>;
-}) {
-  const { intent } = await searchParams;
+export default function WorkspacePage() {
   return (
     <main className="input-shell">
       <header className="input-header">
@@ -34,7 +29,7 @@ export default async function WorkspacePage({
         </p>
       </section>
       <section aria-label="File and URL input" data-ff-reveal="2">
-        <FileUrlInput initialIntent={intent} />
+        <WorkspaceLaunch />
       </section>
       <aside className="input-scope-note" aria-label="What happens next">
         <strong>Review before processing</strong>

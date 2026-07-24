@@ -60,6 +60,7 @@ def create_app(
         bucket=current.s3_bucket,
         region=current.s3_region,
     )
+    app.state.object_storage = storage
     queue = task_queue or CeleryTaskQueue(create_celery(current))
     current_safety = safety_service or SafetyService(
         sessions,
@@ -84,8 +85,9 @@ def create_app(
         CORSMiddleware,
         allow_origins=[str(origin).rstrip("/") for origin in current.allowed_origins],
         allow_credentials=False,
-        allow_methods=["GET", "POST", "DELETE", "OPTIONS"],
+        allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
         allow_headers=["Authorization", "Content-Type", "X-Request-ID"],
+        expose_headers=["Content-Disposition", "X-Request-ID"],
     )
 
     @app.middleware("http")

@@ -61,8 +61,8 @@ describe('M07 recommendation and explainability engine', () => {
     });
   });
 
-  it('selects audio mode from the reliable local size threshold', () => {
-    const local = recommendOperation({
+  it('routes audio to the implemented protected encoder', () => {
+    const small = recommendOperation({
       category: 'audio',
       size: 10_000_000,
       confidence: 'verified',
@@ -73,7 +73,7 @@ describe('M07 recommendation and explainability engine', () => {
       confidence: 'verified',
     });
 
-    expect(local).toMatchObject({ status: 'ready', plan: { mode: 'local' } });
+    expect(small).toMatchObject({ status: 'ready', plan: { mode: 'cloud' } });
     expect(cloud).toMatchObject({ status: 'ready', plan: { mode: 'cloud' } });
   });
 
@@ -92,6 +92,7 @@ describe('M07 recommendation and explainability engine', () => {
   it('exposes reviewed intents and builds a plan for the selected backend operation', () => {
     const context = { category: 'pdf' as const, size: 10_000, confidence: 'verified' as const };
     expect(availableOperations(context).map((operation) => operation.id)).toEqual([
+      'merge-pdf',
       'compress-pdf',
       'split-pdf',
       'pdf-to-jpg',

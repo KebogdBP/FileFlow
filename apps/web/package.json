@@ -17,6 +17,8 @@
     "@fileflow/operation-registry": "workspace:*",
     "@fileflow/shared-types": "workspace:*",
     "@fileflow/ui": "workspace:*",
+    "lucide-react": "^1.26.0",
+    "motion": "^12.42.2",
     "next": "^15.4.2",
     "react": "^19.1.0",
     "react-dom": "^19.1.0"

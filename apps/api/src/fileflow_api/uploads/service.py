@@ -88,6 +88,19 @@ class UploadService:
             ttl,
         )
 
+    def upload_part(self, upload_id: str, part_number: int, body: bytes) -> str:
+        upload = self._active(upload_id)
+        if part_number < 1 or part_number > upload.part_count:
+            raise HTTPException(status_code=422, detail="Part number is outside the upload range.")
+        expected_max = upload.part_size_bytes
+        if part_number == upload.part_count:
+            expected_max = upload.size_bytes - upload.part_size_bytes * (upload.part_count - 1)
+        if not body or len(body) > expected_max:
+            raise HTTPException(status_code=422, detail="Upload part has an invalid size.")
+        if part_number < upload.part_count and len(body) != upload.part_size_bytes:
+            raise HTTPException(status_code=422, detail="Upload part has an invalid size.")
+        return self._storage.upload_part(upload.object_key, upload.multipart_id, part_number, body)
+
     def complete(self, upload_id: str, parts: list[CompletedPart]) -> Upload:
         upload = self._active(upload_id)
         ordered = sorted((part.part_number, part.etag.strip()) for part in parts)

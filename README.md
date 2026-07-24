@@ -30,6 +30,25 @@ pnpm install
 pnpm dev
 ```
 
+### Run the complete cloud workflow
+
+Start PostgreSQL, Redis, MinIO, ClamAV, the API and all workers:
+
+```bash
+docker compose --profile backend up --build
+```
+
+In another terminal, start the web application:
+
+```bash
+pnpm dev
+```
+
+Open `http://localhost:3000/account`, create a free account, then use
+`http://localhost:3000/workspace`. Cloud files are uploaded through the FileFlow API,
+scanned by the safety worker, processed by the media/document worker and returned as a
+downloadable result. Select 2–20 PDF files together to use Merge PDF.
+
 Routes:
 
 - landing page: `http://localhost:3000`;

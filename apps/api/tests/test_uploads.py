@@ -15,6 +15,7 @@ class FakeStorage:
     def __init__(self) -> None:
         self.completed: list[tuple[int, str]] | None = None
         self.aborted = False
+        self.uploaded_parts: list[tuple[int, bytes]] = []
 
     def create_multipart(self, key: str, content_type: str) -> str:
         assert key.startswith("temporary/")
@@ -23,6 +24,10 @@ class FakeStorage:
 
     def presign_part(self, key: str, upload_id: str, part_number: int, ttl: int) -> str:
         return f"https://storage.test/{upload_id}/{part_number}?ttl={ttl}"
+
+    def upload_part(self, key: str, upload_id: str, part_number: int, body: bytes) -> str:
+        self.uploaded_parts.append((part_number, body))
+        return f'"part-{part_number}"'
 
     def complete_multipart(self, key: str, upload_id: str, parts: list[tuple[int, str]]) -> None:
         self.completed = parts
@@ -121,3 +126,17 @@ def test_abort_upload(upload_api: tuple[TestClient, FakeStorage]) -> None:
     assert response.status_code == 204
     assert storage.aborted
     assert api.get(f"/api/v1/uploads/{created['id']}").json()["status"] == "aborted"
+
+
+def test_browser_can_proxy_upload_parts_through_the_api(
+    upload_api: tuple[TestClient, FakeStorage],
+) -> None:
+    api, storage = upload_api
+    created = api.post(
+        "/api/v1/uploads",
+        json={"filename": "voice.wav", "content_type": "audio/wav", "size_bytes": 4},
+    ).json()
+    response = api.put(f"/api/v1/uploads/{created['id']}/parts/1", content=b"data")
+    assert response.status_code == 200
+    assert response.json() == {"part_number": 1, "etag": '"part-1"'}
+    assert storage.uploaded_parts == [(1, b"data")]

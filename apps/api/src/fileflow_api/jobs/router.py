@@ -1,4 +1,5 @@
-from fastapi import APIRouter, Request, status
+from fastapi import APIRouter, HTTPException, Request, status
+from fastapi.responses import StreamingResponse
 
 from fileflow_api.accounts.router import current_account
 from fileflow_api.jobs.contracts import JobCreate, JobResponse
@@ -34,4 +35,27 @@ def cancel_job(job_id: str, request: Request) -> JobResponse:
     account = current_account(request, request.headers.get("Authorization"))
     return JobResponse.model_validate(
         service(request).cancel_for_account(job_id, account.id), from_attributes=True
+    )
+
+
+@router.get("/{job_id}/result")
+def download_result(job_id: str, request: Request) -> StreamingResponse:
+    account = current_account(request, request.headers.get("Authorization"))
+    job = service(request).get_for_account(job_id, account.id)
+    if job.status.value != "succeeded" or not job.result_object_key or not job.result_content_type:
+        raise HTTPException(status_code=409, detail="Job result is not available.")
+    extensions = {
+        "video/mp4": ".mp4",
+        "audio/mpeg": ".mp3",
+        "audio/wav": ".wav",
+        "application/pdf": ".pdf",
+        "image/jpeg": ".jpg",
+    }
+    extension = extensions.get(job.result_content_type, ".bin")
+    filename = f"fileflow-{job.operation}{extension}"
+    storage = request.app.state.object_storage
+    return StreamingResponse(
+        storage.iter_object(job.result_object_key),
+        media_type=job.result_content_type,
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
     )
