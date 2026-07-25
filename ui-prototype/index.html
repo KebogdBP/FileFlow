@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="theme-color" content="#f7f8ff" />
+  <title>FileFlow — Private file workspace</title>
+  <meta name="description" content="Private, local-first tools to convert, compress and prepare files." />
+  <link rel="stylesheet" href="prism.css" />
+</head>
+<body>
+  <div class="aurora aurora-a"></div><div class="aurora aurora-b"></div><div class="grain"></div>
+
+  <aside class="rail" id="rail">
+    <div class="rail-brand"><a href="#top" class="brand"><span class="brand-mark"><i></i><i></i></span><strong>FileFlow</strong></a><span class="version">v2.0</span></div>
+    <button class="rail-close" id="rail-close" aria-label="Close menu">×</button>
+    <nav class="rail-nav">
+      <a class="active" href="#top"><span>⌂</span><b data-i18n="nav_home">Home</b></a>
+      <a href="#workspace"><span>▣</span><b data-i18n="nav_files">My files</b></a>
+      <a href="#recent"><span>◷</span><b data-i18n="nav_recent">Recent</b></a>
+      <a href="#tools"><span>☆</span><b data-i18n="nav_favorites">Favorites</b></a>
+    </nav>
+    <p class="rail-label" data-i18n="nav_tools">TOOLS</p>
+    <nav class="rail-nav rail-tools">
+      <a href="#converter"><span>⇄</span><b data-i18n="tool_converter">Converter</b></a>
+      <a href="#tools"><span>⇩</span><b data-i18n="tool_compressor">Compressor</b></a>
+      <a href="#tools"><span>↧</span><b data-i18n="tool_downloader">Downloader</b></a>
+      <a href="#tools"><span>▤</span><b data-i18n="tool_document">Document AI</b></a>
+      <a href="#tools"><span>▧</span><b data-i18n="tool_images">Image tools</b></a>
+      <a href="#tools"><span>♫</span><b data-i18n="tool_audio">Audio tools</b></a>
+      <a href="#tools"><span>▻</span><b data-i18n="tool_video">Video tools</b></a>
+    </nav>
+    <div class="rail-trust"><span class="tiny-shield">◇</span><div><strong data-i18n="local_first">Local-first</strong><p data-i18n="local_desc">Your files are processed on your device.</p></div><a href="#privacy" data-i18n="learn_more">Learn more →</a></div>
+    <div class="storage"><div><b>12.4 GB</b><span>/ 50 GB</span></div><i><b></b></i><button data-i18n="upgrade">Upgrade plan</button></div>
+  </aside>
+
+  <div class="page-shell">
+    <header class="topbar">
+      <button class="mobile-menu" id="mobile-menu" aria-label="Open menu">☰</button>
+      <a href="#top" class="mobile-brand brand"><span class="brand-mark"><i></i><i></i></span><strong>FileFlow</strong></a>
+      <nav><a href="#tools" data-i18n="nav_tools_title">Tools</a><a href="#workspace" data-i18n="nav_use_cases">Use cases</a><a href="#pricing" data-i18n="pricing">Pricing</a><a href="#privacy" data-i18n="privacy">Privacy</a></nav>
+      <div class="top-actions">
+        <div class="language" aria-label="Language"><button class="active" data-lang="en">EN</button><button data-lang="ru">RU</button></div>
+        <label class="liquid-switch compact"><input id="theme-toggle" type="checkbox"/><span><i></i></span><b>☼</b></label>
+        <button class="sign-in" data-i18n="sign_in">Sign in</button>
+      </div>
+    </header>
+
+    <main id="top">
+      <section class="hero-section">
+        <div class="hero-copy">
+          <span class="eyebrow"><i></i><b data-i18n="eyebrow">PRIVATE · FAST · BEAUTIFUL</b></span>
+          <h1 data-i18n-html="hero_title">Any file,<br/><em>any way</em> you need.</h1>
+          <p data-i18n="hero_copy">Convert, compress and prepare your files with privacy-first technology.</p>
+          <div class="proof-pills"><span>◫ <b data-i18n="formats">300+ formats</b></span><span>◇ <b data-i18n="secure">Secure & private</b></span><span>ϟ <b data-i18n="fast">Blazing fast</b></span></div>
+          <div class="prism-actions" id="tools">
+            <button class="prism-app" data-intent="video"><img src="assets/prism/video.png" alt=""/><span data-i18n="quick_video">Video</span></button>
+            <button class="prism-app" data-intent="audio"><img src="assets/prism/music.jpg" alt=""/><span data-i18n="quick_audio">Audio</span></button>
+            <button class="prism-app" data-intent="telegram"><img src="assets/prism/telegram.jpg" alt=""/><span>Telegram</span></button>
+            <button class="prism-app" data-intent="phone"><img src="assets/prism/phone.jpg" alt=""/><span data-i18n="quick_mobile">Mobile</span></button>
+          </div>
+        </div>
+
+        <div class="upload-stage">
+          <label class="drop-card" id="drop-card">
+            <input type="file" id="file-input" multiple/>
+            <span class="upload-orb">↑<i></i></span>
+            <strong data-i18n="drop_title">Drop your files here</strong>
+            <p><span data-i18n="drop_or">or</span> <u data-i18n="browse">click to browse</u></p>
+            <small data-i18n="drop_support">Supports images, video, audio and documents</small>
+            <div class="format-row"><span class="format-icon video">▻</span><span class="format-icon audio">♫</span><span class="format-icon image">▧</span><span class="format-icon pdf">P</span><span class="format-icon doc">W</span><span class="format-icon folder">▰</span></div>
+          </label>
+          <div class="import-bar"><span data-i18n="import_from">Or import from</span><button>↗ URL</button><button>△ Google Drive</button><button>◇ Dropbox</button></div>
+        </div>
+      </section>
+
+      <section class="intent-strip" aria-label="Quick intents">
+        <button data-intent="compress"><span>⌘</span><b data-i18n="make_smaller">Make it smaller</b></button>
+        <button data-intent="audio"><span>♫</span><b data-i18n="extract_audio">Extract audio</b></button>
+        <button data-intent="web"><span>◎</span><b data-i18n="optimize_web">Optimize for web</b></button>
+        <button data-intent="document"><span>▤</span><b data-i18n="convert_doc">Convert document</b></button>
+        <button data-intent="metadata"><span>◇</span><b data-i18n="remove_meta">Remove metadata</b></button>
+      </section>
+
+      <section class="workspace-card" id="workspace">
+        <header class="workspace-top"><div class="brand mini"><span class="brand-mark"><i></i><i></i></span><strong>FileFlow</strong></div><div class="current-file"><span class="file-thumb">IMG</span><div><b id="current-name">mountain-sunrise.jpg</b><small data-i18n="file_meta">Image · 2.4 MB · just now</small></div></div><div class="mode-badges"><span class="local">● LOCAL</span><span class="private">◆ PRIVATE</span></div><button>?</button><button>♙</button></header>
+        <div class="workspace-layout">
+          <nav class="workspace-nav"><p data-i18n="workspace">WORKSPACE</p><a class="active"><span>⌂</span><b data-i18n="dashboard">Dashboard</b></a><a><span>◷</span><b data-i18n="nav_recent">Recent</b></a><a><span>☆</span><b data-i18n="nav_favorites">Favorites</b></a><a><span>♲</span><b data-i18n="trash">Trash</b></a><p data-i18n="nav_tools">TOOLS</p><a><span>▦</span><b data-i18n="all_tools">All tools</b></a><a><span>▧</span><b data-i18n="tool_images">Image tools</b></a><a><span>▻</span><b data-i18n="tool_video">Video tools</b></a><a><span>♫</span><b data-i18n="tool_audio">Audio tools</b></a></nav>
+
+          <div class="source-panel"><p class="panel-label" data-i18n="source">SOURCE</p><div class="source-preview"><div class="mountain-art"><span></span><i></i></div></div><dl><div><dt>▣</dt><dd>1920 × 1280</dd></div><div><dt>◷</dt><dd data-i18n="today">Today, 10:32</dd></div><div><dt>◉</dt><dd>Canon EOS R5</dd></div><div><dt>⌖</dt><dd data-i18n="no_location">No location data</dd></div></dl></div>
+
+          <div class="preview-panel"><div class="preview-tabs"><button class="active" data-i18n="preview">Preview</button><button data-i18n="details">Details</button><button data-i18n="metadata">Metadata</button></div><div class="compare"><div class="compare-side before"><span data-i18n="before">Before</span></div><div class="compare-side after"><span>WebP</span></div><button class="compare-handle">↔</button></div><div class="compare-stats"><div><b>JPG</b><small>2.4 MB</small></div><span>→</span><div><b>WebP</b><small>620 KB</small></div><strong>74% <small data-i18n="smaller">smaller</small></strong></div></div>
+
+          <div class="actions-panel"><p class="panel-label" data-i18n="recommended">RECOMMENDED ACTIONS</p><button class="selected"><span>▧</span><div><b data-i18n="to_webp">Convert to WebP</b><small data-i18n="best_web">Best for web</small></div><i>→</i></button><button><span>♙</span><div><b data-i18n="compress_image">Compress image</b><small data-i18n="reduce_size">Reduce file size</small></div><i>→</i></button><button><span>⌗</span><div><b data-i18n="resize_image">Resize image</b><small data-i18n="reduce_dims">Reduce dimensions</small></div><i>→</i></button><button><span>◇</span><div><b data-i18n="remove_meta">Remove metadata</b><small data-i18n="privacy_protection">Privacy protection</small></div><i>→</i></button></div>
+
+          <aside class="settings-panel"><p class="panel-label" data-i18n="settings">SETTINGS</p><label><span data-i18n="output_format">Output format</span><select><option>WebP</option><option>PNG</option><option>AVIF</option></select></label><label class="quality"><span><b data-i18n="quality">Quality</b><strong id="quality-value">80%</strong></span><input id="quality-range" type="range" min="30" max="100" value="80"/></label><label class="setting-switch"><span><b data-i18n="resize">Resize</b><small>1920 px</small></span><input type="checkbox" checked/><i><b></b></i></label><label class="setting-switch"><span><b data-i18n="strip_meta">Strip metadata</b><small data-i18n="privacy_protection">Privacy protection</small></span><input type="checkbox" checked/><i><b></b></i></label><button class="run-button" id="run-button"><span data-i18n="run_local">Run locally</span><b>ϟ</b></button><small class="local-note" data-i18n="files_stay">Files stay on your device</small></aside>
+        </div>
+      </section>
+
+      <section class="dashboard-grid" id="recent">
+        <article class="audio-card"><header><span class="mini-prism"><img src="assets/prism/music.jpg" alt=""/></span><b data-i18n="audio_waveform">Audio waveform</b></header><div class="wave"><button>▶</button><div id="wave-bars"></div></div><p>01:24 <span>/ 03:15</span></p><footer><span>MP4 → MP3</span><span>128 kbps</span><b data-i18n="done_local">Done locally</b></footer></article>
+        <article class="video-card"><header><span class="mini-prism"><img src="assets/prism/video.png" alt=""/></span><b data-i18n="video_import">Video import</b></header><div class="video-preview"><div class="road"></div><button>▶</button><span>04:31</span></div><footer><span>YouTube 4K</span><b data-i18n="import_video">Import video</b></footer></article>
+        <article class="switch-card"><header><span>◌</span><b data-i18n="local_controls">Liquid controls</b></header><div class="switch-showcase"><label class="liquid-switch large"><input type="checkbox" checked/><span><i></i></span><b data-i18n="private_mode">Private mode</b></label><label class="liquid-switch large"><input type="checkbox"/><span><i></i></span><b data-i18n="cloud_mode">Cloud mode</b></label></div><p data-i18n="switch_copy">Clear states with tactile, accessible controls.</p></article>
+      </section>
+
+      <section class="privacy-row" id="privacy"><article><span>◇</span><div><b data-i18n="built_trust">Built on trust</b><small data-i18n="designed_privacy">Designed for privacy</small></div></article><article><span>▣</span><div><b data-i18n="local_possible">Local whenever possible</b><small data-i18n="device_copy">Your data stays on your device</small></div></article><article><span>♲</span><div><b data-i18n="auto_delete">Automatic deletion</b><small data-i18n="dont_keep">We don't keep your files</small></div></article><article><span>◉</span><div><b data-i18n="no_hidden">No hidden upload</b><small data-i18n="control_copy">You're always in control</small></div></article></section>
+
+      <section class="tools-section"><div class="section-title"><div><h2 data-i18n="intent_title">Get things done with intent-based tools</h2><p data-i18n="intent_copy">Common tasks. Perfect results.</p></div><a href="#tools" data-i18n="explore_tools">Explore all tools →</a></div><div class="tool-cards"><article><span class="tool-glyph violet">▻</span><h3 data-i18n="compress_whatsapp">Compress video for WhatsApp</h3><p data-i18n="whatsapp_copy">Reduce size without losing too much quality.</p><button data-i18n="compress_now">Compress now →</button></article><article><span class="tool-glyph green">▧</span><h3 data-i18n="optimize_websites">Optimize images for websites</h3><p data-i18n="website_copy">Smaller images, faster websites.</p><button data-i18n="optimize_now">Optimize now →</button></article><article><span class="tool-glyph orange">▤</span><h3 data-i18n="pdf_smaller">Make PDF smaller for email</h3><p data-i18n="pdf_copy">Reduce PDF size while keeping quality.</p><button data-i18n="optimize_pdf">Optimize PDF →</button></article><article><span class="tool-glyph blue">♫</span><h3 data-i18n="extract_video_audio">Extract audio from video</h3><p data-i18n="audio_copy">Get a high-quality MP3 from your videos.</p><button data-i18n="extract_now">Extract audio →</button></article></div></section>
+    </main>
+  </div>
+  <div class="toast" id="toast"><span>✓</span><div><strong data-i18n="ready_title">Processed locally</strong><p data-i18n="ready_copy">Your result is ready.</p></div></div>
+  <script src="prism.js"></script>
+</body>
+</html>

@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="theme-color" content="#07090d" />
+  <title>FileFlow — Private file tools</title>
+  <link rel="stylesheet" href="redsun.css" />
+</head>
+<body>
+  <div class="noise"></div><div class="sun-glow glow-one"></div><div class="sun-glow glow-two"></div>
+  <header class="site-header">
+    <a class="logo" href="#top" aria-label="FileFlow home"><span class="logo-symbol"><i></i><i></i></span><strong>FILEFLOW</strong><b></b></a>
+    <button class="menu-toggle" id="menu-toggle" aria-label="Toggle navigation"><span></span><span></span></button>
+    <nav id="site-nav"><a class="active" href="#top">Home</a><a href="#workspace">Workspace</a><a href="#features">Features</a><a href="#privacy">Privacy</a><a href="#tools">Tools</a></nav>
+    <a class="header-cta" href="#workspace">Open workspace <span>↗</span></a>
+  </header>
+
+  <main id="top">
+    <section class="hero">
+      <a class="update-pill" href="#workspace"><span>WHAT'S NEW</span><strong>Local batch tools v0.2</strong><b>›</b></a>
+      <p class="hero-kicker">ONE WORKSPACE. EVERY FILE. YOUR CONTROL.</p>
+      <h1>File work,<br/><em>without the friction.</em></h1>
+      <p class="hero-copy">Convert, compress and prepare files in one focused workspace. FileFlow runs locally whenever possible—and makes every cloud step explicit.</p>
+      <div class="hero-actions"><a class="button primary" href="#workspace">Start with a file <span>↗</span></a><a class="button secondary" href="#features">Explore the system <span>→</span></a></div>
+      <div class="trust-row"><span><i></i>No hidden uploads</span><span><i></i>No account required</span><span><i></i>Processing mode always visible</span></div>
+
+      <div class="hero-orbit" aria-hidden="true">
+        <span class="orbit orbit-a"></span><span class="orbit orbit-b"></span><span class="orbit orbit-c"></span>
+        <div class="core"><span>FF</span><i></i></div>
+        <span class="orbit-label label-local">LOCAL</span><span class="orbit-label label-private">PRIVATE</span><span class="orbit-label label-ready">READY</span>
+      </div>
+    </section>
+
+    <section class="company-strip" aria-label="Product principles"><span>LOCAL FIRST</span><i></i><span>VISIBLE PROCESSING</span><i></i><span>SAFE DEFAULTS</span><i></i><span>PLAIN-LANGUAGE SETTINGS</span></section>
+
+    <section class="workspace-section" id="workspace">
+      <div class="section-heading"><span class="section-index">01 / WORKSPACE</span><h2>One clear flow from<br/>source to result.</h2><p>Technical choices stay available, but never get in your way.</p></div>
+      <div class="workspace-frame">
+        <div class="frame-topbar"><div class="mini-brand"><span></span>FileFlow</div><div class="frame-status"><i></i> Local engine ready</div><button aria-label="More options">•••</button></div>
+        <div class="frame-body">
+          <aside class="frame-sidebar"><button class="active"><span>⌁</span>New workspace</button><button><span>◷</span>Recent</button><button><span>✦</span>Smart tools</button><p>QUICK ACTIONS</p><button><span>▧</span>Images</button><button><span>▷</span>Video</button><button><span>≡</span>Documents</button></aside>
+          <div class="frame-main">
+            <div class="workspace-title"><div><small>NEW WORKSPACE</small><h3>What are you working with?</h3></div><span class="private-badge">⌾ PRIVATE BY DEFAULT</span></div>
+            <div class="source-switch"><button class="active" data-source="file">↑ Device files</button><button data-source="url">↗ From URL</button></div>
+            <div class="source-panel active" id="file-source">
+              <label class="drop-area" id="redsun-drop"><input id="redsun-file" type="file" multiple/><span class="drop-icon">↑</span><strong>Drop files right here</strong><p>or <u>choose from your device</u></p><small>Images, video, audio and documents · up to 2 GB</small></label>
+            </div>
+            <div class="source-panel" id="url-source"><div class="url-area"><span>↗</span><strong>Bring a file from the web</strong><p>FileFlow inspects the source before importing anything.</p><label><input placeholder="https://example.com/file"/><button>Inspect URL</button></label></div></div>
+            <div class="uploaded-file" id="uploaded-file"><span class="file-art">JPG</span><div><strong>summer-house.jpg</strong><small>4.8 MB · 4032 × 3024</small></div><b><i></i>LOCAL</b><button>•••</button></div>
+          </div>
+          <aside class="frame-settings">
+            <span class="recommended">✦ RECOMMENDED</span><h3>Make it lighter</h3><p>Best balance of quality and size for sharing on the web.</p>
+            <div class="size-prediction"><span>4.8 MB</span><i></i><strong>~1.1 MB</strong><small>77% SMALLER</small></div>
+            <label class="setting"><span><b>Format</b><small>Modern & supported</small></span><button>WebP⌄</button></label>
+            <label class="range-setting"><span><b>Quality</b><strong id="redsun-quality-value">82%</strong></span><input id="redsun-quality" type="range" min="20" max="100" value="82"/><small><i>Smaller file</i><i>Best quality</i></small></label>
+            <label class="toggle-setting"><span><b>Remove metadata</b><small>Location and camera details</small></span><input type="checkbox" checked/><i></i></label>
+            <button class="process" id="redsun-process"><span>Process file</span><b>↗</b></button><small class="private-note">⌾ Processed privately on this device</small>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <section class="features-section" id="features">
+      <div class="section-heading centered"><span class="section-index">02 / CAPABILITIES</span><h2>Powerful tools.<br/>Almost invisible.</h2><p>The interface explains outcomes, not codecs.</p></div>
+      <div class="feature-grid">
+        <article class="feature-large"><div class="feature-number">01</div><div class="chart-visual"><span class="bar b1"></span><span class="bar b2"></span><span class="bar b3"></span><span class="bar b4"></span><span class="chart-line"></span></div><div><span class="micro-label">SMART RECOMMENDATIONS</span><h3>See the result before you commit.</h3><p>FileFlow estimates size, quality and processing mode, then explains every recommendation in plain language.</p><a href="#workspace">Try a file <span>→</span></a></div></article>
+        <article><div class="feature-number">02</div><div class="privacy-radar"><span></span><i></i><b>LOCAL</b></div><span class="micro-label">VISIBLE PRIVACY</span><h3>Know exactly where every operation runs.</h3><p>Local stays local. Cloud steps require a clear confirmation.</p></article>
+        <article><div class="feature-number">03</div><div class="batch-stack"><span>PNG</span><span>PDF</span><span>MP4</span></div><span class="micro-label">ONE WORKSPACE</span><h3>Different files. The same calm flow.</h3><p>Images, video, audio and documents without format directories.</p></article>
+      </div>
+    </section>
+
+    <section class="privacy-section" id="privacy">
+      <div class="privacy-copy"><span class="section-index">03 / PRIVACY</span><h2>Nothing happens<br/>behind your back.</h2><p>Every operation shows where it runs, why that mode is needed and what happens to your file afterward.</p><a class="button secondary" href="#workspace">See how it works <span>→</span></a></div>
+      <div class="privacy-steps"><article><span>01</span><div><b>On-device when possible</b><p>Supported work runs directly in your browser.</p></div><i>LOCAL</i></article><article><span>02</span><div><b>Cloud only when necessary</b><p>Nothing uploads without your confirmation.</p></div><i>CLEAR</i></article><article><span>03</span><div><b>Temporary means temporary</b><p>Cloud files are automatically removed.</p></div><i>CLEAN</i></article></div>
+    </section>
+
+    <section class="final-cta" id="tools"><span class="section-index">A CLEARER WAY TO WORK</span><h2>Your files.<br/><em>Your device. Your call.</em></h2><p>Start without an account. See the plan before processing.</p><a class="button primary" href="#workspace">Open your workspace <span>↗</span></a><div class="final-sun" aria-hidden="true"></div></section>
+  </main>
+
+  <footer><a class="logo" href="#top"><span class="logo-symbol"><i></i><i></i></span><strong>FILEFLOW</strong><b></b></a><p>Private file tools that explain every step.</p><nav><a href="#privacy">Privacy</a><a href="#">Terms</a><a href="#">Security</a></nav><span>© 2026</span></footer>
+  <div class="toast" id="redsun-toast"><span>✓</span><div><strong>Processed locally</strong><p>Your result is ready to download.</p></div></div>
+  <script src="redsun.js"></script>
+</body>
+</html>
