@@ -42,6 +42,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { FaInstagram, FaTiktok, FaYoutube } from 'react-icons/fa6';
+import { FileUrlInput } from './workspace/file-url-input';
 
 type Language = 'en' | 'ru' | 'es';
 
@@ -174,8 +175,8 @@ const advancedTools: ToolItem[] = [
 
 const navItems = [
   { label: 'Home', icon: Home, href: '/' },
-  { label: 'Tools', icon: Grid2X2, href: '/tools' },
-  { label: 'Workspace', icon: WandSparkles, href: '/workspace' },
+  { label: 'Tools', icon: Grid2X2, href: '#tools' },
+  { label: 'Workspace', icon: WandSparkles, href: '#workspace-flow' },
   { label: 'History', icon: History, href: '/account' },
   { label: 'Privacy', icon: ShieldCheck, href: '#privacy' },
 ];
@@ -573,20 +574,6 @@ export function GlassHome() {
               <Menu size={21} />
             </button>
             <div className="ff-top-actions">
-              <div className="ff-language-switch glass-panel" aria-label="Language">
-                <Languages size={17} aria-hidden="true" />
-                {(['ru', 'en', 'es'] as const).map((option) => (
-                  <button
-                    type="button"
-                    key={option}
-                    data-active={language === option || undefined}
-                    aria-pressed={language === option}
-                    onClick={() => setLanguage(option)}
-                  >
-                    {option.toUpperCase()}
-                  </button>
-                ))}
-              </div>
               <Link className="ff-sign-in" href="/account">
                 {t.signIn}
               </Link>
@@ -605,6 +592,20 @@ export function GlassHome() {
                   <motion.span layout />
                 </button>
                 <Moon size={18} aria-hidden="true" />
+              </div>
+              <div className="ff-language-switch glass-panel" aria-label="Language">
+                <Languages size={17} aria-hidden="true" />
+                {(['ru', 'en', 'es'] as const).map((option) => (
+                  <button
+                    type="button"
+                    key={option}
+                    data-active={language === option || undefined}
+                    aria-pressed={language === option}
+                    onClick={() => setLanguage(option)}
+                  >
+                    {option.toUpperCase()}
+                  </button>
+                ))}
               </div>
             </div>
           </header>
@@ -638,6 +639,14 @@ export function GlassHome() {
                 </span>
               </div>
             </motion.div>
+
+            <section
+              className="ff-unified-workspace"
+              id="workspace-flow"
+              aria-label="Unified file workspace"
+            >
+              <FileUrlInput />
+            </section>
 
             <div className="ff-intake-grid">
               <motion.section
@@ -763,7 +772,7 @@ export function GlassHome() {
                 </h2>
                 <p>{t.outcomeLead}</p>
               </div>
-              <Link href="/tools">
+              <Link href="#workspace-flow">
                 {t.viewAll} <ChevronRight size={17} />
               </Link>
             </div>
@@ -849,10 +858,10 @@ export function GlassHome() {
               </p>
             </div>
             <div className="ff-cta-actions">
-              <Link className="ff-primary-button" href="/workspace">
+              <Link className="ff-primary-button" href="#workspace-flow">
                 Open File Flow <ChevronRight size={18} />
               </Link>
-              <Link className="glass-button" href="/tools">
+              <Link className="glass-button" href="#tools">
                 Explore tools
               </Link>
             </div>
@@ -868,7 +877,7 @@ export function GlassHome() {
               <Link href="/legal/privacy">Privacy</Link>
               <Link href="/legal/security">Security</Link>
               <Link href="/legal/terms">Terms</Link>
-              <Link href="/tools">Tools</Link>
+              <Link href="#tools">Tools</Link>
             </nav>
           </footer>
         </main>
@@ -915,7 +924,7 @@ export function GlassHome() {
 
 function ToolCard({ tool, index, language }: { tool: ToolItem; index: number; language: Language }) {
   const Icon = tool.icon;
-  const href = tool.intent ? `/workspace?intent=${tool.intent}` : '/tools';
+  const href = '#workspace-flow';
   const translated =
     language === 'en'
       ? [tool.title, tool.description]

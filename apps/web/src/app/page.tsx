@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import React from 'react';
 import { GlassHome } from './glass-home';
+import './workspace/workspace.css';
 import './glass-home.css';
 
 export const metadata: Metadata = {

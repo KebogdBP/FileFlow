@@ -17,7 +17,7 @@ export default function AccountPage() {
           <Image src="/brand/fileflow-mark.png" alt="" width={34} height={30} priority />
           <strong>FileFlow</strong>
         </Link>
-        <Link href="/workspace">Workspace</Link>
+        <Link href="/#workspace-flow">Back to FileFlow</Link>
       </header>
       <section className="account-intro">
         <p className="input-eyebrow">PRIVATE ACCOUNT</p>

@@ -90,7 +90,8 @@
 }
 .account-intro {
   max-width: 44rem;
-  margin: 4.25rem 0 2.5rem;
+  margin: 4.25rem auto 2.5rem;
+  text-align: center;
 }
 .account-intro h1 {
   margin: 0.4rem 0 1rem;
@@ -104,6 +105,7 @@
 }
 .account-auth {
   max-width: 46rem;
+  margin-inline: auto;
   padding: clamp(1.35rem, 4vw, 2.25rem) !important;
   border-color: rgba(255, 255, 255, 0.8) !important;
   border-radius: 1.75rem !important;

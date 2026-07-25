@@ -1089,3 +1089,144 @@
     animation-iteration-count: 1 !important;
   }
 }
+
+/* Unified landing-page workspace: upload first, choose the outcome directly below it. */
+.ff-intake-grid {
+  display: none !important;
+}
+
+.ff-unified-workspace {
+  margin-top: 2.25rem;
+  scroll-margin-top: 1.5rem;
+}
+
+.ff-unified-workspace .input-card {
+  gap: 1.1rem;
+  padding: clamp(1rem, 2.2vw, 1.5rem) !important;
+  border-color: var(--glass-line) !important;
+  border-radius: 1.65rem !important;
+  background: var(--glass-bg-strong) !important;
+  box-shadow:
+    0 28px 70px rgba(51, 79, 136, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 0.76) !important;
+  backdrop-filter: blur(32px) saturate(165%) !important;
+}
+
+.ff-unified-workspace .input-card-heading h2 {
+  font-size: clamp(1.45rem, 3vw, 2rem);
+}
+
+.ff-unified-workspace .input-tabs {
+  border: 1px solid var(--glass-line);
+  background: color-mix(in srgb, var(--glass-bg) 84%, transparent);
+}
+
+.ff-unified-workspace .input-tabs button {
+  transition: color 160ms ease, background 160ms ease, box-shadow 160ms ease,
+    transform 160ms ease;
+}
+
+.ff-unified-workspace .input-tabs button[aria-selected='true'] {
+  color: white;
+  background: linear-gradient(135deg, var(--home-blue), var(--home-blue-2));
+  box-shadow:
+    0 10px 24px color-mix(in srgb, var(--home-blue) 30%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.42);
+}
+
+.ff-unified-workspace .file-drop-zone,
+.ff-unified-workspace .url-input-form {
+  min-height: 290px;
+  border-color: color-mix(in srgb, var(--home-blue) 42%, var(--glass-line));
+  border-radius: 1.35rem;
+  background: color-mix(in srgb, var(--glass-bg) 78%, transparent);
+}
+
+.ff-unified-workspace .file-drop-icon {
+  background: linear-gradient(145deg, var(--home-blue), var(--home-blue-2));
+  box-shadow:
+    0 16px 32px color-mix(in srgb, var(--home-blue) 31%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.45);
+}
+
+.ff-unified-workspace .input-picker-button,
+.ff-unified-workspace [data-ff-button][data-variant='primary'] {
+  border-color: transparent !important;
+  color: white !important;
+  background: linear-gradient(135deg, var(--home-blue), var(--home-blue-2)) !important;
+  box-shadow:
+    0 12px 26px color-mix(in srgb, var(--home-blue) 30%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.44) !important;
+  transition: transform 180ms ease, filter 180ms ease, box-shadow 180ms ease !important;
+}
+
+.ff-unified-workspace .input-picker-button:hover,
+.ff-unified-workspace [data-ff-button]:hover {
+  transform: translateY(-2px);
+  filter: saturate(1.12);
+  box-shadow:
+    0 17px 34px color-mix(in srgb, var(--home-blue) 36%, transparent),
+    0 0 0 4px color-mix(in srgb, var(--home-blue) 11%, transparent) !important;
+}
+
+.ff-unified-workspace :is(
+    .input-privacy-note,
+    .local-engine-status,
+    .selected-source,
+    .batch-summary,
+    .file-inspector,
+    .intent-workspace,
+    .intent-confirmation,
+    .recommendation-panel,
+    .recommendation-explanation > div,
+    .recommendation-defaults > div,
+    .recommendation-alternatives > div,
+    .local-image-tool,
+    .cloud-job-tool,
+    .social-import-tool,
+    .cloud-controls,
+    .image-tool-controls,
+    .image-result-card,
+    .cloud-result
+  ) {
+  border-color: var(--glass-line);
+  background: color-mix(in srgb, var(--glass-bg-strong) 84%, transparent);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.48);
+  backdrop-filter: blur(20px) saturate(145%);
+}
+
+.ff-unified-workspace .intent-options button {
+  border-color: var(--glass-line);
+  background: color-mix(in srgb, var(--glass-bg-strong) 84%, transparent);
+  transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.ff-unified-workspace .intent-options button:hover,
+.ff-unified-workspace .intent-options button[aria-pressed='true'] {
+  transform: translateY(-2px);
+  border-color: color-mix(in srgb, var(--home-blue) 58%, var(--glass-line));
+  background: color-mix(in srgb, var(--home-blue) 10%, var(--glass-bg-strong));
+  box-shadow:
+    0 10px 24px color-mix(in srgb, var(--home-blue) 14%, transparent),
+    0 0 0 3px color-mix(in srgb, var(--home-blue) 9%, transparent);
+}
+
+.ff-language-switch {
+  margin-left: 4px;
+}
+
+@media (max-width: 560px) {
+  .ff-unified-workspace {
+    margin-top: 1.5rem;
+  }
+
+  .ff-unified-workspace .input-card {
+    padding: 0.9rem !important;
+    border-radius: 1.3rem !important;
+  }
+
+  .ff-unified-workspace .file-drop-zone,
+  .ff-unified-workspace .url-input-form {
+    min-height: 245px;
+  }
+}

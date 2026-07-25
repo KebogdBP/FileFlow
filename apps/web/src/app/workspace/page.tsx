@@ -1,5 +1,6 @@
 import React from 'react';
 import type { Metadata } from 'next';
+import Image from 'next/image';
 import Link from 'next/link';
 import { Badge } from '@fileflow/ui';
 import { WorkspaceLaunch } from './workspace-launch';
@@ -15,7 +16,8 @@ export default function WorkspacePage() {
     <main className="input-shell">
       <header className="input-header">
         <Link className="landing-brand" href="/" aria-label="FileFlow home">
-          <span className="landing-mark" aria-hidden="true" /> FileFlow
+          <Image src="/brand/fileflow-mark.png" alt="" width={34} height={30} priority />
+          <strong>FileFlow</strong>
         </Link>
         <Badge variant="private">M20 · BATCH PROCESSING</Badge>
         <Link href="/account">Account</Link>
