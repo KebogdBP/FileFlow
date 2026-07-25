@@ -7,9 +7,82 @@ import { ACCOUNT_TOKEN_KEY, API_URL, downloadJobResult } from '../cloud-api';
 import { useFileFlowLanguage } from '../use-fileflow-language';
 
 const authCopy = {
-  en: { signIn: 'Sign in', create: 'Create account', name: 'Name or nickname', email: 'Email', password: 'Password', confirm: 'Confirm password', wait: 'Please wait…', mismatch: 'Passwords do not match.', signOut: 'Sign out', account: 'Account overview', used: 'cloud jobs used today. Resets', history: 'Cloud history', emptyHistory: 'No authenticated cloud jobs yet. Local work is intentionally not recorded.', download: 'Download', cancel: 'Cancel', apiTitle: 'Developer API keys', apiLead: 'Create a revocable key for the FileFlow API and MCP adapter.', keyName: 'Key name', createKey: 'Create API key', copyKey: 'Copy this key now. It will not be shown again.', created: 'created', revoke: 'Revoke', noKeys: 'No active API keys.' },
-  ru: { signIn: 'Войти', create: 'Создать аккаунт', name: 'Имя или никнейм', email: 'Электронная почта', password: 'Пароль', confirm: 'Подтвердите пароль', wait: 'Подождите…', mismatch: 'Пароли не совпадают.', signOut: 'Выйти', account: 'Обзор аккаунта', used: 'облачных задач использовано сегодня. Сброс', history: 'Облачная история', emptyHistory: 'Авторизованных облачных задач пока нет. Локальная работа намеренно не записывается.', download: 'Скачать', cancel: 'Отменить', apiTitle: 'API-ключи разработчика', apiLead: 'Создайте отзывной ключ для API FileFlow и MCP-адаптера.', keyName: 'Название ключа', createKey: 'Создать API-ключ', copyKey: 'Скопируйте ключ сейчас. Он больше не будет показан.', created: 'создан', revoke: 'Отозвать', noKeys: 'Активных API-ключей нет.' },
-  es: { signIn: 'Iniciar sesión', create: 'Crear cuenta', name: 'Nombre o apodo', email: 'Correo electrónico', password: 'Contraseña', confirm: 'Confirmar contraseña', wait: 'Espera…', mismatch: 'Las contraseñas no coinciden.', signOut: 'Cerrar sesión', account: 'Resumen de la cuenta', used: 'trabajos en la nube usados hoy. Reinicio', history: 'Historial en la nube', emptyHistory: 'Aún no hay trabajos autenticados. El trabajo local no se registra.', download: 'Descargar', cancel: 'Cancelar', apiTitle: 'Claves API para desarrolladores', apiLead: 'Crea una clave revocable para la API de FileFlow y el adaptador MCP.', keyName: 'Nombre de la clave', createKey: 'Crear clave API', copyKey: 'Copia esta clave ahora. No se volverá a mostrar.', created: 'creada', revoke: 'Revocar', noKeys: 'No hay claves API activas.' },
+  en: {
+    signIn: 'Sign in',
+    create: 'Create account',
+    name: 'Name or nickname',
+    email: 'Email',
+    password: 'Password',
+    confirm: 'Confirm password',
+    wait: 'Please wait…',
+    mismatch: 'Passwords do not match.',
+    signOut: 'Sign out',
+    account: 'Account overview',
+    used: 'cloud jobs used today. Resets',
+    history: 'Cloud history',
+    emptyHistory: 'No authenticated cloud jobs yet. Local work is intentionally not recorded.',
+    download: 'Download',
+    cancel: 'Cancel',
+    apiTitle: 'Developer API keys',
+    apiLead: 'Create a revocable key for the FileFlow API and MCP adapter.',
+    keyName: 'Key name',
+    createKey: 'Create API key',
+    copyKey: 'Copy this key now. It will not be shown again.',
+    created: 'created',
+    revoke: 'Revoke',
+    noKeys: 'No active API keys.',
+  },
+  ru: {
+    signIn: 'Войти',
+    create: 'Создать аккаунт',
+    name: 'Имя или никнейм',
+    email: 'Электронная почта',
+    password: 'Пароль',
+    confirm: 'Подтвердите пароль',
+    wait: 'Подождите…',
+    mismatch: 'Пароли не совпадают.',
+    signOut: 'Выйти',
+    account: 'Обзор аккаунта',
+    used: 'облачных задач использовано сегодня. Сброс',
+    history: 'Облачная история',
+    emptyHistory:
+      'Авторизованных облачных задач пока нет. Локальная работа намеренно не записывается.',
+    download: 'Скачать',
+    cancel: 'Отменить',
+    apiTitle: 'API-ключи разработчика',
+    apiLead: 'Создайте отзывной ключ для API FileFlow и MCP-адаптера.',
+    keyName: 'Название ключа',
+    createKey: 'Создать API-ключ',
+    copyKey: 'Скопируйте ключ сейчас. Он больше не будет показан.',
+    created: 'создан',
+    revoke: 'Отозвать',
+    noKeys: 'Активных API-ключей нет.',
+  },
+  es: {
+    signIn: 'Iniciar sesión',
+    create: 'Crear cuenta',
+    name: 'Nombre o apodo',
+    email: 'Correo electrónico',
+    password: 'Contraseña',
+    confirm: 'Confirmar contraseña',
+    wait: 'Espera…',
+    mismatch: 'Las contraseñas no coinciden.',
+    signOut: 'Cerrar sesión',
+    account: 'Resumen de la cuenta',
+    used: 'trabajos en la nube usados hoy. Reinicio',
+    history: 'Historial en la nube',
+    emptyHistory: 'Aún no hay trabajos autenticados. El trabajo local no se registra.',
+    download: 'Descargar',
+    cancel: 'Cancelar',
+    apiTitle: 'Claves API para desarrolladores',
+    apiLead: 'Crea una clave revocable para la API de FileFlow y el adaptador MCP.',
+    keyName: 'Nombre de la clave',
+    createKey: 'Crear clave API',
+    copyKey: 'Copia esta clave ahora. No se volverá a mostrar.',
+    created: 'creada',
+    revoke: 'Revocar',
+    noKeys: 'No hay claves API activas.',
+  },
 } as const;
 
 type Account = {
@@ -344,7 +417,8 @@ export function AccountDashboard() {
                 <span>
                   <strong>{key.name}</strong>
                   <small>
-                    {key.prefix}… · {text.created} {new Date(key.created_at).toLocaleString(language)}
+                    {key.prefix}… · {text.created}{' '}
+                    {new Date(key.created_at).toLocaleString(language)}
                   </small>
                 </span>
                 <Button

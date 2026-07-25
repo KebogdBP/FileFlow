@@ -41,86 +41,304 @@ type InspectionState =
 
 const workspaceCopy = {
   en: {
-    badge: 'PRIVATE INPUT', title: 'Start with a file or link', nothing: 'Nothing uploaded',
-    readyOne: '1 source ready', filesReady: 'files ready', device: 'From device', link: 'From a link',
-    release: 'Release to add your file', drop: 'Drop a file here',
+    badge: 'PRIVATE INPUT',
+    title: 'Start with a file or link',
+    nothing: 'Nothing uploaded',
+    readyOne: '1 source ready',
+    filesReady: 'files ready',
+    device: 'From device',
+    link: 'From a link',
+    release: 'Release to add your file',
+    drop: 'Drop a file here',
     formats: `Images, video, audio, PDF or DOCX · select up to ${MAX_BATCH_FILES}`,
-    choose: 'Choose a file', publicUrl: 'Public media URL', useLink: 'Use this link',
-    linkHelp: 'YouTube, Instagram and TikTok public links', local: 'LOCAL', linkBadge: 'LINK',
-    noImport: 'No import has started', privateTitle: 'Your file stays privately on your device',
-    localNote: 'Selecting a file does not upload it. Processing mode is confirmed before every operation.',
-    linkNote: 'FileFlow validates the address only. A later step will explain cloud import before it begins.',
-    chooseIntent: 'CHOOSE INTENT', whatDo: 'What would you like to do?', available: 'available',
-    availableOps: 'Available operations', onDevice: 'On this device', cloud: 'Protected cloud',
-    review: 'Review this plan', confirmed: 'Intent confirmed', confirm: 'Confirm intent',
+    choose: 'Choose a file',
+    publicUrl: 'Public media URL',
+    useLink: 'Use this link',
+    linkHelp: 'YouTube, Instagram and TikTok public links',
+    local: 'LOCAL',
+    linkBadge: 'LINK',
+    noImport: 'No import has started',
+    privateTitle: 'Your file stays privately on your device',
+    localNote:
+      'Selecting a file does not upload it. Processing mode is confirmed before every operation.',
+    linkNote:
+      'FileFlow validates the address only. A later step will explain cloud import before it begins.',
+    chooseIntent: 'CHOOSE INTENT',
+    whatDo: 'What would you like to do?',
+    available: 'available',
+    availableOps: 'Available operations',
+    onDevice: 'On this device',
+    cloud: 'Protected cloud',
+    review: 'Review this plan',
+    confirmed: 'Intent confirmed',
+    confirm: 'Confirm intent',
     confirmedButton: 'Confirmed',
-    inspecting: 'Inspecting locally…', fileSummary: 'File summary', bytesRead: 'bytes read locally',
+    inspecting: 'Inspecting locally…',
+    fileSummary: 'File summary',
+    bytesRead: 'bytes read locally',
     metadata: ['Category', 'Format', 'Declared MIME', 'Detected MIME', 'Extension', 'Modified'],
     operationNames: {},
-    invalidFile: 'This file cannot be used. Check its type and size.', invalidUrl: 'Enter a supported public HTTPS link.',
-    engine: ['CHECKING', 'LOCAL ENGINE', 'UNAVAILABLE', 'Browser worker readiness', 'This device allows guarded local jobs up to', 'Checking browser capabilities…', 'Cancel check', 'Test local engine', 'Local worker is ready.'],
-    batch: ['BATCH VERIFIED', 'REVIEW NEEDED', 'files inspected locally', 'All files are compatible JPG or PNG images and can share one local operation.', 'All files are verified PDFs and can be merged in the selected order.', 'Use a matching batch of verified JPG/PNG images or PDF files.', 'Clear batch'],
-    plan: ['RECOMMENDED', 'Why this fits', 'What to expect', 'Where it runs', 'Safe defaults', 'Trade-offs', 'Alternative', 'Plan only · nothing has started.', 'You will confirm settings before any processing.'],
+    invalidFile: 'This file cannot be used. Check its type and size.',
+    invalidUrl: 'Enter a supported public HTTPS link.',
+    engine: [
+      'CHECKING',
+      'LOCAL ENGINE',
+      'UNAVAILABLE',
+      'Browser worker readiness',
+      'This device allows guarded local jobs up to',
+      'Checking browser capabilities…',
+      'Cancel check',
+      'Test local engine',
+      'Local worker is ready.',
+    ],
+    batch: [
+      'BATCH VERIFIED',
+      'REVIEW NEEDED',
+      'files inspected locally',
+      'All files are compatible JPG or PNG images and can share one local operation.',
+      'All files are verified PDFs and can be merged in the selected order.',
+      'Use a matching batch of verified JPG/PNG images or PDF files.',
+      'Clear batch',
+    ],
+    plan: [
+      'RECOMMENDED',
+      'Why this fits',
+      'What to expect',
+      'Where it runs',
+      'Safe defaults',
+      'Trade-offs',
+      'Alternative',
+      'Plan only · nothing has started.',
+      'You will confirm settings before any processing.',
+    ],
     selected: ['Ready for inspection', 'Validated · Ready for import review', 'Remove'],
-    urlImport: ['CLOUD IMPORT', 'Import media from', 'Outcome', 'A compatible video plus available title, creator and thumbnail metadata.', 'Where it runs', 'The platform import runs in an isolated cloud worker.', 'Safety', 'The imported result enters quarantine and malware scanning before processing.', 'Import intent confirmed', 'Nothing has been imported yet', 'The URL is ready for the asynchronous import workflow.', 'Confirm after reviewing the cloud and safety lifecycle.', 'Confirm import'],
+    urlImport: [
+      'CLOUD IMPORT',
+      'Import media from',
+      'Outcome',
+      'A compatible video plus available title, creator and thumbnail metadata.',
+      'Where it runs',
+      'The platform import runs in an isolated cloud worker.',
+      'Safety',
+      'The imported result enters quarantine and malware scanning before processing.',
+      'Import intent confirmed',
+      'Nothing has been imported yet',
+      'The URL is ready for the asynchronous import workflow.',
+      'Confirm after reviewing the cloud and safety lifecycle.',
+      'Confirm import',
+    ],
   },
   ru: {
-    badge: 'ПРИВАТНЫЙ ВВОД', title: 'Начните с файла или ссылки', nothing: 'Ничего не загружено',
-    readyOne: '1 источник готов', filesReady: 'файлов готово', device: 'С устройства', link: 'По ссылке',
-    release: 'Отпустите, чтобы добавить файл', drop: 'Перетащите файл сюда',
+    badge: 'ПРИВАТНЫЙ ВВОД',
+    title: 'Начните с файла или ссылки',
+    nothing: 'Ничего не загружено',
+    readyOne: '1 источник готов',
+    filesReady: 'файлов готово',
+    device: 'С устройства',
+    link: 'По ссылке',
+    release: 'Отпустите, чтобы добавить файл',
+    drop: 'Перетащите файл сюда',
     formats: `Изображения, видео, аудио, PDF или DOCX · до ${MAX_BATCH_FILES} файлов`,
-    choose: 'Выбрать файл', publicUrl: 'Публичная ссылка на медиа', useLink: 'Использовать ссылку',
-    linkHelp: 'Публичные ссылки YouTube, Instagram и TikTok', local: 'ЛОКАЛЬНО', linkBadge: 'ССЫЛКА',
-    noImport: 'Импорт ещё не начался', privateTitle: 'Ваш файл остаётся приватно на устройстве',
-    localNote: 'Выбор файла не загружает его. Режим обработки подтверждается перед каждой операцией.',
-    linkNote: 'FileFlow только проверяет адрес. Перед облачным импортом вы увидите подробное объяснение.',
-    chooseIntent: 'ВЫБЕРИТЕ ДЕЙСТВИЕ', whatDo: 'Что вы хотите сделать?', available: 'доступно',
-    availableOps: 'Доступные операции', onDevice: 'На этом устройстве', cloud: 'Защищённое облако',
-    review: 'Проверьте план', confirmed: 'Действие подтверждено', confirm: 'Подтвердить действие',
+    choose: 'Выбрать файл',
+    publicUrl: 'Публичная ссылка на медиа',
+    useLink: 'Использовать ссылку',
+    linkHelp: 'Публичные ссылки YouTube, Instagram и TikTok',
+    local: 'ЛОКАЛЬНО',
+    linkBadge: 'ССЫЛКА',
+    noImport: 'Импорт ещё не начался',
+    privateTitle: 'Ваш файл остаётся приватно на устройстве',
+    localNote:
+      'Выбор файла не загружает его. Режим обработки подтверждается перед каждой операцией.',
+    linkNote:
+      'FileFlow только проверяет адрес. Перед облачным импортом вы увидите подробное объяснение.',
+    chooseIntent: 'ВЫБЕРИТЕ ДЕЙСТВИЕ',
+    whatDo: 'Что вы хотите сделать?',
+    available: 'доступно',
+    availableOps: 'Доступные операции',
+    onDevice: 'На этом устройстве',
+    cloud: 'Защищённое облако',
+    review: 'Проверьте план',
+    confirmed: 'Действие подтверждено',
+    confirm: 'Подтвердить действие',
     confirmedButton: 'Подтверждено',
-    inspecting: 'Локальная проверка…', fileSummary: 'Сводка по файлу', bytesRead: 'байт прочитано локально',
-    metadata: ['Категория', 'Формат', 'Заявленный MIME', 'Определённый MIME', 'Расширение', 'Изменён'],
+    inspecting: 'Локальная проверка…',
+    fileSummary: 'Сводка по файлу',
+    bytesRead: 'байт прочитано локально',
+    metadata: [
+      'Категория',
+      'Формат',
+      'Заявленный MIME',
+      'Определённый MIME',
+      'Расширение',
+      'Изменён',
+    ],
     operationNames: {
-      'compress-pdf': 'Сжать PDF', 'split-pdf': 'Разделить PDF', 'merge-pdf': 'Объединить PDF',
-      'pdf-to-jpg': 'PDF в JPEG', 'docx-to-pdf': 'DOCX в PDF', 'compress-video': 'Сжать видео',
-      'resize-video': 'Изменить размер видео', 'extract-audio': 'Извлечь аудио',
-      'optimize-image': 'Оптимизировать изображение', 'remove-image-metadata': 'Удалить метаданные',
+      'compress-pdf': 'Сжать PDF',
+      'split-pdf': 'Разделить PDF',
+      'merge-pdf': 'Объединить PDF',
+      'pdf-to-jpg': 'PDF в JPEG',
+      'docx-to-pdf': 'DOCX в PDF',
+      'compress-video': 'Сжать видео',
+      'resize-video': 'Изменить размер видео',
+      'extract-audio': 'Извлечь аудио',
+      'optimize-image': 'Оптимизировать изображение',
+      'remove-image-metadata': 'Удалить метаданные',
     },
-    invalidFile: 'Этот файл нельзя использовать. Проверьте тип и размер.', invalidUrl: 'Введите поддерживаемую публичную HTTPS-ссылку.',
-    engine: ['ПРОВЕРКА', 'ЛОКАЛЬНЫЙ ДВИЖОК', 'НЕДОСТУПНО', 'Готовность браузерного обработчика', 'Это устройство поддерживает защищённые локальные задачи до', 'Проверяем возможности браузера…', 'Отменить проверку', 'Проверить локальный движок', 'Локальный обработчик готов.'],
-    batch: ['ПАКЕТ ПРОВЕРЕН', 'НУЖНА ПРОВЕРКА', 'файлов проверено локально', 'Все файлы — совместимые JPG или PNG и подходят для одной локальной операции.', 'Все файлы — проверенные PDF и могут быть объединены в выбранном порядке.', 'Используйте однородный пакет проверенных JPG/PNG или PDF.', 'Очистить пакет'],
-    plan: ['РЕКОМЕНДОВАНО', 'Почему подходит', 'Что ожидать', 'Где выполняется', 'Безопасные настройки', 'Компромиссы', 'Альтернатива', 'Только план · ничего не запущено.', 'Вы подтвердите настройки до начала обработки.'],
+    invalidFile: 'Этот файл нельзя использовать. Проверьте тип и размер.',
+    invalidUrl: 'Введите поддерживаемую публичную HTTPS-ссылку.',
+    engine: [
+      'ПРОВЕРКА',
+      'ЛОКАЛЬНЫЙ ДВИЖОК',
+      'НЕДОСТУПНО',
+      'Готовность браузерного обработчика',
+      'Это устройство поддерживает защищённые локальные задачи до',
+      'Проверяем возможности браузера…',
+      'Отменить проверку',
+      'Проверить локальный движок',
+      'Локальный обработчик готов.',
+    ],
+    batch: [
+      'ПАКЕТ ПРОВЕРЕН',
+      'НУЖНА ПРОВЕРКА',
+      'файлов проверено локально',
+      'Все файлы — совместимые JPG или PNG и подходят для одной локальной операции.',
+      'Все файлы — проверенные PDF и могут быть объединены в выбранном порядке.',
+      'Используйте однородный пакет проверенных JPG/PNG или PDF.',
+      'Очистить пакет',
+    ],
+    plan: [
+      'РЕКОМЕНДОВАНО',
+      'Почему подходит',
+      'Что ожидать',
+      'Где выполняется',
+      'Безопасные настройки',
+      'Компромиссы',
+      'Альтернатива',
+      'Только план · ничего не запущено.',
+      'Вы подтвердите настройки до начала обработки.',
+    ],
     selected: ['Готов к проверке', 'Проверено · готово к проверке импорта', 'Удалить'],
-    urlImport: ['ОБЛАЧНЫЙ ИМПОРТ', 'Импортировать медиа из', 'Результат', 'Совместимое видео, а также доступные название, автор и превью.', 'Где выполняется', 'Импорт платформы выполняется в изолированном облачном обработчике.', 'Безопасность', 'Перед обработкой результат проходит карантин и проверку на вредоносное ПО.', 'Импорт подтверждён', 'Импорт ещё не начался', 'Ссылка готова для асинхронного импорта.', 'Подтвердите после проверки облачного режима и мер безопасности.', 'Подтвердить импорт'],
+    urlImport: [
+      'ОБЛАЧНЫЙ ИМПОРТ',
+      'Импортировать медиа из',
+      'Результат',
+      'Совместимое видео, а также доступные название, автор и превью.',
+      'Где выполняется',
+      'Импорт платформы выполняется в изолированном облачном обработчике.',
+      'Безопасность',
+      'Перед обработкой результат проходит карантин и проверку на вредоносное ПО.',
+      'Импорт подтверждён',
+      'Импорт ещё не начался',
+      'Ссылка готова для асинхронного импорта.',
+      'Подтвердите после проверки облачного режима и мер безопасности.',
+      'Подтвердить импорт',
+    ],
   },
   es: {
-    badge: 'ENTRADA PRIVADA', title: 'Empieza con un archivo o enlace', nothing: 'Nada cargado',
-    readyOne: '1 fuente lista', filesReady: 'archivos listos', device: 'Desde el dispositivo', link: 'Desde un enlace',
-    release: 'Suelta para añadir el archivo', drop: 'Suelta un archivo aquí',
+    badge: 'ENTRADA PRIVADA',
+    title: 'Empieza con un archivo o enlace',
+    nothing: 'Nada cargado',
+    readyOne: '1 fuente lista',
+    filesReady: 'archivos listos',
+    device: 'Desde el dispositivo',
+    link: 'Desde un enlace',
+    release: 'Suelta para añadir el archivo',
+    drop: 'Suelta un archivo aquí',
     formats: `Imágenes, vídeo, audio, PDF o DOCX · hasta ${MAX_BATCH_FILES} archivos`,
-    choose: 'Elegir archivo', publicUrl: 'URL pública de medios', useLink: 'Usar este enlace',
-    linkHelp: 'Enlaces públicos de YouTube, Instagram y TikTok', local: 'LOCAL', linkBadge: 'ENLACE',
-    noImport: 'La importación aún no ha empezado', privateTitle: 'Tu archivo permanece privado en tu dispositivo',
-    localNote: 'Elegir un archivo no lo carga. El modo de procesamiento se confirma antes de cada operación.',
-    linkNote: 'FileFlow solo valida la dirección. Antes de importar en la nube verás una explicación.',
-    chooseIntent: 'ELIGE UNA ACCIÓN', whatDo: '¿Qué quieres hacer?', available: 'disponibles',
-    availableOps: 'Operaciones disponibles', onDevice: 'En este dispositivo', cloud: 'Nube protegida',
-    review: 'Revisa este plan', confirmed: 'Acción confirmada', confirm: 'Confirmar acción',
+    choose: 'Elegir archivo',
+    publicUrl: 'URL pública de medios',
+    useLink: 'Usar este enlace',
+    linkHelp: 'Enlaces públicos de YouTube, Instagram y TikTok',
+    local: 'LOCAL',
+    linkBadge: 'ENLACE',
+    noImport: 'La importación aún no ha empezado',
+    privateTitle: 'Tu archivo permanece privado en tu dispositivo',
+    localNote:
+      'Elegir un archivo no lo carga. El modo de procesamiento se confirma antes de cada operación.',
+    linkNote:
+      'FileFlow solo valida la dirección. Antes de importar en la nube verás una explicación.',
+    chooseIntent: 'ELIGE UNA ACCIÓN',
+    whatDo: '¿Qué quieres hacer?',
+    available: 'disponibles',
+    availableOps: 'Operaciones disponibles',
+    onDevice: 'En este dispositivo',
+    cloud: 'Nube protegida',
+    review: 'Revisa este plan',
+    confirmed: 'Acción confirmada',
+    confirm: 'Confirmar acción',
     confirmedButton: 'Confirmado',
-    inspecting: 'Inspección local…', fileSummary: 'Resumen del archivo', bytesRead: 'bytes leídos localmente',
-    metadata: ['Categoría', 'Formato', 'MIME declarado', 'MIME detectado', 'Extensión', 'Modificado'],
+    inspecting: 'Inspección local…',
+    fileSummary: 'Resumen del archivo',
+    bytesRead: 'bytes leídos localmente',
+    metadata: [
+      'Categoría',
+      'Formato',
+      'MIME declarado',
+      'MIME detectado',
+      'Extensión',
+      'Modificado',
+    ],
     operationNames: {
-      'compress-pdf': 'Comprimir PDF', 'split-pdf': 'Dividir PDF', 'merge-pdf': 'Unir PDFs',
-      'pdf-to-jpg': 'PDF a JPEG', 'docx-to-pdf': 'DOCX a PDF', 'compress-video': 'Comprimir vídeo',
-      'resize-video': 'Redimensionar vídeo', 'extract-audio': 'Extraer audio',
-      'optimize-image': 'Optimizar imagen', 'remove-image-metadata': 'Eliminar metadatos',
+      'compress-pdf': 'Comprimir PDF',
+      'split-pdf': 'Dividir PDF',
+      'merge-pdf': 'Unir PDFs',
+      'pdf-to-jpg': 'PDF a JPEG',
+      'docx-to-pdf': 'DOCX a PDF',
+      'compress-video': 'Comprimir vídeo',
+      'resize-video': 'Redimensionar vídeo',
+      'extract-audio': 'Extraer audio',
+      'optimize-image': 'Optimizar imagen',
+      'remove-image-metadata': 'Eliminar metadatos',
     },
-    invalidFile: 'No se puede usar este archivo. Comprueba el tipo y el tamaño.', invalidUrl: 'Introduce un enlace HTTPS público compatible.',
-    engine: ['COMPROBANDO', 'MOTOR LOCAL', 'NO DISPONIBLE', 'Preparación del motor del navegador', 'Este dispositivo admite trabajos locales protegidos de hasta', 'Comprobando el navegador…', 'Cancelar prueba', 'Probar motor local', 'El motor local está listo.'],
-    batch: ['LOTE VERIFICADO', 'REVISIÓN NECESARIA', 'archivos inspeccionados localmente', 'Todos son JPG o PNG compatibles y pueden compartir una operación local.', 'Todos son PDF verificados y pueden unirse en el orden elegido.', 'Usa un lote uniforme de JPG/PNG o PDF verificados.', 'Limpiar lote'],
-    plan: ['RECOMENDADO', 'Por qué encaja', 'Qué esperar', 'Dónde se ejecuta', 'Valores seguros', 'Compromisos', 'Alternativa', 'Solo es un plan · nada ha comenzado.', 'Confirmarás los ajustes antes de procesar.'],
+    invalidFile: 'No se puede usar este archivo. Comprueba el tipo y el tamaño.',
+    invalidUrl: 'Introduce un enlace HTTPS público compatible.',
+    engine: [
+      'COMPROBANDO',
+      'MOTOR LOCAL',
+      'NO DISPONIBLE',
+      'Preparación del motor del navegador',
+      'Este dispositivo admite trabajos locales protegidos de hasta',
+      'Comprobando el navegador…',
+      'Cancelar prueba',
+      'Probar motor local',
+      'El motor local está listo.',
+    ],
+    batch: [
+      'LOTE VERIFICADO',
+      'REVISIÓN NECESARIA',
+      'archivos inspeccionados localmente',
+      'Todos son JPG o PNG compatibles y pueden compartir una operación local.',
+      'Todos son PDF verificados y pueden unirse en el orden elegido.',
+      'Usa un lote uniforme de JPG/PNG o PDF verificados.',
+      'Limpiar lote',
+    ],
+    plan: [
+      'RECOMENDADO',
+      'Por qué encaja',
+      'Qué esperar',
+      'Dónde se ejecuta',
+      'Valores seguros',
+      'Compromisos',
+      'Alternativa',
+      'Solo es un plan · nada ha comenzado.',
+      'Confirmarás los ajustes antes de procesar.',
+    ],
     selected: ['Listo para inspección', 'Validado · listo para revisar la importación', 'Eliminar'],
-    urlImport: ['IMPORTACIÓN EN LA NUBE', 'Importar medios de', 'Resultado', 'Un vídeo compatible con título, autor y miniatura disponibles.', 'Dónde se ejecuta', 'La importación se ejecuta en un motor aislado en la nube.', 'Seguridad', 'El resultado pasa por cuarentena y análisis de malware antes de procesarse.', 'Importación confirmada', 'Aún no se ha importado nada', 'La URL está lista para el flujo de importación asíncrono.', 'Confirma después de revisar el ciclo de nube y seguridad.', 'Confirmar importación'],
+    urlImport: [
+      'IMPORTACIÓN EN LA NUBE',
+      'Importar medios de',
+      'Resultado',
+      'Un vídeo compatible con título, autor y miniatura disponibles.',
+      'Dónde se ejecuta',
+      'La importación se ejecuta en un motor aislado en la nube.',
+      'Seguridad',
+      'El resultado pasa por cuarentena y análisis de malware antes de procesarse.',
+      'Importación confirmada',
+      'Aún no se ha importado nada',
+      'La URL está lista para el flujo de importación asíncrono.',
+      'Confirma después de revisar el ciclo de nube y seguridad.',
+      'Confirmar importación',
+    ],
   },
 } as const;
 
@@ -350,14 +568,8 @@ export function FileUrlInput({
           {source?.kind === 'url' ? text.linkBadge : text.local}
         </Badge>
         <div>
-          <strong>
-            {source?.kind === 'url' ? text.noImport : text.privateTitle}
-          </strong>
-          <p>
-            {source?.kind === 'url'
-              ? text.linkNote
-              : text.localNote}
-          </p>
+          <strong>{source?.kind === 'url' ? text.noImport : text.privateTitle}</strong>
+          <p>{source?.kind === 'url' ? text.linkNote : text.localNote}</p>
         </div>
       </div>
       <LocalEngineStatus language={language} />
@@ -394,14 +606,10 @@ function BatchPanel({
           <Badge variant={ready ? 'success' : 'warning'}>
             {ready ? text.batch[0] : text.batch[1]}
           </Badge>
-          <strong>{batch.length} {text.batch[2]}</strong>
-          <p>
-            {imageReady
-              ? text.batch[3]
-              : pdfReady
-                ? text.batch[4]
-                : text.batch[5]}
-          </p>
+          <strong>
+            {batch.length} {text.batch[2]}
+          </strong>
+          <p>{imageReady ? text.batch[3] : pdfReady ? text.batch[4] : text.batch[5]}</p>
         </div>
         <Button type="button" size="sm" variant="ghost" onClick={onRemove}>
           {text.batch[6]}
@@ -502,9 +710,7 @@ function LocalEngineStatus({ language }: { language: FileFlowLanguage }) {
             </small>
           </div>
         ) : null}
-        {state.status === 'completed' ? (
-          <p className="engine-success">{text.engine[8]}</p>
-        ) : null}
+        {state.status === 'completed' ? <p className="engine-success">{text.engine[8]}</p> : null}
         {state.status === 'error' ? (
           <p className="input-error" role="alert">
             {state.message}
@@ -567,7 +773,9 @@ function FileInspectorPanel({
             </Badge>
             <h3 id="file-inspector-title">{text.fileSummary}</h3>
           </div>
-          <span>{item.bytesRead} {text.bytesRead}</span>
+          <span>
+            {item.bytesRead} {text.bytesRead}
+          </span>
         </div>
         <dl className="file-metadata-grid">
           <div>
@@ -657,7 +865,9 @@ function RecommendationPanel({
           <Badge variant="private">{text.chooseIntent}</Badge>
           <h3 id="intent-title">{text.whatDo}</h3>
         </div>
-        <span>{options.length} {text.available}</span>
+        <span>
+          {options.length} {text.available}
+        </span>
       </div>
       <div className="intent-options" role="group" aria-label={text.availableOps}>
         {options.map((option) => {
@@ -676,9 +886,7 @@ function RecommendationPanel({
               <strong>
                 {(text.operationNames as Record<string, string>)[option.id] ?? option.displayName}
               </strong>
-              <small>
-                {option.executionMode === 'local' ? text.onDevice : text.cloud}
-              </small>
+              <small>{option.executionMode === 'local' ? text.onDevice : text.cloud}</small>
             </button>
           );
         })}
@@ -727,7 +935,9 @@ function UrlIntentPanel({
       <div className="intent-heading">
         <div>
           <Badge variant="cloud">{text.urlImport[0]}</Badge>
-          <h3 id="url-intent-title">{text.urlImport[1]} {platform}</h3>
+          <h3 id="url-intent-title">
+            {text.urlImport[1]} {platform}
+          </h3>
         </div>
       </div>
       <div className="recommendation-explanation">
@@ -747,11 +957,7 @@ function UrlIntentPanel({
       <div className="intent-confirmation" data-confirmed={confirmed || undefined}>
         <div>
           <strong>{confirmed ? text.urlImport[8] : text.urlImport[9]}</strong>
-          <p>
-            {confirmed
-              ? text.urlImport[10]
-              : text.urlImport[11]}
-          </p>
+          <p>{confirmed ? text.urlImport[10] : text.urlImport[11]}</p>
         </div>
         <Button type="button" onClick={() => setConfirmed(true)} disabled={confirmed}>
           {confirmed ? text.confirmedButton : text.urlImport[12]}
@@ -866,9 +1072,7 @@ function SelectedSource({
       <div>
         <strong>{source.kind === 'file' ? source.file.name : `${source.platform} link`}</strong>
         <span>
-          {file
-            ? `${formatFileSize(file.size)} · ${text.selected[0]}`
-            : text.selected[1]}
+          {file ? `${formatFileSize(file.size)} · ${text.selected[0]}` : text.selected[1]}
         </span>
       </div>
       <Button

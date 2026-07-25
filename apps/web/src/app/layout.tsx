@@ -3,8 +3,7 @@ import './globals.css';
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? 'https://fileflow.app'),
   title: { default: 'File Flow — private file tools', template: '%s | File Flow' },
-  description:
-    'Convert, compress and prepare documents and media with visible privacy controls.',
+  description: 'Convert, compress and prepare documents and media with visible privacy controls.',
   applicationName: 'File Flow',
   category: 'productivity',
   keywords: [

@@ -11,10 +11,7 @@ export default {
     const url = new URL(request.url);
 
     if (response.status === 404 && request.method === 'GET' && !url.pathname.includes('.')) {
-      const indexUrl = new URL(
-        `${url.pathname.replace(/\/$/, '') || ''}/index.html`,
-        request.url,
-      );
+      const indexUrl = new URL(`${url.pathname.replace(/\/$/, '') || ''}/index.html`, request.url);
       response = await env.ASSETS.fetch(new Request(indexUrl, request));
     }
 

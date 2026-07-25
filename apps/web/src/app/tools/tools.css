@@ -32,7 +32,9 @@
   border: 1px solid color-mix(in srgb, var(--ff-color-border) 72%, white);
   border-radius: 1.25rem;
   background: var(--tools-glass);
-  box-shadow: 0 18px 45px rgba(61, 93, 154, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.58);
+  box-shadow:
+    0 18px 45px rgba(61, 93, 154, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.58);
   backdrop-filter: blur(24px) saturate(145%);
 }
 .tools-header .landing-brand {
@@ -85,14 +87,21 @@
 .tools-grid [data-ff-card] {
   border-color: color-mix(in srgb, var(--ff-color-border) 72%, white);
   background: var(--tools-glass);
-  box-shadow: 0 16px 38px rgba(61, 93, 154, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.52);
+  box-shadow:
+    0 16px 38px rgba(61, 93, 154, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.52);
   backdrop-filter: blur(22px) saturate(140%);
-  transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+  transition:
+    transform 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease;
 }
 .tools-grid a:hover [data-ff-card] {
   transform: translateY(-5px);
   border-color: color-mix(in srgb, #2474ff 42%, var(--ff-color-border));
-  box-shadow: 0 22px 44px rgba(36, 116, 255, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  box-shadow:
+    0 22px 44px rgba(36, 116, 255, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
 }
 .tools-grid h2 {
   margin: 1.25rem 0 0.75rem;
@@ -116,7 +125,9 @@
   border: 1px solid var(--ff-color-border);
   border-radius: var(--ff-radius-lg);
   background: var(--tools-glass);
-  box-shadow: 0 16px 38px rgba(61, 93, 154, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  box-shadow:
+    0 16px 38px rgba(61, 93, 154, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
   backdrop-filter: blur(22px) saturate(140%);
 }
 .intent-facts h2 {

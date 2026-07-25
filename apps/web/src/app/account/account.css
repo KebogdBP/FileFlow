@@ -81,7 +81,10 @@
   padding: 0.75rem 1rem;
   border-radius: 0.8rem;
   font-weight: 750;
-  transition: color 160ms ease, background 160ms ease, box-shadow 160ms ease;
+  transition:
+    color 160ms ease,
+    background 160ms ease,
+    box-shadow 160ms ease;
 }
 .account-header > a:last-child:hover {
   color: white;
@@ -128,7 +131,10 @@
 .account-auth form > [data-ff-button] {
   min-height: 3.15rem !important;
   border-radius: 0.9rem !important;
-  transition: transform 180ms ease, filter 180ms ease, box-shadow 180ms ease !important;
+  transition:
+    transform 180ms ease,
+    filter 180ms ease,
+    box-shadow 180ms ease !important;
 }
 .account-mode [data-ff-button][data-variant='primary'],
 .account-auth form > [data-ff-button] {
@@ -160,7 +166,10 @@
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.58),
     0 8px 24px rgba(61, 93, 154, 0.05);
-  transition: border-color 160ms ease, box-shadow 160ms ease, background 160ms ease;
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    background 160ms ease;
 }
 :root[data-theme='dark'] .account-auth [data-ff-input-shell],
 :root[data-theme='dark'] .account-mode [data-ff-button][data-variant='secondary'] {

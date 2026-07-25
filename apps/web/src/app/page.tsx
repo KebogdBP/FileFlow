@@ -11,8 +11,7 @@ export const metadata: Metadata = {
   alternates: { canonical: '/' },
   openGraph: {
     title: 'File Flow — private file tools in one workspace',
-    description:
-      'Convert, compress, resize, merge and prepare files with clear privacy controls.',
+    description: 'Convert, compress, resize, merge and prepare files with clear privacy controls.',
     type: 'website',
     url: '/',
     siteName: 'File Flow',

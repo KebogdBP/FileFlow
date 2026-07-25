@@ -45,8 +45,7 @@
   background:
     radial-gradient(circle at 80% 8%, rgba(103, 68, 190, 0.26), transparent 31rem),
     radial-gradient(circle at 28% 25%, rgba(26, 120, 176, 0.2), transparent 28rem),
-    radial-gradient(circle at 80% 70%, rgba(83, 60, 165, 0.18), transparent 30rem),
-    var(--home-bg);
+    radial-gradient(circle at 80% 70%, rgba(83, 60, 165, 0.18), transparent 30rem), var(--home-bg);
 }
 
 .ff-home::before {
@@ -56,7 +55,8 @@
   inset: 0;
   opacity: 0.34;
   pointer-events: none;
-  background-image: linear-gradient(rgba(101, 126, 181, 0.08) 1px, transparent 1px),
+  background-image:
+    linear-gradient(rgba(101, 126, 181, 0.08) 1px, transparent 1px),
     linear-gradient(90deg, rgba(101, 126, 181, 0.08) 1px, transparent 1px);
   background-size: 48px 48px;
   mask-image: linear-gradient(to bottom, black, transparent 80%);
@@ -201,19 +201,24 @@
   border-radius: 13px;
   color: white;
   background: linear-gradient(135deg, var(--home-blue), var(--home-blue-2));
-  box-shadow: 0 12px 24px color-mix(in srgb, var(--home-blue) 27%, transparent),
+  box-shadow:
+    0 12px 24px color-mix(in srgb, var(--home-blue) 27%, transparent),
     inset 0 1px 0 rgba(255, 255, 255, 0.4);
   font: inherit;
   font-size: 14px;
   font-weight: 800;
   cursor: pointer;
-  transition: transform 180ms ease, box-shadow 180ms ease, filter 180ms ease;
+  transition:
+    transform 180ms ease,
+    box-shadow 180ms ease,
+    filter 180ms ease;
 }
 
 .ff-primary-button:hover {
   transform: translateY(-2px);
   filter: saturate(1.12);
-  box-shadow: 0 16px 30px color-mix(in srgb, var(--home-blue) 34%, transparent),
+  box-shadow:
+    0 16px 30px color-mix(in srgb, var(--home-blue) 34%, transparent),
     inset 0 1px 0 rgba(255, 255, 255, 0.46);
 }
 
@@ -415,7 +420,9 @@
   border-radius: 50%;
   color: var(--home-blue);
   background: rgba(255, 255, 255, 0.36);
-  box-shadow: 0 18px 34px rgba(45, 91, 188, 0.14), inset 0 0 22px rgba(255, 255, 255, 0.6);
+  box-shadow:
+    0 18px 34px rgba(45, 91, 188, 0.14),
+    inset 0 0 22px rgba(255, 255, 255, 0.6);
 }
 
 :root[data-theme='dark'] .ff-upload-orb {
@@ -895,8 +902,7 @@
   margin-top: 44px;
   padding: clamp(28px, 5vw, 58px);
   background:
-    radial-gradient(circle at 86% 20%, rgba(119, 90, 255, 0.23), transparent 34%),
-    var(--glass-bg);
+    radial-gradient(circle at 86% 20%, rgba(119, 90, 255, 0.23), transparent 34%), var(--glass-bg);
 }
 
 .ff-saas-cta > div:first-child {
@@ -1158,7 +1164,10 @@
 }
 
 .ff-unified-workspace .input-tabs button {
-  transition: color 160ms ease, background 160ms ease, box-shadow 160ms ease,
+  transition:
+    color 160ms ease,
+    background 160ms ease,
+    box-shadow 160ms ease,
     transform 160ms ease;
 }
 
@@ -1193,7 +1202,10 @@
   box-shadow:
     0 12px 26px color-mix(in srgb, var(--home-blue) 30%, transparent),
     inset 0 1px 0 rgba(255, 255, 255, 0.44) !important;
-  transition: transform 180ms ease, filter 180ms ease, box-shadow 180ms ease !important;
+  transition:
+    transform 180ms ease,
+    filter 180ms ease,
+    box-shadow 180ms ease !important;
 }
 
 .ff-unified-workspace .input-picker-button:hover,
@@ -1205,7 +1217,8 @@
     0 0 0 4px color-mix(in srgb, var(--home-blue) 11%, transparent) !important;
 }
 
-.ff-unified-workspace :is(
+.ff-unified-workspace
+  :is(
     .input-privacy-note,
     .local-engine-status,
     .selected-source,
@@ -1234,7 +1247,10 @@
 .ff-unified-workspace .intent-options button {
   border-color: var(--glass-line);
   background: color-mix(in srgb, var(--glass-bg-strong) 84%, transparent);
-  transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+  transition:
+    transform 160ms ease,
+    border-color 160ms ease,
+    box-shadow 160ms ease;
 }
 
 .ff-unified-workspace .intent-options button:hover,

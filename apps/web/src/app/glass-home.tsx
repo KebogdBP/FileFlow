@@ -220,11 +220,13 @@ const copy = {
     ],
     productFoundation: 'Product foundation',
     reliable: 'Built for reliable workflows',
-    reliableLead: 'Batch processing, job status, validated outputs and account history already share one product architecture.',
+    reliableLead:
+      'Batch processing, job status, validated outputs and account history already share one product architecture.',
     openWorkspace: 'Open workspace',
     oneWorkspace: 'One workspace',
     effortless: 'Make file work feel effortless.',
-    effortlessLead: 'Start without an account, then sign in when you need history and repeatable workflows.',
+    effortlessLead:
+      'Start without an account, then sign in when you need history and repeatable workflows.',
     openFlow: 'Open File Flow',
     explore: 'Explore tools',
     footer: 'Private file tools with visible processing.',
@@ -257,7 +259,8 @@ const copy = {
     viewAll: 'Все инструменты',
     nextMedia: 'Медиа нового поколения',
     moreWays: 'Больше возможностей для каждого файла.',
-    moreWaysLead: 'Продуманный набор медиа-инструментов для авторов, команд и повторяемых процессов.',
+    moreWaysLead:
+      'Продуманный набор медиа-инструментов для авторов, команд и повторяемых процессов.',
     privacyArchitecture: 'Архитектура приватности',
     privacyTitle: 'Вы всегда знаете, куда отправляется файл.',
     privacySteps: [
@@ -267,11 +270,13 @@ const copy = {
     ],
     productFoundation: 'Основа продукта',
     reliable: 'Создано для надёжных процессов',
-    reliableLead: 'Пакетная обработка, статусы задач, проверка результатов и история аккаунта работают в одной архитектуре.',
+    reliableLead:
+      'Пакетная обработка, статусы задач, проверка результатов и история аккаунта работают в одной архитектуре.',
     openWorkspace: 'Открыть рабочую область',
     oneWorkspace: 'Одна рабочая область',
     effortless: 'Работать с файлами стало легко.',
-    effortlessLead: 'Начните без аккаунта, а затем войдите, когда понадобится история и повторяемые процессы.',
+    effortlessLead:
+      'Начните без аккаунта, а затем войдите, когда понадобится история и повторяемые процессы.',
     openFlow: 'Открыть FileFlow',
     explore: 'Смотреть инструменты',
     footer: 'Приватные файловые инструменты с прозрачной обработкой.',
@@ -314,11 +319,13 @@ const copy = {
     ],
     productFoundation: 'Base del producto',
     reliable: 'Creado para flujos fiables',
-    reliableLead: 'Procesamiento por lotes, estados, resultados verificados e historial comparten una arquitectura.',
+    reliableLead:
+      'Procesamiento por lotes, estados, resultados verificados e historial comparten una arquitectura.',
     openWorkspace: 'Abrir espacio de trabajo',
     oneWorkspace: 'Un espacio de trabajo',
     effortless: 'Trabajar con archivos, sin esfuerzo.',
-    effortlessLead: 'Empieza sin cuenta e inicia sesión cuando necesites historial y flujos repetibles.',
+    effortlessLead:
+      'Empieza sin cuenta e inicia sesión cuando necesites historial y flujos repetibles.',
     openFlow: 'Abrir FileFlow',
     explore: 'Explorar herramientas',
     footer: 'Herramientas privadas con procesamiento visible.',
@@ -402,46 +409,88 @@ const localizedCopy = {
       ['Clean up', 'Temporary cloud sources follow automatic retention rules.'],
     ],
     securityTitle: 'Security at FileFlow',
-    securityLead: 'Layered protection for cloud operations, while local processing avoids upload entirely.',
-    securityItems: ['Quarantine and malware scanning', 'Isolated processing environments', 'Short-lived access to temporary files'],
+    securityLead:
+      'Layered protection for cloud operations, while local processing avoids upload entirely.',
+    securityItems: [
+      'Quarantine and malware scanning',
+      'Isolated processing environments',
+      'Short-lived access to temporary files',
+    ],
     privacyDetailTitle: 'Privacy you can verify',
-    privacyDetailLead: 'Local files stay in your browser. Cloud processing is explained before it starts and follows automatic retention rules.',
-    privacyItems: ['Local tools work without an account', 'No filenames or contents in analytics', 'Sessions can be revoked at any time'],
+    privacyDetailLead:
+      'Local files stay in your browser. Cloud processing is explained before it starts and follows automatic retention rules.',
+    privacyItems: [
+      'Local tools work without an account',
+      'No filenames or contents in analytics',
+      'Sessions can be revoked at any time',
+    ],
     termsTitle: 'Clear beta terms',
-    termsLead: 'You keep ownership of your files and control what you submit. Keep independent copies of important files.',
-    termsItems: ['Your files remain yours', 'No malware or rights violations', 'Beta features may change'],
+    termsLead:
+      'You keep ownership of your files and control what you submit. Keep independent copies of important files.',
+    termsItems: [
+      'Your files remain yours',
+      'No malware or rights violations',
+      'Beta features may change',
+    ],
     footer: 'Private file tools with visible processing.',
     terms: 'Terms',
     roadmap: 'Roadmap',
   },
   ru: {
-    nav: ['\u0413\u043b\u0430\u0432\u043d\u0430\u044f', '\u0418\u043d\u0441\u0442\u0440\u0443\u043c\u0435\u043d\u0442\u044b', '\u0420\u0430\u0431\u043e\u0447\u0430\u044f \u043e\u0431\u043b\u0430\u0441\u0442\u044c', '\u0418\u0441\u0442\u043e\u0440\u0438\u044f', '\u041f\u0440\u0438\u0432\u0430\u0442\u043d\u043e\u0441\u0442\u044c'],
+    nav: [
+      '\u0413\u043b\u0430\u0432\u043d\u0430\u044f',
+      '\u0418\u043d\u0441\u0442\u0440\u0443\u043c\u0435\u043d\u0442\u044b',
+      '\u0420\u0430\u0431\u043e\u0447\u0430\u044f \u043e\u0431\u043b\u0430\u0441\u0442\u044c',
+      '\u0418\u0441\u0442\u043e\u0440\u0438\u044f',
+      '\u041f\u0440\u0438\u0432\u0430\u0442\u043d\u043e\u0441\u0442\u044c',
+    ],
     security: '\u0411\u0435\u0437\u043e\u043f\u0430\u0441\u043d\u043e\u0441\u0442\u044c',
     privacy: '\u041f\u0440\u0438\u0432\u0430\u0442\u043d\u043e\u0441\u0442\u044c',
     signIn: '\u0412\u043e\u0439\u0442\u0438',
     createAccount: '\u0420\u0435\u0433\u0438\u0441\u0442\u0440\u0430\u0446\u0438\u044f',
-    eyebrow: '\u041f\u0440\u0438\u0432\u0430\u0442\u043d\u0430\u044f \u0440\u0430\u0431\u043e\u0442\u0430 \u0441 \u0444\u0430\u0439\u043b\u0430\u043c\u0438',
-    headline: '\u041a\u043e\u043d\u0432\u0435\u0440\u0442\u0438\u0440\u0443\u0439\u0442\u0435, \u0441\u0436\u0438\u043c\u0430\u0439\u0442\u0435 \u0438 \u0441\u043a\u0430\u0447\u0438\u0432\u0430\u0439\u0442\u0435 —',
-    headlineAccent: ' \u0432\u0441\u0451 \u0432 \u043e\u0434\u043d\u043e\u043c \u043f\u043e\u0442\u043e\u043a\u0435.',
+    eyebrow:
+      '\u041f\u0440\u0438\u0432\u0430\u0442\u043d\u0430\u044f \u0440\u0430\u0431\u043e\u0442\u0430 \u0441 \u0444\u0430\u0439\u043b\u0430\u043c\u0438',
+    headline:
+      '\u041a\u043e\u043d\u0432\u0435\u0440\u0442\u0438\u0440\u0443\u0439\u0442\u0435, \u0441\u0436\u0438\u043c\u0430\u0439\u0442\u0435 \u0438 \u0441\u043a\u0430\u0447\u0438\u0432\u0430\u0439\u0442\u0435 —',
+    headlineAccent:
+      ' \u0432\u0441\u0451 \u0432 \u043e\u0434\u043d\u043e\u043c \u043f\u043e\u0442\u043e\u043a\u0435.',
     lead: '\u0411\u044b\u0441\u0442\u0440\u044b\u0435 \u0438\u043d\u0441\u0442\u0440\u0443\u043c\u0435\u043d\u0442\u044b \u0434\u043b\u044f \u0434\u043e\u043a\u0443\u043c\u0435\u043d\u0442\u043e\u0432, \u0438\u0437\u043e\u0431\u0440\u0430\u0436\u0435\u043d\u0438\u0439, \u0432\u0438\u0434\u0435\u043e \u0438 \u0430\u0443\u0434\u0438\u043e. \u041b\u043e\u043a\u0430\u043b\u044c\u043d\u0430\u044f \u043e\u0431\u0440\u0430\u0431\u043e\u0442\u043a\u0430 \u0432\u0435\u0437\u0434\u0435, \u0433\u0434\u0435 \u044d\u0442\u043e \u0432\u043e\u0437\u043c\u043e\u0436\u043d\u043e.',
-    trust: ['\u0411\u044b\u0441\u0442\u0440\u043e \u043f\u043e \u0443\u043c\u043e\u043b\u0447\u0430\u043d\u0438\u044e', '\u041f\u0440\u0438\u0432\u0430\u0442\u043d\u043e\u0441\u0442\u044c \u0432\u0438\u0434\u043d\u0430', '\u0420\u0435\u0437\u0443\u043b\u044c\u0442\u0430\u0442 \u043f\u0440\u043e\u0432\u0435\u0440\u0435\u043d'],
+    trust: [
+      '\u0411\u044b\u0441\u0442\u0440\u043e \u043f\u043e \u0443\u043c\u043e\u043b\u0447\u0430\u043d\u0438\u044e',
+      '\u041f\u0440\u0438\u0432\u0430\u0442\u043d\u043e\u0441\u0442\u044c \u0432\u0438\u0434\u043d\u0430',
+      '\u0420\u0435\u0437\u0443\u043b\u044c\u0442\u0430\u0442 \u043f\u0440\u043e\u0432\u0435\u0440\u0435\u043d',
+    ],
     drop: '\u041f\u0435\u0440\u0435\u0442\u0430\u0449\u0438\u0442\u0435 \u0444\u0430\u0439\u043b\u044b \u0441\u044e\u0434\u0430',
-    dropActive: '\u041e\u0442\u043f\u0443\u0441\u0442\u0438\u0442\u0435, \u0447\u0442\u043e\u0431\u044b \u0434\u043e\u0431\u0430\u0432\u0438\u0442\u044c \u0444\u0430\u0439\u043b',
-    fileTypes: 'PDF, DOCX, \u0438\u0437\u043e\u0431\u0440\u0430\u0436\u0435\u043d\u0438\u044f, \u0432\u0438\u0434\u0435\u043e \u0438 \u0430\u0443\u0434\u0438\u043e',
+    dropActive:
+      '\u041e\u0442\u043f\u0443\u0441\u0442\u0438\u0442\u0435, \u0447\u0442\u043e\u0431\u044b \u0434\u043e\u0431\u0430\u0432\u0438\u0442\u044c \u0444\u0430\u0439\u043b',
+    fileTypes:
+      'PDF, DOCX, \u0438\u0437\u043e\u0431\u0440\u0430\u0436\u0435\u043d\u0438\u044f, \u0432\u0438\u0434\u0435\u043e \u0438 \u0430\u0443\u0434\u0438\u043e',
     browse: '\u0412\u044b\u0431\u0440\u0430\u0442\u044c \u0444\u0430\u0439\u043b\u044b',
-    pasteLink: '\u0412\u0441\u0442\u0430\u0432\u044c\u0442\u0435 \u0441\u0441\u044b\u043b\u043a\u0443',
-    importMedia: '\u0411\u0435\u0437\u043e\u043f\u0430\u0441\u043d\u044b\u0439 \u0438\u043c\u043f\u043e\u0440\u0442 \u043f\u0443\u0431\u043b\u0438\u0447\u043d\u044b\u0445 \u043c\u0435\u0434\u0438\u0430',
-    urlPlaceholder: '\u0421\u0441\u044b\u043b\u043a\u0430 YouTube, Instagram \u0438\u043b\u0438 TikTok',
-    startLink: '\u041d\u0430\u0447\u0430\u0442\u044c \u0441\u043e \u0441\u0441\u044b\u043b\u043a\u0438',
-    urlError: '\u0412\u0441\u0442\u0430\u0432\u044c\u0442\u0435 \u043f\u0443\u0431\u043b\u0438\u0447\u043d\u0443\u044e HTTPS-\u0441\u0441\u044b\u043b\u043a\u0443 YouTube, Instagram \u0438\u043b\u0438 TikTok.',
+    pasteLink:
+      '\u0412\u0441\u0442\u0430\u0432\u044c\u0442\u0435 \u0441\u0441\u044b\u043b\u043a\u0443',
+    importMedia:
+      '\u0411\u0435\u0437\u043e\u043f\u0430\u0441\u043d\u044b\u0439 \u0438\u043c\u043f\u043e\u0440\u0442 \u043f\u0443\u0431\u043b\u0438\u0447\u043d\u044b\u0445 \u043c\u0435\u0434\u0438\u0430',
+    urlPlaceholder:
+      '\u0421\u0441\u044b\u043b\u043a\u0430 YouTube, Instagram \u0438\u043b\u0438 TikTok',
+    startLink:
+      '\u041d\u0430\u0447\u0430\u0442\u044c \u0441\u043e \u0441\u0441\u044b\u043b\u043a\u0438',
+    urlError:
+      '\u0412\u0441\u0442\u0430\u0432\u044c\u0442\u0435 \u043f\u0443\u0431\u043b\u0438\u0447\u043d\u0443\u044e HTTPS-\u0441\u0441\u044b\u043b\u043a\u0443 YouTube, Instagram \u0438\u043b\u0438 TikTok.',
     smartActions: '\u0423\u043c\u043d\u044b\u0435 \u0434\u0435\u0439\u0441\u0442\u0432\u0438\u044f',
-    chooseOutcome: '\u0412\u044b\u0431\u0435\u0440\u0438\u0442\u0435 \u0440\u0435\u0437\u0443\u043b\u044c\u0442\u0430\u0442',
-    bestOptions: '\u041b\u0443\u0447\u0448\u0438\u0435 \u0432\u0430\u0440\u0438\u0430\u043d\u0442\u044b \u0434\u043b\u044f',
-    outcomeLead: '\u0412\u044b\u0431\u0435\u0440\u0438\u0442\u0435 \u0440\u0435\u0437\u0443\u043b\u044c\u0442\u0430\u0442 — FileFlow \u0440\u0430\u0437\u0431\u0435\u0440\u0451\u0442\u0441\u044f \u0441 \u0444\u043e\u0440\u043c\u0430\u0442\u043e\u043c.',
-    viewAll: '\u0412\u0441\u0435 \u0438\u043d\u0441\u0442\u0440\u0443\u043c\u0435\u043d\u0442\u044b',
-    nextMedia: '\u041c\u0435\u0434\u0438\u0430 \u043d\u043e\u0432\u043e\u0433\u043e \u043f\u043e\u043a\u043e\u043b\u0435\u043d\u0438\u044f',
-    moreWays: '\u0411\u043e\u043b\u044c\u0448\u0435 \u0432\u043e\u0437\u043c\u043e\u0436\u043d\u043e\u0441\u0442\u0435\u0439 \u0434\u043b\u044f \u043a\u0430\u0436\u0434\u043e\u0433\u043e \u0444\u0430\u0439\u043b\u0430.',
-    moreWaysLead: '\u041d\u0430\u0431\u043e\u0440 \u043c\u0435\u0434\u0438\u0430-\u0438\u043d\u0441\u0442\u0440\u0443\u043c\u0435\u043d\u0442\u043e\u0432 \u0434\u043b\u044f \u0430\u0432\u0442\u043e\u0440\u043e\u0432, \u043a\u043e\u043c\u0430\u043d\u0434 \u0438 \u043f\u043e\u0432\u0442\u043e\u0440\u044f\u0435\u043c\u044b\u0445 \u043f\u0440\u043e\u0446\u0435\u0441\u0441\u043e\u0432.',
+    chooseOutcome:
+      '\u0412\u044b\u0431\u0435\u0440\u0438\u0442\u0435 \u0440\u0435\u0437\u0443\u043b\u044c\u0442\u0430\u0442',
+    bestOptions:
+      '\u041b\u0443\u0447\u0448\u0438\u0435 \u0432\u0430\u0440\u0438\u0430\u043d\u0442\u044b \u0434\u043b\u044f',
+    outcomeLead:
+      '\u0412\u044b\u0431\u0435\u0440\u0438\u0442\u0435 \u0440\u0435\u0437\u0443\u043b\u044c\u0442\u0430\u0442 — FileFlow \u0440\u0430\u0437\u0431\u0435\u0440\u0451\u0442\u0441\u044f \u0441 \u0444\u043e\u0440\u043c\u0430\u0442\u043e\u043c.',
+    viewAll:
+      '\u0412\u0441\u0435 \u0438\u043d\u0441\u0442\u0440\u0443\u043c\u0435\u043d\u0442\u044b',
+    nextMedia:
+      '\u041c\u0435\u0434\u0438\u0430 \u043d\u043e\u0432\u043e\u0433\u043e \u043f\u043e\u043a\u043e\u043b\u0435\u043d\u0438\u044f',
+    moreWays:
+      '\u0411\u043e\u043b\u044c\u0448\u0435 \u0432\u043e\u0437\u043c\u043e\u0436\u043d\u043e\u0441\u0442\u0435\u0439 \u0434\u043b\u044f \u043a\u0430\u0436\u0434\u043e\u0433\u043e \u0444\u0430\u0439\u043b\u0430.',
+    moreWaysLead:
+      '\u041d\u0430\u0431\u043e\u0440 \u043c\u0435\u0434\u0438\u0430-\u0438\u043d\u0441\u0442\u0440\u0443\u043c\u0435\u043d\u0442\u043e\u0432 \u0434\u043b\u044f \u0430\u0432\u0442\u043e\u0440\u043e\u0432, \u043a\u043e\u043c\u0430\u043d\u0434 \u0438 \u043f\u043e\u0432\u0442\u043e\u0440\u044f\u0435\u043c\u044b\u0445 \u043f\u0440\u043e\u0446\u0435\u0441\u0441\u043e\u0432.',
     privacyArchitecture: 'Архитектура приватности',
     privacyTitle: 'Вы всегда знаете, куда отправляется файл.',
     privacySteps: [
@@ -450,14 +499,29 @@ const localizedCopy = {
       ['Автоочистка', 'Временные облачные файлы удаляются по правилам хранения.'],
     ],
     securityTitle: 'Безопасность FileFlow',
-    securityLead: 'Многоуровневая защита облачных операций, а локальная обработка полностью исключает загрузку.',
-    securityItems: ['Карантин и проверка на вредоносное ПО', 'Изолированные среды обработки', 'Кратковременный доступ к временным файлам'],
+    securityLead:
+      'Многоуровневая защита облачных операций, а локальная обработка полностью исключает загрузку.',
+    securityItems: [
+      'Карантин и проверка на вредоносное ПО',
+      'Изолированные среды обработки',
+      'Кратковременный доступ к временным файлам',
+    ],
     privacyDetailTitle: 'Проверяемая приватность',
-    privacyDetailLead: 'Локальные файлы остаются в браузере. Облачная обработка объясняется заранее и подчиняется автоочистке.',
-    privacyItems: ['Локальные инструменты без аккаунта', 'Без имён и содержимого файлов в аналитике', 'Сессию можно отозвать в любой момент'],
+    privacyDetailLead:
+      'Локальные файлы остаются в браузере. Облачная обработка объясняется заранее и подчиняется автоочистке.',
+    privacyItems: [
+      'Локальные инструменты без аккаунта',
+      'Без имён и содержимого файлов в аналитике',
+      'Сессию можно отозвать в любой момент',
+    ],
     termsTitle: 'Понятные условия бета-версии',
-    termsLead: 'Вы сохраняете права на файлы и решаете, что отправлять. Храните отдельные копии важных материалов.',
-    termsItems: ['Ваши файлы остаются вашими', 'Запрещены вредоносные файлы и нарушение прав', 'Бета-функции могут изменяться'],
+    termsLead:
+      'Вы сохраняете права на файлы и решаете, что отправлять. Храните отдельные копии важных материалов.',
+    termsItems: [
+      'Ваши файлы остаются вашими',
+      'Запрещены вредоносные файлы и нарушение прав',
+      'Бета-функции могут изменяться',
+    ],
     footer: 'Приватные инструменты с прозрачной обработкой.',
     terms: 'Условия',
     roadmap: '\u0412 \u043f\u043b\u0430\u043d\u0430\u0445',
@@ -493,19 +557,37 @@ const localizedCopy = {
     privacyArchitecture: 'Arquitectura de privacidad',
     privacyTitle: 'Siempre sabes adónde va tu archivo.',
     privacySteps: [
-      ['Inspección local', 'El navegador verifica el tipo de archivo antes de cualquier operación.'],
+      [
+        'Inspección local',
+        'El navegador verifica el tipo de archivo antes de cualquier operación.',
+      ],
       ['Revisar el plan', 'El modo local o en la nube se explica antes de procesar.'],
       ['Limpieza', 'Los archivos temporales siguen reglas de eliminación automática.'],
     ],
     securityTitle: 'Seguridad en FileFlow',
-    securityLead: 'Protección por capas para operaciones en la nube; el procesamiento local evita la carga por completo.',
-    securityItems: ['Cuarentena y análisis de malware', 'Entornos de procesamiento aislados', 'Acceso breve a archivos temporales'],
+    securityLead:
+      'Protección por capas para operaciones en la nube; el procesamiento local evita la carga por completo.',
+    securityItems: [
+      'Cuarentena y análisis de malware',
+      'Entornos de procesamiento aislados',
+      'Acceso breve a archivos temporales',
+    ],
     privacyDetailTitle: 'Privacidad verificable',
-    privacyDetailLead: 'Los archivos locales permanecen en el navegador. El uso de la nube se explica antes y sigue reglas de retención.',
-    privacyItems: ['Herramientas locales sin cuenta', 'Analítica sin nombres ni contenido', 'La sesión puede revocarse en cualquier momento'],
+    privacyDetailLead:
+      'Los archivos locales permanecen en el navegador. El uso de la nube se explica antes y sigue reglas de retención.',
+    privacyItems: [
+      'Herramientas locales sin cuenta',
+      'Analítica sin nombres ni contenido',
+      'La sesión puede revocarse en cualquier momento',
+    ],
     termsTitle: 'Términos beta claros',
-    termsLead: 'Conservas la propiedad de tus archivos y decides qué enviar. Mantén copias independientes de los archivos importantes.',
-    termsItems: ['Tus archivos siguen siendo tuyos', 'Sin malware ni infracciones de derechos', 'Las funciones beta pueden cambiar'],
+    termsLead:
+      'Conservas la propiedad de tus archivos y decides qué enviar. Mantén copias independientes de los archivos importantes.',
+    termsItems: [
+      'Tus archivos siguen siendo tuyos',
+      'Sin malware ni infracciones de derechos',
+      'Las funciones beta pueden cambiar',
+    ],
     footer: 'Herramientas privadas con procesamiento visible.',
     terms: 'Términos',
     roadmap: 'Próximamente',
@@ -604,7 +686,14 @@ export function GlassHome() {
 
         <aside className="ff-sidebar glass-panel" aria-label="Primary navigation">
           <Link className="ff-logo" href="/" aria-label="File Flow home">
-            <Image className="ff-logo-mark" src="/brand/fileflow-mark.png" alt="" width={34} height={30} priority />
+            <Image
+              className="ff-logo-mark"
+              src="/brand/fileflow-mark.png"
+              alt=""
+              width={34}
+              height={30}
+              priority
+            />
             <strong>FileFlow</strong>
           </Link>
           <nav>
@@ -616,7 +705,11 @@ export function GlassHome() {
             ))}
           </nav>
           <div className="ff-sidebar-bottom">
-            <Link className="ff-user-avatar" href="/account" aria-label={userProfile?.displayName ?? t.signIn}>
+            <Link
+              className="ff-user-avatar"
+              href="/account"
+              aria-label={userProfile?.displayName ?? t.signIn}
+            >
               {userProfile ? (
                 <span aria-hidden="true">{userProfile.displayName.slice(0, 2).toUpperCase()}</span>
               ) : (
@@ -694,9 +787,7 @@ export function GlassHome() {
                 {t.headline}
                 <span>{t.headlineAccent}</span>
               </h1>
-              <p>
-                {t.lead}
-              </p>
+              <p>{t.lead}</p>
               <div className="ff-trust-row">
                 <span>
                   <Zap size={15} /> {t.trust[0]}
@@ -729,7 +820,8 @@ export function GlassHome() {
                 }}
                 onDragOver={(event) => event.preventDefault()}
                 onDragLeave={(event) => {
-                  if (!event.currentTarget.contains(event.relatedTarget as Node)) setDragging(false);
+                  if (!event.currentTarget.contains(event.relatedTarget as Node))
+                    setDragging(false);
                 }}
                 onDrop={(event) => {
                   event.preventDefault();
@@ -895,25 +987,43 @@ export function GlassHome() {
               <LockKeyhole size={26} />
               <h2>{t.securityTitle}</h2>
               <p>{t.securityLead}</p>
-              <ul>{t.securityItems.map((item) => <li key={item}>{item}</li>)}</ul>
+              <ul>
+                {t.securityItems.map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
             </article>
             <article className="ff-legal-card glass-panel">
               <ShieldCheck size={26} />
               <h2>{t.privacyDetailTitle}</h2>
               <p>{t.privacyDetailLead}</p>
-              <ul>{t.privacyItems.map((item) => <li key={item}>{item}</li>)}</ul>
+              <ul>
+                {t.privacyItems.map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
             </article>
             <article className="ff-legal-card glass-panel" id="terms">
               <BookOpen size={26} />
               <h2>{t.termsTitle}</h2>
               <p>{t.termsLead}</p>
-              <ul>{t.termsItems.map((item) => <li key={item}>{item}</li>)}</ul>
+              <ul>
+                {t.termsItems.map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
             </article>
           </section>
 
           <footer className="ff-footer">
             <Link className="ff-logo" href="/">
-              <Image className="ff-logo-mark" src="/brand/fileflow-mark.png" alt="" width={34} height={30} />
+              <Image
+                className="ff-logo-mark"
+                src="/brand/fileflow-mark.png"
+                alt=""
+                width={34}
+                height={30}
+              />
               <strong>FileFlow</strong>
             </Link>
             <p>{t.footer}</p>
@@ -943,7 +1053,13 @@ export function GlassHome() {
               >
                 <div className="ff-mobile-heading">
                   <span className="ff-logo">
-                    <Image className="ff-logo-mark" src="/brand/fileflow-mark.png" alt="" width={34} height={30} />
+                    <Image
+                      className="ff-logo-mark"
+                      src="/brand/fileflow-mark.png"
+                      alt=""
+                      width={34}
+                      height={30}
+                    />
                     <strong>FileFlow</strong>
                   </span>
                   <button type="button" onClick={() => setMobileNav(false)} aria-label="Close menu">
@@ -966,7 +1082,15 @@ export function GlassHome() {
   );
 }
 
-function ToolCard({ tool, index, language }: { tool: ToolItem; index: number; language: Language }) {
+function ToolCard({
+  tool,
+  index,
+  language,
+}: {
+  tool: ToolItem;
+  index: number;
+  language: Language;
+}) {
   const Icon = tool.icon;
   const href = '#workspace-flow';
   const translated =
@@ -992,7 +1116,10 @@ function ToolCard({ tool, index, language }: { tool: ToolItem; index: number; la
         </div>
         <p>{translated[1]}</p>
       </div>
-      <Link href={href} aria-label={`${translated[0]}: ${tool.planned ? 'view roadmap' : 'open tool'}`}>
+      <Link
+        href={href}
+        aria-label={`${translated[0]}: ${tool.planned ? 'view roadmap' : 'open tool'}`}
+      >
         <ChevronRight size={18} />
       </Link>
     </motion.article>
