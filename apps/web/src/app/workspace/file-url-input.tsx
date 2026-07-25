@@ -29,6 +29,7 @@ import { BatchImageTool } from './batch-image-tool';
 import { MAX_BATCH_FILES, validateBatchCount } from './batch-model';
 import { CloudJobTool } from './cloud-job-tool';
 import { SocialImportTool } from './social-import-tool';
+import type { FileFlowLanguage } from '../use-fileflow-language';
 
 type Source = { kind: 'file'; file: File } | { kind: 'url'; url: string; platform: InputPlatform };
 type BatchInspection = { file: File; result: FileInspectionResult };
@@ -38,13 +39,86 @@ type InspectionState =
   | { status: 'ready'; value: FileInspection }
   | { status: 'error'; error: string };
 
+const workspaceCopy = {
+  en: {
+    badge: 'PRIVATE INPUT', title: 'Start with a file or link', nothing: 'Nothing uploaded',
+    readyOne: '1 source ready', filesReady: 'files ready', device: 'From device', link: 'From a link',
+    release: 'Release to add your file', drop: 'Drop a file here',
+    formats: `Images, video, audio, PDF or DOCX · select up to ${MAX_BATCH_FILES}`,
+    choose: 'Choose a file', publicUrl: 'Public media URL', useLink: 'Use this link',
+    linkHelp: 'YouTube, Instagram and TikTok public links', local: 'LOCAL', linkBadge: 'LINK',
+    noImport: 'No import has started', privateTitle: 'Your file stays privately on your device',
+    localNote: 'Selecting a file does not upload it. Processing mode is confirmed before every operation.',
+    linkNote: 'FileFlow validates the address only. A later step will explain cloud import before it begins.',
+    chooseIntent: 'CHOOSE INTENT', whatDo: 'What would you like to do?', available: 'available',
+    availableOps: 'Available operations', onDevice: 'On this device', cloud: 'Protected cloud',
+    review: 'Review this plan', confirmed: 'Intent confirmed', confirm: 'Confirm intent',
+    confirmedButton: 'Confirmed',
+    inspecting: 'Inspecting locally…', fileSummary: 'File summary', bytesRead: 'bytes read locally',
+    metadata: ['Category', 'Format', 'Declared MIME', 'Detected MIME', 'Extension', 'Modified'],
+    operationNames: {},
+    invalidFile: 'This file cannot be used. Check its type and size.', invalidUrl: 'Enter a supported public HTTPS link.',
+  },
+  ru: {
+    badge: 'ПРИВАТНЫЙ ВВОД', title: 'Начните с файла или ссылки', nothing: 'Ничего не загружено',
+    readyOne: '1 источник готов', filesReady: 'файлов готово', device: 'С устройства', link: 'По ссылке',
+    release: 'Отпустите, чтобы добавить файл', drop: 'Перетащите файл сюда',
+    formats: `Изображения, видео, аудио, PDF или DOCX · до ${MAX_BATCH_FILES} файлов`,
+    choose: 'Выбрать файл', publicUrl: 'Публичная ссылка на медиа', useLink: 'Использовать ссылку',
+    linkHelp: 'Публичные ссылки YouTube, Instagram и TikTok', local: 'ЛОКАЛЬНО', linkBadge: 'ССЫЛКА',
+    noImport: 'Импорт ещё не начался', privateTitle: 'Ваш файл остаётся приватно на устройстве',
+    localNote: 'Выбор файла не загружает его. Режим обработки подтверждается перед каждой операцией.',
+    linkNote: 'FileFlow только проверяет адрес. Перед облачным импортом вы увидите подробное объяснение.',
+    chooseIntent: 'ВЫБЕРИТЕ ДЕЙСТВИЕ', whatDo: 'Что вы хотите сделать?', available: 'доступно',
+    availableOps: 'Доступные операции', onDevice: 'На этом устройстве', cloud: 'Защищённое облако',
+    review: 'Проверьте план', confirmed: 'Действие подтверждено', confirm: 'Подтвердить действие',
+    confirmedButton: 'Подтверждено',
+    inspecting: 'Локальная проверка…', fileSummary: 'Сводка по файлу', bytesRead: 'байт прочитано локально',
+    metadata: ['Категория', 'Формат', 'Заявленный MIME', 'Определённый MIME', 'Расширение', 'Изменён'],
+    operationNames: {
+      'compress-pdf': 'Сжать PDF', 'split-pdf': 'Разделить PDF', 'merge-pdf': 'Объединить PDF',
+      'pdf-to-jpg': 'PDF в JPEG', 'docx-to-pdf': 'DOCX в PDF', 'compress-video': 'Сжать видео',
+      'resize-video': 'Изменить размер видео', 'extract-audio': 'Извлечь аудио',
+      'optimize-image': 'Оптимизировать изображение', 'remove-image-metadata': 'Удалить метаданные',
+    },
+    invalidFile: 'Этот файл нельзя использовать. Проверьте тип и размер.', invalidUrl: 'Введите поддерживаемую публичную HTTPS-ссылку.',
+  },
+  es: {
+    badge: 'ENTRADA PRIVADA', title: 'Empieza con un archivo o enlace', nothing: 'Nada cargado',
+    readyOne: '1 fuente lista', filesReady: 'archivos listos', device: 'Desde el dispositivo', link: 'Desde un enlace',
+    release: 'Suelta para añadir el archivo', drop: 'Suelta un archivo aquí',
+    formats: `Imágenes, vídeo, audio, PDF o DOCX · hasta ${MAX_BATCH_FILES} archivos`,
+    choose: 'Elegir archivo', publicUrl: 'URL pública de medios', useLink: 'Usar este enlace',
+    linkHelp: 'Enlaces públicos de YouTube, Instagram y TikTok', local: 'LOCAL', linkBadge: 'ENLACE',
+    noImport: 'La importación aún no ha empezado', privateTitle: 'Tu archivo permanece privado en tu dispositivo',
+    localNote: 'Elegir un archivo no lo carga. El modo de procesamiento se confirma antes de cada operación.',
+    linkNote: 'FileFlow solo valida la dirección. Antes de importar en la nube verás una explicación.',
+    chooseIntent: 'ELIGE UNA ACCIÓN', whatDo: '¿Qué quieres hacer?', available: 'disponibles',
+    availableOps: 'Operaciones disponibles', onDevice: 'En este dispositivo', cloud: 'Nube protegida',
+    review: 'Revisa este plan', confirmed: 'Acción confirmada', confirm: 'Confirmar acción',
+    confirmedButton: 'Confirmado',
+    inspecting: 'Inspección local…', fileSummary: 'Resumen del archivo', bytesRead: 'bytes leídos localmente',
+    metadata: ['Categoría', 'Formato', 'MIME declarado', 'MIME detectado', 'Extensión', 'Modificado'],
+    operationNames: {
+      'compress-pdf': 'Comprimir PDF', 'split-pdf': 'Dividir PDF', 'merge-pdf': 'Unir PDFs',
+      'pdf-to-jpg': 'PDF a JPEG', 'docx-to-pdf': 'DOCX a PDF', 'compress-video': 'Comprimir vídeo',
+      'resize-video': 'Redimensionar vídeo', 'extract-audio': 'Extraer audio',
+      'optimize-image': 'Optimizar imagen', 'remove-image-metadata': 'Eliminar metadatos',
+    },
+    invalidFile: 'No se puede usar este archivo. Comprueba el tipo y el tamaño.', invalidUrl: 'Introduce un enlace HTTPS público compatible.',
+  },
+} as const;
+
 export function FileUrlInput({
   initialIntent,
   initialUrl,
+  language = 'en',
 }: {
   initialIntent?: string;
   initialUrl?: string;
+  language?: FileFlowLanguage;
 }) {
+  const text = workspaceCopy[language];
   const [tab, setTab] = useState<'file' | 'url'>(initialUrl ? 'url' : 'file');
   const [source, setSource] = useState<Source>();
   const [error, setError] = useState('');
@@ -83,7 +157,7 @@ export function FileUrlInput({
     if (!result.ok) {
       setSource(undefined);
       setInspection({ status: 'idle' });
-      setError(result.error);
+      setError(language === 'en' ? result.error : text.invalidFile);
       if (inputRef.current) inputRef.current.value = '';
       return;
     }
@@ -102,7 +176,7 @@ export function FileUrlInput({
     const result = validateSourceUrl(urlValue);
     if (!result.ok) {
       setSource(undefined);
-      setError(result.error);
+      setError(language === 'en' ? result.error : text.invalidUrl);
       return;
     }
     setError('');
@@ -130,11 +204,11 @@ export function FileUrlInput({
     <Card className="input-card" variant="glass">
       <div className="input-card-heading">
         <div>
-          <Badge variant="private">PRIVATE INPUT</Badge>
-          <h2 id={`${id}-title`}>Start with a file or link</h2>
+          <Badge variant="private">{text.badge}</Badge>
+          <h2 id={`${id}-title`}>{text.title}</h2>
         </div>
         <span className="input-empty-status">
-          {batch ? `${batch.length} files ready` : source ? '1 source ready' : 'Nothing uploaded'}
+          {batch ? `${batch.length} ${text.filesReady}` : source ? text.readyOne : text.nothing}
         </span>
       </div>
 
@@ -147,7 +221,7 @@ export function FileUrlInput({
           aria-controls={`${id}-file-panel`}
           onClick={() => selectTab('file')}
         >
-          From device
+          {text.device}
         </button>
         <button
           type="button"
@@ -157,7 +231,7 @@ export function FileUrlInput({
           aria-controls={`${id}-url-panel`}
           onClick={() => selectTab('url')}
         >
-          From a link
+          {text.link}
         </button>
       </div>
 
@@ -200,12 +274,10 @@ export function FileUrlInput({
             <span className="file-drop-icon" aria-hidden="true">
               ↥
             </span>
-            <strong>{dragActive ? 'Release to add your file' : 'Drop a file here'}</strong>
-            <span id={`${id}-file-help`}>
-              Images, video, audio, PDF or DOCX · select up to {MAX_BATCH_FILES}
-            </span>
+            <strong>{dragActive ? text.release : text.drop}</strong>
+            <span id={`${id}-file-help`}>{text.formats}</span>
             <label className="input-picker-button" htmlFor={`${id}-file`}>
-              Choose a file
+              {text.choose}
             </label>
           </div>
         </div>
@@ -217,7 +289,7 @@ export function FileUrlInput({
           className="input-panel"
         >
           <form className="url-input-form" onSubmit={chooseUrl} noValidate>
-            <label htmlFor={`${id}-url`}>Public media URL</label>
+            <label htmlFor={`${id}-url`}>{text.publicUrl}</label>
             <div className="url-input-row">
               <input
                 id={`${id}-url`}
@@ -230,9 +302,9 @@ export function FileUrlInput({
                 aria-describedby={`${id}-url-help`}
                 onChange={(event) => setUrlValue(event.target.value)}
               />
-              <Button type="submit">Use this link</Button>
+              <Button type="submit">{text.useLink}</Button>
             </div>
-            <span id={`${id}-url-help`}>YouTube, Instagram and TikTok public links</span>
+            <span id={`${id}-url-help`}>{text.linkHelp}</span>
           </form>
         </div>
       )}
@@ -246,7 +318,12 @@ export function FileUrlInput({
         {source ? <SelectedSource source={source} onRemove={reset} /> : null}
         {batch ? <BatchPanel batch={batch} onRemove={reset} /> : null}
         {source?.kind === 'file' ? (
-          <FileInspectorPanel state={inspection} file={source.file} initialIntent={initialIntent} />
+          <FileInspectorPanel
+            state={inspection}
+            file={source.file}
+            initialIntent={initialIntent}
+            language={language}
+          />
         ) : null}
         {source?.kind === 'url' ? (
           <UrlIntentPanel platform={source.platform} url={source.url} />
@@ -255,16 +332,16 @@ export function FileUrlInput({
 
       <div className="input-privacy-note">
         <Badge variant={source?.kind === 'url' ? 'cloud' : 'local'}>
-          {source?.kind === 'url' ? 'LINK' : 'LOCAL'}
+          {source?.kind === 'url' ? text.linkBadge : text.local}
         </Badge>
         <div>
           <strong>
-            {source?.kind === 'url' ? 'No import has started' : 'Your file stays on this device'}
+            {source?.kind === 'url' ? text.noImport : text.privateTitle}
           </strong>
           <p>
             {source?.kind === 'url'
-              ? 'FileFlow validates the address only. A later step will explain cloud import before it begins.'
-              : 'Selecting a file does not upload it. Processing mode is confirmed before every operation.'}
+              ? text.linkNote
+              : text.localNote}
           </p>
         </div>
       </div>
@@ -429,17 +506,20 @@ function FileInspectorPanel({
   state,
   file,
   initialIntent,
+  language,
 }: {
   state: InspectionState;
   file: File;
   initialIntent?: string;
+  language: FileFlowLanguage;
 }) {
+  const text = workspaceCopy[language];
   if (state.status === 'idle') return null;
   if (state.status === 'loading') {
     return (
       <div className="file-inspector file-inspector-loading" aria-busy="true">
         <span className="inspector-spinner" aria-hidden="true" />
-        <strong>Inspecting locally…</strong>
+        <strong>{text.inspecting}</strong>
       </div>
     );
   }
@@ -466,33 +546,33 @@ function FileInspectorPanel({
             <Badge variant={item.confidence === 'mismatch' ? 'warning' : 'success'}>
               {item.confidence === 'verified' ? 'VERIFIED' : item.confidence.toUpperCase()}
             </Badge>
-            <h3 id="file-inspector-title">File summary</h3>
+            <h3 id="file-inspector-title">{text.fileSummary}</h3>
           </div>
-          <span>{item.bytesRead} bytes read locally</span>
+          <span>{item.bytesRead} {text.bytesRead}</span>
         </div>
         <dl className="file-metadata-grid">
           <div>
-            <dt>Category</dt>
+            <dt>{text.metadata[0]}</dt>
             <dd>{item.category}</dd>
           </div>
           <div>
-            <dt>Format</dt>
+            <dt>{text.metadata[1]}</dt>
             <dd>{item.detectedFormat ?? item.extension.toUpperCase()}</dd>
           </div>
           <div>
-            <dt>Declared MIME</dt>
+            <dt>{text.metadata[2]}</dt>
             <dd>{item.declaredMime}</dd>
           </div>
           <div>
-            <dt>Detected MIME</dt>
+            <dt>{text.metadata[3]}</dt>
             <dd>{item.detectedMime ?? 'Not verified'}</dd>
           </div>
           <div>
-            <dt>Extension</dt>
+            <dt>{text.metadata[4]}</dt>
             <dd>{item.extension === 'none' ? 'None' : `.${item.extension}`}</dd>
           </div>
           <div>
-            <dt>Modified</dt>
+            <dt>{text.metadata[5]}</dt>
             <dd>{item.lastModified ?? 'Not provided'}</dd>
           </div>
         </dl>
@@ -509,6 +589,7 @@ function FileInspectorPanel({
         initialIntent={initialIntent}
         file={file}
         sourceMime={item.detectedMime}
+        language={language}
       />
     </>
   );
@@ -519,12 +600,15 @@ function RecommendationPanel({
   initialIntent,
   file,
   sourceMime,
+  language,
 }: {
   context: RecommendationContext;
   initialIntent?: string;
   file: File;
   sourceMime?: string;
+  language: FileFlowLanguage;
 }) {
+  const text = workspaceCopy[language];
   const [operationId, setOperationId] = useState<string>();
   const [confirmed, setConfirmed] = useState(false);
   const options = availableOperations(context);
@@ -551,12 +635,12 @@ function RecommendationPanel({
     <section className="intent-workspace" aria-labelledby="intent-title">
       <div className="intent-heading">
         <div>
-          <Badge variant="private">CHOOSE INTENT</Badge>
-          <h3 id="intent-title">What would you like to do?</h3>
+          <Badge variant="private">{text.chooseIntent}</Badge>
+          <h3 id="intent-title">{text.whatDo}</h3>
         </div>
-        <span>{options.length} available</span>
+        <span>{options.length} {text.available}</span>
       </div>
-      <div className="intent-options" role="group" aria-label="Available operations">
+      <div className="intent-options" role="group" aria-label={text.availableOps}>
         {options.map((option) => {
           const selected = result.plan.operationId === option.id;
           return (
@@ -570,9 +654,11 @@ function RecommendationPanel({
               }}
             >
               <span aria-hidden="true">{selected ? '●' : '○'}</span>
-              <strong>{option.displayName}</strong>
+              <strong>
+                {(text.operationNames as Record<string, string>)[option.id] ?? option.displayName}
+              </strong>
               <small>
-                {option.executionMode === 'local' ? 'On this device' : 'Protected cloud'}
+                {option.executionMode === 'local' ? text.onDevice : text.cloud}
               </small>
             </button>
           );
@@ -581,7 +667,7 @@ function RecommendationPanel({
       <RecommendationPlanView plan={result.plan} />
       <div className="intent-confirmation" data-confirmed={confirmed || undefined}>
         <div>
-          <strong>{confirmed ? 'Intent confirmed' : 'Review this plan'}</strong>
+          <strong>{confirmed ? text.confirmed : text.review}</strong>
           <p>
             {confirmed
               ? result.plan.mode === 'local'
@@ -591,7 +677,7 @@ function RecommendationPanel({
           </p>
         </div>
         <Button type="button" onClick={() => setConfirmed(true)} disabled={confirmed}>
-          {confirmed ? 'Confirmed' : 'Confirm intent'}
+          {confirmed ? text.confirmedButton : text.confirm}
         </Button>
       </div>
       {confirmed && result.plan.mode === 'cloud' ? (

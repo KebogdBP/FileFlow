@@ -4,6 +4,13 @@ import { useCallback, useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
 import { Badge, Button, Card, Input } from '@fileflow/ui';
 import { ACCOUNT_TOKEN_KEY, API_URL, downloadJobResult } from '../cloud-api';
+import { useFileFlowLanguage } from '../use-fileflow-language';
+
+const authCopy = {
+  en: { signIn: 'Sign in', create: 'Create account', name: 'Name or nickname', email: 'Email', password: 'Password', confirm: 'Confirm password', wait: 'Please wait…', mismatch: 'Passwords do not match.' },
+  ru: { signIn: 'Войти', create: 'Создать аккаунт', name: 'Имя или никнейм', email: 'Электронная почта', password: 'Пароль', confirm: 'Подтвердите пароль', wait: 'Подождите…', mismatch: 'Пароли не совпадают.' },
+  es: { signIn: 'Iniciar sesión', create: 'Crear cuenta', name: 'Nombre o apodo', email: 'Correo electrónico', password: 'Contraseña', confirm: 'Confirmar contraseña', wait: 'Espera…', mismatch: 'Las contraseñas no coinciden.' },
+} as const;
 
 type Account = {
   id: string;
@@ -43,6 +50,8 @@ function apiRequest(path: string, accessToken: string, init?: RequestInit) {
 }
 
 export function AccountDashboard() {
+  const { language } = useFileFlowLanguage();
+  const text = authCopy[language];
   const [token, setToken] = useState<string | null>(null);
   const [account, setAccount] = useState<Account | null>(null);
   const [limits, setLimits] = useState<Limits | null>(null);
@@ -66,7 +75,13 @@ export function AccountDashboard() {
       return;
     }
     setToken(accessToken);
-    setAccount((await profileResponse.json()) as Account);
+    const profile = (await profileResponse.json()) as Account;
+    setAccount(profile);
+    window.localStorage.setItem(
+      'fileflow-user-profile',
+      JSON.stringify({ displayName: profile.display_name }),
+    );
+    window.dispatchEvent(new Event('fileflow-profile-change'));
     setLimits((await limitsResponse.json()) as Limits);
     setJobs(((await historyResponse.json()) as { items: Job[] }).items);
     setApiKeys(((await keysResponse.json()) as { items: ApiKey[] }).items);
@@ -83,7 +98,7 @@ export function AccountDashboard() {
     const data = new FormData(event.currentTarget);
     const password = String(data.get('password') ?? '');
     if (mode === 'register' && password !== String(data.get('confirmPassword') ?? '')) {
-      setMessage('Passwords do not match.');
+      setMessage(text.mismatch);
       return;
     }
     setBusy(true);
@@ -117,6 +132,8 @@ export function AccountDashboard() {
   async function logout() {
     if (token) await apiRequest('/account/session', token, { method: 'DELETE' });
     window.localStorage.removeItem(ACCOUNT_TOKEN_KEY);
+    window.localStorage.removeItem('fileflow-user-profile');
+    window.dispatchEvent(new Event('fileflow-profile-change'));
     setToken(null);
     setAccount(null);
     setLimits(null);
@@ -186,19 +203,19 @@ export function AccountDashboard() {
             variant={mode === 'login' ? 'primary' : 'secondary'}
             onClick={() => setMode('login')}
           >
-            Sign in
+            {text.signIn}
           </Button>
           <Button
             variant={mode === 'register' ? 'primary' : 'secondary'}
             onClick={() => setMode('register')}
           >
-            Create account
+            {text.create}
           </Button>
         </div>
         <form onSubmit={submit}>
           {mode === 'register' ? (
             <Input
-              label="Name or nickname"
+              label={text.name}
               name="displayName"
               autoComplete="nickname"
               minLength={2}
@@ -206,9 +223,9 @@ export function AccountDashboard() {
               required
             />
           ) : null}
-          <Input label="Email" name="email" type="email" autoComplete="email" required />
+          <Input label={text.email} name="email" type="email" autoComplete="email" required />
           <Input
-            label="Password"
+            label={text.password}
             name="password"
             type="password"
             autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
@@ -217,7 +234,7 @@ export function AccountDashboard() {
           />
           {mode === 'register' ? (
             <Input
-              label="Confirm password"
+              label={text.confirm}
               name="confirmPassword"
               type="password"
               autoComplete="new-password"
@@ -231,7 +248,7 @@ export function AccountDashboard() {
             </p>
           )}
           <Button type="submit" disabled={busy}>
-            {busy ? 'Please wait…' : mode === 'login' ? 'Sign in' : 'Create account'}
+            {busy ? text.wait : mode === 'login' ? text.signIn : text.create}
           </Button>
         </form>
       </Card>

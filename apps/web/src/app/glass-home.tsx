@@ -12,7 +12,6 @@ import {
   FileOutput,
   FileText,
   Film,
-  Gauge,
   Grid2X2,
   History,
   Home,
@@ -33,6 +32,7 @@ import {
   Subtitles,
   Sun,
   UploadCloud,
+  UserRound,
   WandSparkles,
   X,
   Zap,
@@ -42,9 +42,10 @@ import Image from 'next/image';
 import Link from 'next/link';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { FaInstagram, FaTiktok, FaYoutube } from 'react-icons/fa6';
+import { useFileFlowLanguage, type FileFlowLanguage } from './use-fileflow-language';
 import { FileUrlInput } from './workspace/file-url-input';
 
-type Language = 'en' | 'ru' | 'es';
+type Language = FileFlowLanguage;
 
 type ToolItem = {
   title: string;
@@ -393,6 +394,24 @@ const localizedCopy = {
     nextMedia: 'Next-generation media',
     moreWays: 'More ways to shape every file.',
     moreWaysLead: 'A focused media toolkit designed for creators, teams and repeatable workflows.',
+    privacyArchitecture: 'Privacy architecture',
+    privacyTitle: 'You always know where your file goes.',
+    privacySteps: [
+      ['Inspect locally', 'The browser checks file identity before any operation.'],
+      ['Review the plan', 'Local or cloud mode is explained before processing.'],
+      ['Clean up', 'Temporary cloud sources follow automatic retention rules.'],
+    ],
+    securityTitle: 'Security at FileFlow',
+    securityLead: 'Layered protection for cloud operations, while local processing avoids upload entirely.',
+    securityItems: ['Quarantine and malware scanning', 'Isolated processing environments', 'Short-lived access to temporary files'],
+    privacyDetailTitle: 'Privacy you can verify',
+    privacyDetailLead: 'Local files stay in your browser. Cloud processing is explained before it starts and follows automatic retention rules.',
+    privacyItems: ['Local tools work without an account', 'No filenames or contents in analytics', 'Sessions can be revoked at any time'],
+    termsTitle: 'Clear beta terms',
+    termsLead: 'You keep ownership of your files and control what you submit. Keep independent copies of important files.',
+    termsItems: ['Your files remain yours', 'No malware or rights violations', 'Beta features may change'],
+    footer: 'Private file tools with visible processing.',
+    terms: 'Terms',
     roadmap: 'Roadmap',
   },
   ru: {
@@ -418,42 +437,78 @@ const localizedCopy = {
     smartActions: '\u0423\u043c\u043d\u044b\u0435 \u0434\u0435\u0439\u0441\u0442\u0432\u0438\u044f',
     chooseOutcome: '\u0412\u044b\u0431\u0435\u0440\u0438\u0442\u0435 \u0440\u0435\u0437\u0443\u043b\u044c\u0442\u0430\u0442',
     bestOptions: '\u041b\u0443\u0447\u0448\u0438\u0435 \u0432\u0430\u0440\u0438\u0430\u043d\u0442\u044b \u0434\u043b\u044f',
-    outcomeLead: '\u0412\u044b\u0431\u0435\u0440\u0438\u0442\u0435 \u0440\u0435\u0437\u0443\u043b\u044c\u0442 — FileFlow \u0440\u0430\u0437\u0431\u0435\u0440\u0451\u0442\u0441\u044f \u0441 \u0444\u043e\u0440\u043c\u0430\u0442\u043e\u043c.',
+    outcomeLead: '\u0412\u044b\u0431\u0435\u0440\u0438\u0442\u0435 \u0440\u0435\u0437\u0443\u043b\u044c\u0442\u0430\u0442 — FileFlow \u0440\u0430\u0437\u0431\u0435\u0440\u0451\u0442\u0441\u044f \u0441 \u0444\u043e\u0440\u043c\u0430\u0442\u043e\u043c.',
     viewAll: '\u0412\u0441\u0435 \u0438\u043d\u0441\u0442\u0440\u0443\u043c\u0435\u043d\u0442\u044b',
     nextMedia: '\u041c\u0435\u0434\u0438\u0430 \u043d\u043e\u0432\u043e\u0433\u043e \u043f\u043e\u043a\u043e\u043b\u0435\u043d\u0438\u044f',
     moreWays: '\u0411\u043e\u043b\u044c\u0448\u0435 \u0432\u043e\u0437\u043c\u043e\u0436\u043d\u043e\u0441\u0442\u0435\u0439 \u0434\u043b\u044f \u043a\u0430\u0436\u0434\u043e\u0433\u043e \u0444\u0430\u0439\u043b\u0430.',
     moreWaysLead: '\u041d\u0430\u0431\u043e\u0440 \u043c\u0435\u0434\u0438\u0430-\u0438\u043d\u0441\u0442\u0440\u0443\u043c\u0435\u043d\u0442\u043e\u0432 \u0434\u043b\u044f \u0430\u0432\u0442\u043e\u0440\u043e\u0432, \u043a\u043e\u043c\u0430\u043d\u0434 \u0438 \u043f\u043e\u0432\u0442\u043e\u0440\u044f\u0435\u043c\u044b\u0445 \u043f\u0440\u043e\u0446\u0435\u0441\u0441\u043e\u0432.',
+    privacyArchitecture: 'Архитектура приватности',
+    privacyTitle: 'Вы всегда знаете, куда отправляется файл.',
+    privacySteps: [
+      ['Локальная проверка', 'Браузер проверяет тип файла перед любой операцией.'],
+      ['Проверка плана', 'Локальный или облачный режим объясняется до обработки.'],
+      ['Автоочистка', 'Временные облачные файлы удаляются по правилам хранения.'],
+    ],
+    securityTitle: 'Безопасность FileFlow',
+    securityLead: 'Многоуровневая защита облачных операций, а локальная обработка полностью исключает загрузку.',
+    securityItems: ['Карантин и проверка на вредоносное ПО', 'Изолированные среды обработки', 'Кратковременный доступ к временным файлам'],
+    privacyDetailTitle: 'Проверяемая приватность',
+    privacyDetailLead: 'Локальные файлы остаются в браузере. Облачная обработка объясняется заранее и подчиняется автоочистке.',
+    privacyItems: ['Локальные инструменты без аккаунта', 'Без имён и содержимого файлов в аналитике', 'Сессию можно отозвать в любой момент'],
+    termsTitle: 'Понятные условия бета-версии',
+    termsLead: 'Вы сохраняете права на файлы и решаете, что отправлять. Храните отдельные копии важных материалов.',
+    termsItems: ['Ваши файлы остаются вашими', 'Запрещены вредоносные файлы и нарушение прав', 'Бета-функции могут изменяться'],
+    footer: 'Приватные инструменты с прозрачной обработкой.',
+    terms: 'Условия',
     roadmap: '\u0412 \u043f\u043b\u0430\u043d\u0430\u0445',
   },
   es: {
     nav: ['Inicio', 'Herramientas', 'Espacio de trabajo', 'Historial', 'Privacidad'],
     security: 'Seguridad',
     privacy: 'Privacidad',
-    signIn: 'Iniciar sesion',
+    signIn: 'Iniciar sesión',
     createAccount: 'Crear cuenta',
     eyebrow: 'Espacio de archivos privado',
     headline: 'Convierte, comprime y descarga —',
     headlineAccent: ' todo en un solo flujo.',
-    lead: 'Herramientas rapidas para documentos, imagenes, video y audio. Procesamiento local cuando sea posible y nube transparente cuando sea necesaria.',
-    trust: ['Rapido por defecto', 'Privacidad visible', 'Resultados verificados'],
-    drop: 'Suelta los archivos aqui',
-    dropActive: 'Suelta para anadir el archivo',
-    fileTypes: 'PDF, DOCX, imagenes, video y audio',
+    lead: 'Herramientas rápidas para documentos, imágenes, vídeo y audio. Procesamiento local cuando sea posible y nube transparente cuando sea necesaria.',
+    trust: ['Rápido por defecto', 'Privacidad visible', 'Resultados verificados'],
+    drop: 'Suelta los archivos aquí',
+    dropActive: 'Suelta para añadir el archivo',
+    fileTypes: 'PDF, DOCX, imágenes, vídeo y audio',
     browse: 'Elegir archivos',
     pasteLink: 'Pega un enlace',
-    importMedia: 'Importa medios publicos con seguridad',
+    importMedia: 'Importa medios públicos con seguridad',
     urlPlaceholder: 'URL de YouTube, Instagram o TikTok',
     startLink: 'Empezar con enlace',
-    urlError: 'Pega un enlace HTTPS publico de YouTube, Instagram o TikTok.',
+    urlError: 'Pega un enlace HTTPS público de YouTube, Instagram o TikTok.',
     smartActions: 'Acciones inteligentes',
     chooseOutcome: 'Elige un resultado',
     bestOptions: 'Mejores opciones para',
     outcomeLead: 'Elige el resultado. FileFlow se ocupa de los formatos.',
     viewAll: 'Ver herramientas',
-    nextMedia: 'Medios de nueva generacion',
-    moreWays: 'Mas formas de transformar cada archivo.',
+    nextMedia: 'Medios de nueva generación',
+    moreWays: 'Más formas de transformar cada archivo.',
     moreWaysLead: 'Herramientas para creadores, equipos y flujos repetibles.',
-    roadmap: 'Proximamente',
+    privacyArchitecture: 'Arquitectura de privacidad',
+    privacyTitle: 'Siempre sabes adónde va tu archivo.',
+    privacySteps: [
+      ['Inspección local', 'El navegador verifica el tipo de archivo antes de cualquier operación.'],
+      ['Revisar el plan', 'El modo local o en la nube se explica antes de procesar.'],
+      ['Limpieza', 'Los archivos temporales siguen reglas de eliminación automática.'],
+    ],
+    securityTitle: 'Seguridad en FileFlow',
+    securityLead: 'Protección por capas para operaciones en la nube; el procesamiento local evita la carga por completo.',
+    securityItems: ['Cuarentena y análisis de malware', 'Entornos de procesamiento aislados', 'Acceso breve a archivos temporales'],
+    privacyDetailTitle: 'Privacidad verificable',
+    privacyDetailLead: 'Los archivos locales permanecen en el navegador. El uso de la nube se explica antes y sigue reglas de retención.',
+    privacyItems: ['Herramientas locales sin cuenta', 'Analítica sin nombres ni contenido', 'La sesión puede revocarse en cualquier momento'],
+    termsTitle: 'Términos beta claros',
+    termsLead: 'Conservas la propiedad de tus archivos y decides qué enviar. Mantén copias independientes de los archivos importantes.',
+    termsItems: ['Tus archivos siguen siendo tuyos', 'Sin malware ni infracciones de derechos', 'Las funciones beta pueden cambiar'],
+    footer: 'Herramientas privadas con procesamiento visible.',
+    terms: 'Términos',
+    roadmap: 'Próximamente',
   },
 } as const;
 
@@ -481,7 +536,8 @@ export function GlassHome() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [sourceUrl, setSourceUrl] = useState('');
   const [urlError, setUrlError] = useState('');
-  const [language, setLanguage] = useState<Language>('en');
+  const { language, setLanguage } = useFileFlowLanguage();
+  const [userProfile, setUserProfile] = useState<{ displayName: string } | null>(null);
   const t = localizedCopy[language];
   const suggestedTools = useMemo(
     () => (selectedFile ? detectSuggestedIntents(selectedFile.name) : primaryTools),
@@ -500,14 +556,22 @@ export function GlassHome() {
   }, [theme]);
 
   useEffect(() => {
-    const saved = window.localStorage.getItem('fileflow-language');
-    if (saved === 'en' || saved === 'ru' || saved === 'es') setLanguage(saved);
+    const readProfile = () => {
+      try {
+        const saved = window.localStorage.getItem('fileflow-user-profile');
+        setUserProfile(saved ? (JSON.parse(saved) as { displayName: string }) : null);
+      } catch {
+        setUserProfile(null);
+      }
+    };
+    readProfile();
+    window.addEventListener('storage', readProfile);
+    window.addEventListener('fileflow-profile-change', readProfile);
+    return () => {
+      window.removeEventListener('storage', readProfile);
+      window.removeEventListener('fileflow-profile-change', readProfile);
+    };
   }, []);
-
-  useEffect(() => {
-    document.documentElement.lang = language;
-    window.localStorage.setItem('fileflow-language', language);
-  }, [language]);
 
   function acceptFile(file?: File) {
     if (!file) return;
@@ -552,11 +616,19 @@ export function GlassHome() {
             ))}
           </nav>
           <div className="ff-sidebar-bottom">
-            <Link href="/legal/security">
+            <Link className="ff-user-avatar" href="/account" aria-label={userProfile?.displayName ?? t.signIn}>
+              {userProfile ? (
+                <span aria-hidden="true">{userProfile.displayName.slice(0, 2).toUpperCase()}</span>
+              ) : (
+                <UserRound size={19} />
+              )}
+              <span>{userProfile?.displayName ?? t.signIn}</span>
+            </Link>
+            <Link href="#security">
               <LockKeyhole size={18} />
               <span>{t.security}</span>
             </Link>
-            <Link href="/legal/privacy">
+            <Link href="#privacy">
               <BookOpen size={18} />
               <span>{t.privacy}</span>
             </Link>
@@ -593,20 +665,18 @@ export function GlassHome() {
                 </button>
                 <Moon size={18} aria-hidden="true" />
               </div>
-              <div className="ff-language-switch glass-panel" aria-label="Language">
+              <label className="ff-language-switch glass-panel" aria-label="Language">
                 <Languages size={17} aria-hidden="true" />
-                {(['ru', 'en', 'es'] as const).map((option) => (
-                  <button
-                    type="button"
-                    key={option}
-                    data-active={language === option || undefined}
-                    aria-pressed={language === option}
-                    onClick={() => setLanguage(option)}
-                  >
-                    {option.toUpperCase()}
-                  </button>
-                ))}
-              </div>
+                <select
+                  value={language}
+                  onChange={(event) => setLanguage(event.target.value as Language)}
+                  aria-label="Select language"
+                >
+                  <option value="ru">RU</option>
+                  <option value="en">EN</option>
+                  <option value="es">ES</option>
+                </select>
+              </label>
             </div>
           </header>
 
@@ -645,7 +715,7 @@ export function GlassHome() {
               id="workspace-flow"
               aria-label="Unified file workspace"
             >
-              <FileUrlInput />
+              <FileUrlInput language={language} />
             </section>
 
             <div className="ff-intake-grid">
@@ -772,9 +842,6 @@ export function GlassHome() {
                 </h2>
                 <p>{t.outcomeLead}</p>
               </div>
-              <Link href="#workspace-flow">
-                {t.viewAll} <ChevronRight size={17} />
-              </Link>
             </div>
             <motion.div className="ff-tool-grid" layout>
               {suggestedTools.map((tool, index) => (
@@ -807,64 +874,41 @@ export function GlassHome() {
                   <ShieldCheck size={24} />
                 </div>
                 <div>
-                  <span className="ff-status-pill">Privacy architecture</span>
-                  <h2>You always know where your file goes.</h2>
+                  <span className="ff-status-pill">{t.privacyArchitecture}</span>
+                  <h2>{t.privacyTitle}</h2>
                 </div>
               </div>
               <div className="ff-privacy-flow">
-                <div>
-                  <span>01</span>
-                  <strong>Inspect locally</strong>
-                  <p>The browser checks file identity before any operation.</p>
-                </div>
-                <div>
-                  <span>02</span>
-                  <strong>Review the plan</strong>
-                  <p>Local or cloud mode is explained before processing.</p>
-                </div>
-                <div>
-                  <span>03</span>
-                  <strong>Clean up</strong>
-                  <p>Temporary cloud sources follow automatic retention rules.</p>
-                </div>
+                {t.privacySteps.map(([title, description], index) => (
+                  <div key={title}>
+                    <span>0{index + 1}</span>
+                    <strong>{title}</strong>
+                    <p>{description}</p>
+                  </div>
+                ))}
               </div>
-            </div>
-            <div className="ff-update-card glass-panel">
-              <div className="ff-speed-dial">
-                <Gauge size={42} />
-                <span />
-              </div>
-              <span className="ff-status-pill">Product foundation</span>
-              <h2>Built for reliable workflows</h2>
-              <p>
-                Batch processing, job status, validated outputs and account history already share
-                one product architecture.
-              </p>
-              <Link href="/workspace">
-                Open workspace <ChevronRight size={17} />
-              </Link>
             </div>
           </section>
 
-          <section className="ff-saas-cta glass-panel" aria-labelledby="cta-title">
-            <div>
-              <span className="ff-eyebrow">
-                <Sparkles size={15} /> One workspace
-              </span>
-              <h2 id="cta-title">Make file work feel effortless.</h2>
-              <p>
-                Start without an account, then sign in when you need history and repeatable
-                workflows.
-              </p>
-            </div>
-            <div className="ff-cta-actions">
-              <Link className="ff-primary-button" href="#workspace-flow">
-                Open File Flow <ChevronRight size={18} />
-              </Link>
-              <Link className="glass-button" href="#tools">
-                Explore tools
-              </Link>
-            </div>
+          <section className="ff-legal-grid" aria-label="Security, privacy and terms">
+            <article className="ff-legal-card glass-panel" id="security">
+              <LockKeyhole size={26} />
+              <h2>{t.securityTitle}</h2>
+              <p>{t.securityLead}</p>
+              <ul>{t.securityItems.map((item) => <li key={item}>{item}</li>)}</ul>
+            </article>
+            <article className="ff-legal-card glass-panel">
+              <ShieldCheck size={26} />
+              <h2>{t.privacyDetailTitle}</h2>
+              <p>{t.privacyDetailLead}</p>
+              <ul>{t.privacyItems.map((item) => <li key={item}>{item}</li>)}</ul>
+            </article>
+            <article className="ff-legal-card glass-panel" id="terms">
+              <BookOpen size={26} />
+              <h2>{t.termsTitle}</h2>
+              <p>{t.termsLead}</p>
+              <ul>{t.termsItems.map((item) => <li key={item}>{item}</li>)}</ul>
+            </article>
           </section>
 
           <footer className="ff-footer">
@@ -872,11 +916,11 @@ export function GlassHome() {
               <Image className="ff-logo-mark" src="/brand/fileflow-mark.png" alt="" width={34} height={30} />
               <strong>FileFlow</strong>
             </Link>
-            <p>Private file tools with visible processing.</p>
+            <p>{t.footer}</p>
             <nav aria-label="Footer links">
-              <Link href="/legal/privacy">Privacy</Link>
-              <Link href="/legal/security">Security</Link>
-              <Link href="/legal/terms">Terms</Link>
+              <Link href="#privacy">{t.privacy}</Link>
+              <Link href="#security">{t.security}</Link>
+              <Link href="#terms">{t.terms}</Link>
               <Link href="#tools">Tools</Link>
             </nav>
           </footer>

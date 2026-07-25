@@ -238,38 +238,37 @@
 }
 
 .ff-language-switch {
-  min-height: 46px;
+  min-height: 40px;
   display: flex;
   align-items: center;
-  gap: 3px;
-  padding: 5px 7px 5px 10px;
-  border-radius: 14px;
+  gap: 6px;
+  padding: 4px 8px 4px 10px;
+  border-radius: 12px;
   color: var(--home-muted);
 }
 
 .ff-language-switch > svg {
-  margin-right: 3px;
+  flex: 0 0 auto;
 }
 
-.ff-language-switch button {
-  min-width: 34px;
+.ff-language-switch select {
+  width: 54px;
   height: 30px;
-  padding: 0 6px;
+  padding: 0 20px 0 7px;
   border: 0;
-  border-radius: 9px;
-  color: var(--home-muted);
-  background: transparent;
-  font: inherit;
-  font-size: 10px;
-  font-weight: 850;
-  cursor: pointer;
-  transition: color 160ms ease, background 160ms ease, box-shadow 160ms ease;
-}
-
-.ff-language-switch button[data-active] {
+  border-radius: 8px;
   color: white;
   background: linear-gradient(135deg, var(--home-blue), var(--home-blue-2));
+  font: inherit;
+  font-size: 11px;
+  font-weight: 850;
+  cursor: pointer;
   box-shadow: 0 6px 14px color-mix(in srgb, var(--home-blue) 28%, transparent);
+}
+
+.ff-language-switch option {
+  color: var(--home-text);
+  background: var(--glass-bg-strong);
 }
 
 .ff-theme-switch button {
@@ -729,10 +728,9 @@
 }
 
 .ff-status-grid {
-  display: grid;
-  grid-template-columns: minmax(0, 1.45fr) minmax(290px, 0.75fr);
-  gap: 15px;
+  display: block;
   padding: 54px 0 22px;
+  scroll-margin-top: 1.5rem;
 }
 
 .ff-privacy-card,
@@ -789,7 +787,7 @@
 }
 
 .ff-privacy-flow strong {
-  font-size: 13px;
+  font-size: 15px;
 }
 
 .ff-privacy-flow p,
@@ -797,8 +795,46 @@
 .ff-saas-cta p {
   margin: 6px 0 0;
   color: var(--home-muted);
-  font-size: 11px;
+  font-size: 14px;
   line-height: 1.55;
+}
+
+.ff-legal-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 15px;
+  padding: 26px 0 38px;
+}
+
+.ff-legal-card {
+  min-height: 100%;
+  padding: clamp(22px, 3vw, 32px);
+  border-radius: 22px;
+  scroll-margin-top: 1.5rem;
+}
+
+.ff-legal-card > svg {
+  color: var(--home-blue);
+}
+
+.ff-legal-card h2 {
+  margin: 18px 0 10px;
+  font-size: clamp(1.4rem, 2vw, 2rem);
+  letter-spacing: -0.04em;
+}
+
+.ff-legal-card p,
+.ff-legal-card li {
+  color: var(--home-muted);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.ff-legal-card ul {
+  display: grid;
+  gap: 8px;
+  margin: 18px 0 0;
+  padding-left: 19px;
 }
 
 .ff-update-card {
@@ -1213,6 +1249,34 @@
 
 .ff-language-switch {
   margin-left: 4px;
+}
+
+.ff-tool-title strong {
+  font-size: 20px;
+}
+
+.ff-unified-workspace .input-privacy-note strong {
+  font-size: 20px;
+  line-height: 1.25;
+}
+
+.ff-user-avatar > span:first-child {
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  color: white;
+  background: linear-gradient(135deg, var(--home-blue), #6a61ff);
+  box-shadow: 0 8px 18px color-mix(in srgb, var(--home-blue) 26%, transparent);
+  font-size: 10px;
+  font-weight: 900;
+}
+
+@media (max-width: 900px) {
+  .ff-legal-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 560px) {
