@@ -11,6 +11,55 @@ import { Badge, Button, Select, Slider } from '@fileflow/ui';
 import { batchOverallProgress, type BatchItemStatus } from './batch-model';
 import { validateWebPResult, webPFileName } from './image-result';
 import { formatFileSize } from './input-policy';
+import type { FileFlowLanguage } from '../use-fileflow-language';
+
+const batchCopy = {
+  en: {
+    badge: 'LOCAL BATCH',
+    title: 'Optimize images together',
+    lead: 'One shared plan, processed one at a time to keep browser memory bounded.',
+    complete: 'complete',
+    quality: 'Quality',
+    dimension: 'Maximum dimension',
+    original: 'Keep original dimensions',
+    running: 'Batch processing locally',
+    ready: 'Ready · source files never leave this device',
+    queued: 'Queued',
+    download: 'Download',
+    actions: ['Cancel batch', 'Run batch again', 'Process batch locally'],
+    result: 'Results are validated individually before download.',
+  },
+  ru: {
+    badge: 'ЛОКАЛЬНЫЙ ПАКЕТ',
+    title: 'Оптимизировать изображения вместе',
+    lead: 'Один общий план, обработка по очереди для экономии памяти браузера.',
+    complete: 'готово',
+    quality: 'Качество',
+    dimension: 'Максимальный размер',
+    original: 'Сохранить исходные размеры',
+    running: 'Локальная пакетная обработка',
+    ready: 'Готово · исходные файлы остаются на устройстве',
+    queued: 'В очереди',
+    download: 'Скачать',
+    actions: ['Отменить пакет', 'Запустить пакет снова', 'Обработать пакет локально'],
+    result: 'Каждый результат проверяется отдельно перед скачиванием.',
+  },
+  es: {
+    badge: 'LOTE LOCAL',
+    title: 'Optimizar imágenes juntas',
+    lead: 'Un plan común, procesado uno por uno para limitar la memoria del navegador.',
+    complete: 'completado',
+    quality: 'Calidad',
+    dimension: 'Dimensión máxima',
+    original: 'Conservar dimensiones originales',
+    running: 'Procesamiento local por lotes',
+    ready: 'Listo · los archivos originales permanecen en el dispositivo',
+    queued: 'En cola',
+    download: 'Descargar',
+    actions: ['Cancelar lote', 'Ejecutar lote de nuevo', 'Procesar lote localmente'],
+    result: 'Cada resultado se verifica por separado antes de descargarlo.',
+  },
+} as const;
 
 type BatchImage = { file: File; sourceMime: 'image/jpeg' | 'image/png' };
 type ItemState = BatchImage & {
@@ -21,7 +70,14 @@ type ItemState = BatchImage & {
   error?: string;
 };
 
-export function BatchImageTool({ images }: { images: readonly BatchImage[] }) {
+export function BatchImageTool({
+  images,
+  language = 'en',
+}: {
+  images: readonly BatchImage[];
+  language?: FileFlowLanguage;
+}) {
+  const text = batchCopy[language];
   const [quality, setQuality] = useState(82);
   const [maxDimension, setMaxDimension] = useState(0);
   const [items, setItems] = useState<ItemState[]>(() => initialItems(images));
@@ -127,16 +183,21 @@ export function BatchImageTool({ images }: { images: readonly BatchImage[] }) {
     <section className="batch-workspace" aria-labelledby="batch-title">
       <div className="batch-heading">
         <div>
-          <Badge variant="local">LOCAL BATCH</Badge>
-          <h3 id="batch-title">Optimize {images.length} images together</h3>
-          <p>One shared plan, processed one at a time to keep browser memory bounded.</p>
+          <Badge variant="local">{text.badge}</Badge>
+          <h3 id="batch-title">
+            {images.length} ·{' '}
+            {language === 'en' ? `Optimize ${images.length} images together` : text.title}
+          </h3>
+          <p>{text.lead}</p>
         </div>
-        <strong>{running ? `${progress}%` : `${completed}/${images.length} complete`}</strong>
+        <strong>
+          {running ? `${progress}%` : `${completed}/${images.length} ${text.complete}`}
+        </strong>
       </div>
       <div className="image-tool-controls">
         <Slider
           id="batch-quality"
-          label="Quality"
+          label={text.quality}
           min={40}
           max={100}
           value={quality}
@@ -146,12 +207,12 @@ export function BatchImageTool({ images }: { images: readonly BatchImage[] }) {
         />
         <Select
           id="batch-size"
-          label="Maximum dimension"
+          label={text.dimension}
           value={maxDimension}
           disabled={running}
           onChange={(event) => setMaxDimension(Number(event.target.value))}
         >
-          <option value={0}>Keep original dimensions</option>
+          <option value={0}>{text.original}</option>
           <option value={1920}>1920 px</option>
           <option value={1280}>1280 px</option>
           <option value={800}>800 px</option>
@@ -161,9 +222,7 @@ export function BatchImageTool({ images }: { images: readonly BatchImage[] }) {
         <span>
           <span style={{ width: `${progress}%` }} />
         </span>
-        <small>
-          {running ? 'Batch processing locally' : 'Ready · source files never leave this device'}
-        </small>
+        <small>{running ? text.running : text.ready}</small>
       </div>
       <ol className="batch-list">
         {items.map((item, index) => (
@@ -172,12 +231,12 @@ export function BatchImageTool({ images }: { images: readonly BatchImage[] }) {
             <div>
               <strong>{item.file.name}</strong>
               <small>
-                {formatFileSize(item.file.size)} · {item.stage || 'Queued'}
+                {formatFileSize(item.file.size)} · {item.stage || text.queued}
               </small>
             </div>
             {item.result ? (
               <a href={item.result.url} download={webPFileName(item.file.name)}>
-                Download · {formatFileSize(item.result.size)}
+                {text.download} · {formatFileSize(item.result.size)}
               </a>
             ) : (
               <Badge
@@ -202,9 +261,9 @@ export function BatchImageTool({ images }: { images: readonly BatchImage[] }) {
           variant={running ? 'secondary' : 'primary'}
           onClick={running ? cancelBatch : () => void runBatch()}
         >
-          {running ? 'Cancel batch' : completed ? 'Run batch again' : 'Process batch locally'}
+          {running ? text.actions[0] : completed ? text.actions[1] : text.actions[2]}
         </Button>
-        <span>Results are validated individually before download.</span>
+        <span>{text.result}</span>
       </div>
     </section>
   );

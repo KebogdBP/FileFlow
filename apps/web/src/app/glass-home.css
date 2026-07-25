@@ -629,11 +629,88 @@
   white-space: nowrap;
 }
 
-.ff-tool-grid,
 .ff-advanced-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 13px;
+}
+
+.ff-tool-rail-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 9px;
+}
+
+.ff-tool-rail-actions > span {
+  margin-right: 4px;
+  color: var(--home-muted);
+  font-size: 12px;
+  font-weight: 760;
+  white-space: nowrap;
+}
+
+.ff-tool-back,
+.ff-tool-more {
+  min-height: 43px;
+  border: 1px solid var(--glass-line);
+  color: var(--home-text);
+  background: color-mix(in srgb, var(--glass-bg-strong) 84%, transparent);
+  box-shadow: var(--glass-shadow);
+  cursor: pointer;
+}
+
+.ff-tool-back {
+  width: 43px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border-radius: 50%;
+}
+
+.ff-tool-more {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 12px 7px 8px;
+  border-radius: 999px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 850;
+}
+
+.ff-tool-more img {
+  object-fit: contain;
+}
+
+.ff-tool-back:hover,
+.ff-tool-more:hover {
+  border-color: color-mix(in srgb, var(--home-blue) 48%, var(--glass-line));
+  transform: translateY(-2px);
+  box-shadow:
+    var(--glass-shadow),
+    0 0 0 4px color-mix(in srgb, var(--home-blue) 10%, transparent);
+}
+
+.ff-tool-rail {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(265px, calc((100% - 39px) / 4));
+  gap: 13px;
+  padding: 3px 4px 18px;
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+  scroll-behavior: smooth;
+  scroll-snap-type: inline mandatory;
+  scrollbar-width: none;
+}
+
+.ff-tool-rail::-webkit-scrollbar {
+  display: none;
+}
+
+.ff-tool-rail .ff-tool-card {
+  scroll-snap-align: start;
 }
 
 .ff-tool-card {
@@ -666,18 +743,21 @@
   line-height: 1.4;
 }
 
-.ff-tool-card > a {
+.ff-tool-card > button {
   position: absolute;
   inset: 0;
   display: flex;
   align-items: center;
   justify-content: flex-end;
   padding-right: 13px;
+  border: 0;
   border-radius: inherit;
   color: var(--home-muted);
+  background: transparent;
+  cursor: pointer;
 }
 
-.ff-tool-card > a:focus-visible {
+.ff-tool-card > button:focus-visible {
   outline: 3px solid var(--home-blue);
   outline-offset: 3px;
 }
@@ -697,6 +777,19 @@
   font-size: 8px;
   font-weight: 850;
   letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.ff-tool-mode {
+  display: inline-flex;
+  margin-top: 12px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  color: var(--home-blue);
+  background: color-mix(in srgb, var(--home-blue) 9%, transparent);
+  font-size: 9px;
+  font-weight: 820;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
 }
 
@@ -730,8 +823,44 @@
   background: rgba(247, 116, 85, 0.13);
 }
 
-.ff-advanced-grid .ff-tool-card {
-  opacity: 0.92;
+.ff-roadmap-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.ff-roadmap-card {
+  min-height: 104px;
+  grid-template-columns: 36px 1fr;
+  gap: 9px;
+  padding: 12px;
+  border-style: dashed;
+  opacity: 0.74;
+  box-shadow: none;
+}
+
+.ff-roadmap-card .ff-icon-tile {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+}
+
+.ff-roadmap-card h3 {
+  font-size: 17px;
+  line-height: 1.1;
+}
+
+.ff-roadmap-card p {
+  font-size: 10px;
+}
+
+.ff-roadmap-card .ff-tool-title {
+  display: block;
+  padding-right: 0;
+}
+
+.ff-roadmap-card .ff-tool-title span {
+  display: inline-flex;
+  margin-top: 5px;
 }
 
 .ff-status-grid {
@@ -1016,7 +1145,6 @@
   .ff-intake-grid {
     grid-template-columns: 1.25fr 0.9fr;
   }
-  .ff-tool-grid,
   .ff-advanced-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -1089,9 +1217,19 @@
     align-items: flex-start;
     flex-direction: column;
   }
-  .ff-tool-grid,
   .ff-advanced-grid {
     grid-template-columns: 1fr;
+  }
+  .ff-tool-rail-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+  .ff-tool-rail {
+    grid-auto-columns: minmax(245px, 84vw);
+    margin-right: -14px;
+  }
+  .ff-roadmap-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
   .ff-privacy-flow {
     grid-template-columns: 1fr;
@@ -1130,11 +1268,6 @@
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
   }
-}
-
-/* Unified landing-page workspace: upload first, choose the outcome directly below it. */
-.ff-intake-grid {
-  display: none !important;
 }
 
 .ff-unified-workspace {

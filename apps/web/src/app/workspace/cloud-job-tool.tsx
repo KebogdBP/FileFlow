@@ -13,6 +13,127 @@ import {
   type CloudJob,
 } from '../cloud-api';
 import { formatFileSize } from './input-policy';
+import type { FileFlowLanguage } from '../use-fileflow-language';
+
+const cloudCopy = {
+  en: {
+    protected: 'PROTECTED CLOUD',
+    messages: [
+      'Sign in to use protected cloud processing.',
+      'Preparing upload',
+      'No clean upload is available for processing.',
+      'Queueing job',
+      'Queued',
+      'Processing',
+      'Processing cancelled.',
+      'Cloud processing failed.',
+    ],
+    imported: 'Imported media',
+    files: 'file(s)',
+    auth: ['Cloud jobs require a free account.', 'Sign in or create one'],
+    actions: ['Cancel', 'Run again', 'Upload and process'],
+    retention: 'Files are quarantined, scanned and removed after the retention window.',
+    result: ['VERIFIED RESULT', 'Ready', 'Download result'],
+    controls: [
+      'Quality (CRF)',
+      'Encoding speed',
+      'Fast',
+      'Balanced',
+      'Smaller file',
+      'Maximum height',
+      'MP3 bitrate',
+      'Start (seconds)',
+      'Duration (seconds)',
+      'Compression',
+      'Smallest',
+      'Print',
+      'First page',
+      'Last page',
+      'Page',
+      'Resolution',
+      'JPG quality',
+    ],
+  },
+  ru: {
+    protected: 'ЗАЩИЩЁННОЕ ОБЛАКО',
+    messages: [
+      'Войдите, чтобы использовать защищённую облачную обработку.',
+      'Подготовка загрузки',
+      'Нет проверенного файла для обработки.',
+      'Постановка задачи в очередь',
+      'В очереди',
+      'Обработка',
+      'Обработка отменена.',
+      'Не удалось выполнить облачную обработку.',
+    ],
+    imported: 'Импортированное медиа',
+    files: 'файл(ов)',
+    auth: ['Для облачных задач нужен бесплатный аккаунт.', 'Войти или зарегистрироваться'],
+    actions: ['Отменить', 'Запустить снова', 'Загрузить и обработать'],
+    retention: 'Файлы проходят карантин и проверку, затем автоматически удаляются.',
+    result: ['ПРОВЕРЕННЫЙ РЕЗУЛЬТАТ', 'Готово', 'Скачать результат'],
+    controls: [
+      'Качество (CRF)',
+      'Скорость кодирования',
+      'Быстро',
+      'Баланс',
+      'Меньший файл',
+      'Максимальная высота',
+      'Битрейт MP3',
+      'Начало (секунды)',
+      'Длительность (секунды)',
+      'Сжатие',
+      'Минимальный размер',
+      'Для печати',
+      'Первая страница',
+      'Последняя страница',
+      'Страница',
+      'Разрешение',
+      'Качество JPEG',
+    ],
+  },
+  es: {
+    protected: 'NUBE PROTEGIDA',
+    messages: [
+      'Inicia sesión para usar el procesamiento protegido en la nube.',
+      'Preparando la carga',
+      'No hay ningún archivo verificado para procesar.',
+      'Añadiendo el trabajo a la cola',
+      'En cola',
+      'Procesando',
+      'Procesamiento cancelado.',
+      'El procesamiento en la nube ha fallado.',
+    ],
+    imported: 'Medio importado',
+    files: 'archivo(s)',
+    auth: [
+      'Los trabajos en la nube requieren una cuenta gratuita.',
+      'Inicia sesión o crea una cuenta',
+    ],
+    actions: ['Cancelar', 'Ejecutar de nuevo', 'Cargar y procesar'],
+    retention: 'Los archivos pasan cuarentena y análisis, y después se eliminan.',
+    result: ['RESULTADO VERIFICADO', 'Listo', 'Descargar resultado'],
+    controls: [
+      'Calidad (CRF)',
+      'Velocidad de codificación',
+      'Rápida',
+      'Equilibrada',
+      'Archivo más pequeño',
+      'Altura máxima',
+      'Bitrate MP3',
+      'Inicio (segundos)',
+      'Duración (segundos)',
+      'Compresión',
+      'Más pequeño',
+      'Impresión',
+      'Primera página',
+      'Última página',
+      'Página',
+      'Resolución',
+      'Calidad JPEG',
+    ],
+  },
+} as const;
 
 type State =
   | { status: 'idle' }
@@ -24,11 +145,14 @@ export function CloudJobTool({
   operationId,
   files = [],
   existingUploadId,
+  language = 'en',
 }: {
   operationId: string;
   files?: readonly File[];
   existingUploadId?: string;
+  language?: FileFlowLanguage;
 }) {
+  const text = cloudCopy[language];
   const [parameters, setParameters] = useState<Record<string, string | number>>(() =>
     defaultParameters(operationId),
   );
@@ -50,12 +174,12 @@ export function CloudJobTool({
   async function run() {
     const accessToken = accountToken();
     if (!accessToken) {
-      setState({ status: 'error', message: 'Sign in to use protected cloud processing.' });
+      setState({ status: 'error', message: text.messages[0] });
       return;
     }
     const controller = new AbortController();
     aborter.current = controller;
-    setState({ status: 'running', progress: 0, stage: 'Preparing upload' });
+    setState({ status: 'running', progress: 0, stage: text.messages[1] });
     try {
       const uploadIds: string[] = [];
       if (existingUploadId) {
@@ -86,8 +210,8 @@ export function CloudJobTool({
         }
       }
       const primary = uploadIds[0];
-      if (!primary) throw new Error('No clean upload is available for processing.');
-      setState({ status: 'running', progress: 88, stage: 'Queueing job' });
+      if (!primary) throw new Error(text.messages[2]);
+      setState({ status: 'running', progress: 88, stage: text.messages[3] });
       const job = await createCloudJob(
         primary,
         uploadIds.slice(1),
@@ -104,7 +228,10 @@ export function CloudJobTool({
           setState({
             status: 'running',
             progress: Math.max(90, Math.round(90 + next.progress / 10)),
-            stage: next.status === 'queued' ? 'Queued' : `Processing · ${next.progress}%`,
+            stage:
+              next.status === 'queued'
+                ? text.messages[4]
+                : `${text.messages[5]} · ${next.progress}%`,
           }),
         controller.signal,
       );
@@ -118,10 +245,10 @@ export function CloudJobTool({
         status: 'error',
         message:
           error instanceof DOMException && error.name === 'AbortError'
-            ? 'Processing cancelled.'
+            ? text.messages[6]
             : error instanceof Error
               ? error.message
-              : 'Cloud processing failed.',
+              : text.messages[7],
       });
     } finally {
       aborter.current = null;
@@ -144,31 +271,36 @@ export function CloudJobTool({
     <section className="cloud-job-tool" aria-label={`${operationId} cloud processing`}>
       <div className="cloud-tool-heading">
         <div>
-          <Badge variant="cloud">PROTECTED CLOUD</Badge>
-          <h4>{operationTitle(operationId)}</h4>
+          <Badge variant="cloud">{text.protected}</Badge>
+          <h4>{operationTitle(operationId, language)}</h4>
         </div>
         <span>
           {existingUploadId
-            ? 'Imported media'
-            : `${files.length} file(s) · ${formatFileSize(totalSize)}`}
+            ? text.imported
+            : `${files.length} ${text.files} · ${formatFileSize(totalSize)}`}
         </span>
       </div>
       <OperationControls
         operationId={operationId}
         parameters={parameters}
         disabled={running}
+        language={language}
         update={(name, value) => setParameters((current) => ({ ...current, [name]: value }))}
       />
       {!token ? (
         <p className="cloud-auth-note">
-          Cloud jobs require a free account. <a href="/account">Sign in or create one</a>.
+          {text.auth[0]} <a href="/account">{text.auth[1]}</a>.
         </p>
       ) : null}
       <div className="cloud-tool-actions">
         <Button type="button" onClick={running ? () => void cancel() : () => void run()}>
-          {running ? 'Cancel' : state.status === 'completed' ? 'Run again' : 'Upload and process'}
+          {running
+            ? text.actions[0]
+            : state.status === 'completed'
+              ? text.actions[1]
+              : text.actions[2]}
         </Button>
-        <span>Files are quarantined, scanned and removed after the retention window.</span>
+        <span>{text.retention}</span>
       </div>
       {running ? (
         <div className="cloud-progress" aria-live="polite">
@@ -188,15 +320,17 @@ export function CloudJobTool({
       {state.status === 'completed' ? (
         <div className="cloud-result">
           <div>
-            <Badge variant="success">VERIFIED RESULT</Badge>
+            <Badge variant="success">{text.result[0]}</Badge>
             <strong>{state.filename}</strong>
             <small>
-              {state.job.result_size_bytes ? formatFileSize(state.job.result_size_bytes) : 'Ready'}
+              {state.job.result_size_bytes
+                ? formatFileSize(state.job.result_size_bytes)
+                : text.result[1]}
               {state.job.runtime_ms ? ` · ${(state.job.runtime_ms / 1000).toFixed(1)} s` : ''}
             </small>
           </div>
           <a className="image-download" href={state.url} download={state.filename}>
-            Download result
+            {text.result[2]}
           </a>
         </div>
       ) : null}
@@ -208,19 +342,22 @@ function OperationControls({
   operationId,
   parameters,
   disabled,
+  language,
   update,
 }: {
   operationId: string;
   parameters: Record<string, string | number>;
   disabled: boolean;
+  language: FileFlowLanguage;
   update: (name: string, value: string | number) => void;
 }) {
+  const labels = cloudCopy[language].controls;
   if (['compress-video', 'video-to-mp4', 'resize-video'].includes(operationId)) {
     return (
       <div className="cloud-controls">
         <Slider
           id={`${operationId}-quality`}
-          label="Quality (CRF)"
+          label={labels[0]}
           min={18}
           max={32}
           value={Number(parameters.quality)}
@@ -230,18 +367,18 @@ function OperationControls({
         />
         <Select
           id={`${operationId}-preset`}
-          label="Encoding speed"
+          label={labels[1]}
           value={String(parameters.preset)}
           disabled={disabled}
           onChange={(event) => update('preset', event.target.value)}
         >
-          <option value="fast">Fast</option>
-          <option value="medium">Balanced</option>
-          <option value="slow">Smaller file</option>
+          <option value="fast">{labels[2]}</option>
+          <option value="medium">{labels[3]}</option>
+          <option value="slow">{labels[4]}</option>
         </Select>
         <Select
           id={`${operationId}-height`}
-          label="Maximum height"
+          label={labels[5]}
           value={String(parameters.max_height)}
           disabled={disabled}
           onChange={(event) => update('max_height', Number(event.target.value))}
@@ -258,7 +395,7 @@ function OperationControls({
       <div className="cloud-controls">
         <Select
           id={`${operationId}-bitrate`}
-          label="MP3 bitrate"
+          label={labels[6]}
           value={String(parameters.bitrate_kbps)}
           disabled={disabled}
           onChange={(event) => update('bitrate_kbps', Number(event.target.value))}
@@ -274,7 +411,7 @@ function OperationControls({
     return (
       <div className="cloud-controls">
         <label>
-          Start (seconds)
+          {labels[7]}
           <input
             type="number"
             min="0"
@@ -285,7 +422,7 @@ function OperationControls({
           />
         </label>
         <label>
-          Duration (seconds)
+          {labels[8]}
           <input
             type="number"
             min="0.1"
@@ -306,14 +443,14 @@ function OperationControls({
       <div className="cloud-controls">
         <Select
           id="pdf-quality"
-          label="Compression"
+          label={labels[9]}
           value={String(parameters.quality)}
           disabled={disabled}
           onChange={(event) => update('quality', event.target.value)}
         >
-          <option value="screen">Smallest</option>
-          <option value="balanced">Balanced</option>
-          <option value="print">Print</option>
+          <option value="screen">{labels[10]}</option>
+          <option value="balanced">{labels[3]}</option>
+          <option value="print">{labels[11]}</option>
         </Select>
       </div>
     );
@@ -322,7 +459,7 @@ function OperationControls({
     return (
       <div className="cloud-controls">
         <label>
-          First page
+          {labels[12]}
           <input
             type="number"
             min="1"
@@ -332,7 +469,7 @@ function OperationControls({
           />
         </label>
         <label>
-          Last page
+          {labels[13]}
           <input
             type="number"
             min="1"
@@ -348,7 +485,7 @@ function OperationControls({
     return (
       <div className="cloud-controls">
         <label>
-          Page
+          {labels[14]}
           <input
             type="number"
             min="1"
@@ -359,7 +496,7 @@ function OperationControls({
         </label>
         <Select
           id="pdf-dpi"
-          label="Resolution"
+          label={labels[15]}
           value={String(parameters.dpi)}
           disabled={disabled}
           onChange={(event) => update('dpi', Number(event.target.value))}
@@ -370,7 +507,7 @@ function OperationControls({
         </Select>
         <Slider
           id="jpg-quality"
-          label="JPG quality"
+          label={labels[16]}
           min={40}
           max={95}
           value={Number(parameters.quality)}
@@ -396,7 +533,44 @@ function defaultParameters(operationId: string): Record<string, string | number>
   return {};
 }
 
-function operationTitle(operationId: string) {
+const operationTitles: Record<Exclude<FileFlowLanguage, 'en'>, Record<string, string>> = {
+  ru: {
+    'compress-video': 'Сжать видео',
+    'video-to-mp4': 'Видео в MP4',
+    'resize-video': 'Изменить размер видео',
+    'extract-audio': 'Извлечь аудио',
+    'optimize-audio': 'Оптимизировать аудио',
+    'audio-to-mp3': 'Аудио в MP3',
+    'audio-to-wav': 'Аудио в WAV',
+    'trim-audio': 'Обрезать аудио',
+    'merge-pdf': 'Объединить PDF',
+    'compress-pdf': 'Сжать PDF',
+    'split-pdf': 'Разделить PDF',
+    'pdf-to-jpg': 'PDF в JPEG',
+    'docx-to-pdf': 'DOCX в PDF',
+  },
+  es: {
+    'compress-video': 'Comprimir vídeo',
+    'video-to-mp4': 'Vídeo a MP4',
+    'resize-video': 'Redimensionar vídeo',
+    'extract-audio': 'Extraer audio',
+    'optimize-audio': 'Optimizar audio',
+    'audio-to-mp3': 'Audio a MP3',
+    'audio-to-wav': 'Audio a WAV',
+    'trim-audio': 'Recortar audio',
+    'merge-pdf': 'Unir PDFs',
+    'compress-pdf': 'Comprimir PDF',
+    'split-pdf': 'Dividir PDF',
+    'pdf-to-jpg': 'PDF a JPEG',
+    'docx-to-pdf': 'DOCX a PDF',
+  },
+};
+
+function operationTitle(operationId: string, language: FileFlowLanguage) {
+  if (language !== 'en') {
+    const translated = operationTitles[language][operationId];
+    if (translated) return translated;
+  }
   return operationId
     .split('-')
     .map((part) => part[0]?.toUpperCase() + part.slice(1))

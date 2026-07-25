@@ -28,7 +28,7 @@ describe('glass File Flow landing page', () => {
   it('has functional inputs and landmark navigation', () => {
     expect(markup).toContain('aria-label="Primary navigation"');
     expect(markup).toContain('type="file"');
-    expect(markup).toContain('type="url"');
+    expect(markup).toContain('From a link');
     expect(markup.match(/<h1/g)).toHaveLength(1);
     expect(markup).toContain('id="tools-title"');
   });
@@ -36,8 +36,14 @@ describe('glass File Flow landing page', () => {
   it('distinguishes current actions from roadmap media tools', () => {
     expect(markup).toContain('Compress PDF');
     expect(markup).toContain('Compress video');
+    expect(markup).toContain('Video to MP4');
+    expect(markup).toContain('Trim audio');
+    expect(markup).toContain('15 working tools');
+    expect(markup.match(/: open tool/g)).toHaveLength(15);
     expect(markup).toContain('AI transcription');
     expect(markup).toContain('Roadmap');
+    expect(markup.match(/ff-roadmap-card/g)).toHaveLength(8);
+    expect(landingCss).toContain('scroll-snap-type: inline mandatory');
   });
 
   it('defines light, dark and responsive layouts', () => {

@@ -4,20 +4,19 @@ import {
   AudioLines,
   BadgeCheck,
   BookOpen,
+  ChevronLeft,
   ChevronRight,
   Combine,
   Crop,
   FileArchive,
   FileImage,
   FileOutput,
-  FileText,
   Film,
   Grid2X2,
   History,
   Home,
   Image as ImageIcon,
   Languages,
-  Link2,
   LockKeyhole,
   Menu,
   Merge,
@@ -31,89 +30,148 @@ import {
   Split,
   Subtitles,
   Sun,
-  UploadCloud,
   UserRound,
   WandSparkles,
-  X,
   Zap,
 } from 'lucide-react';
 import { AnimatePresence, MotionConfig, motion } from 'motion/react';
 import Image from 'next/image';
 import Link from 'next/link';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { FaInstagram, FaTiktok, FaYoutube } from 'react-icons/fa6';
+import React, { useEffect, useRef, useState } from 'react';
+import { operations } from '@fileflow/operation-registry';
 import { useFileFlowLanguage, type FileFlowLanguage } from './use-fileflow-language';
 import { FileUrlInput } from './workspace/file-url-input';
 
 type Language = FileFlowLanguage;
+type OperationId = (typeof operations)[number]['id'];
 
 type ToolItem = {
   title: string;
   description: string;
   icon: React.ComponentType<{ size?: number; strokeWidth?: number }>;
   tone: 'blue' | 'violet' | 'mint' | 'coral';
-  intent?: string;
+  intent?: OperationId;
+  executionMode?: 'local' | 'cloud' | 'hybrid';
   planned?: boolean;
 };
 
-const primaryTools: ToolItem[] = [
-  {
+const operationPresentation: Record<
+  OperationId,
+  Pick<ToolItem, 'title' | 'description' | 'icon' | 'tone'>
+> = {
+  'optimize-image': {
+    title: 'Optimize image',
+    description: 'Create a lighter WebP directly on this device',
+    icon: ImageIcon,
+    tone: 'mint',
+  },
+  'remove-image-metadata': {
+    title: 'Remove image metadata',
+    description: 'Strip location and camera details locally',
+    icon: ShieldCheck,
+    tone: 'blue',
+  },
+  'compress-video': {
+    title: 'Compress video',
+    description: 'Create a smaller MP4 for fast sharing',
+    icon: Film,
+    tone: 'violet',
+  },
+  'video-to-mp4': {
+    title: 'Video to MP4',
+    description: 'Convert video to a broadly compatible format',
+    icon: FileOutput,
+    tone: 'blue',
+  },
+  'resize-video': {
+    title: 'Resize video',
+    description: 'Set a practical resolution for any screen',
+    icon: Crop,
+    tone: 'mint',
+  },
+  'extract-audio': {
+    title: 'Extract audio',
+    description: 'Save a video soundtrack as MP3',
+    icon: Music2,
+    tone: 'violet',
+  },
+  'optimize-audio': {
+    title: 'Optimize audio',
+    description: 'Reduce audio size with balanced quality',
+    icon: AudioLines,
+    tone: 'mint',
+  },
+  'audio-to-mp3': {
+    title: 'Audio to MP3',
+    description: 'Create a compact file for everyday playback',
+    icon: Music2,
+    tone: 'violet',
+  },
+  'audio-to-wav': {
+    title: 'Audio to WAV',
+    description: 'Create an uncompressed file for editing',
+    icon: AudioLines,
+    tone: 'blue',
+  },
+  'trim-audio': {
+    title: 'Trim audio',
+    description: 'Keep an exact part of an audio file',
+    icon: Scissors,
+    tone: 'coral',
+  },
+  'merge-pdf': {
+    title: 'Merge PDFs',
+    description: 'Combine up to 20 documents in order',
+    icon: Combine,
+    tone: 'blue',
+  },
+  'compress-pdf': {
     title: 'Compress PDF',
-    description: 'Reduce size, preserve readability',
+    description: 'Reduce size while preserving readability',
     icon: FileArchive,
     tone: 'coral',
-    intent: 'compress-pdf',
   },
-  {
+  'split-pdf': {
     title: 'Split PDF',
     description: 'Extract only the pages you need',
     icon: Split,
     tone: 'violet',
-    intent: 'split-pdf',
   },
-  {
-    title: 'Merge PDFs',
-    description: 'Combine up to 20 documents',
-    icon: Combine,
-    tone: 'blue',
-    intent: 'merge-pdf',
-  },
-  {
+  'pdf-to-jpg': {
     title: 'PDF to JPEG',
-    description: 'Turn pages into checked images',
+    description: 'Turn a selected page into a checked image',
     icon: FileImage,
     tone: 'mint',
-    intent: 'pdf-to-jpg',
   },
-  {
+  'docx-to-pdf': {
     title: 'DOCX to PDF',
-    description: 'Create a stable shareable document',
+    description: 'Create a stable, shareable document',
     icon: FileOutput,
     tone: 'blue',
-    intent: 'docx-to-pdf',
   },
-  {
-    title: 'Compress video',
-    description: 'Smaller MP4 for fast sharing',
-    icon: Film,
-    tone: 'violet',
-    intent: 'compress-video',
-  },
-  {
-    title: 'Resize video',
-    description: 'Set resolution for any screen',
-    icon: Crop,
-    tone: 'mint',
-    intent: 'resize-video',
-  },
-  {
-    title: 'Extract audio',
-    description: 'Save the soundtrack as MP3',
-    icon: Music2,
-    tone: 'violet',
-    intent: 'extract-audio',
-  },
+};
+
+const featuredOperationIds: readonly OperationId[] = [
+  'compress-pdf',
+  'split-pdf',
+  'merge-pdf',
+  'pdf-to-jpg',
+  'docx-to-pdf',
+  'compress-video',
+  'resize-video',
+  'extract-audio',
 ];
+
+const orderedOperations = [
+  ...featuredOperationIds.map((id) => operations.find((operation) => operation.id === id)!),
+  ...operations.filter((operation) => !featuredOperationIds.includes(operation.id)),
+];
+
+const workingTools: ToolItem[] = orderedOperations.map((operation) => ({
+  ...operationPresentation[operation.id],
+  intent: operation.id,
+  executionMode: operation.executionMode,
+}));
 
 const advancedTools: ToolItem[] = [
   {
@@ -341,8 +399,15 @@ const toolTranslations: Record<Exclude<Language, 'en'>, Record<string, [string, 
     'PDF to JPEG': ['PDF в JPEG', 'Превратить страницы в изображения'],
     'DOCX to PDF': ['DOCX в PDF', 'Создать стабильный документ для отправки'],
     'Compress video': ['Сжать видео', 'Компактный MP4 для быстрой отправки'],
+    'Video to MP4': ['Видео в MP4', 'Преобразовать видео в совместимый формат'],
     'Resize video': ['Изменить размер видео', 'Настроить разрешение для экрана'],
     'Extract audio': ['Извлечь аудио', 'Сохранить звуковую дорожку в MP3'],
+    'Optimize image': ['Оптимизировать изображение', 'Создать лёгкий WebP прямо на устройстве'],
+    'Remove image metadata': ['Удалить метаданные', 'Локально удалить геолокацию и данные камеры'],
+    'Optimize audio': ['Оптимизировать аудио', 'Уменьшить размер с балансом качества'],
+    'Audio to MP3': ['Аудио в MP3', 'Создать компактный файл для воспроизведения'],
+    'Audio to WAV': ['Аудио в WAV', 'Создать несжатый файл для редактирования'],
+    'Trim audio': ['Обрезать аудио', 'Оставить точный фрагмент аудиофайла'],
     'Trim video': ['Обрезать видео', 'Оставить точный отрезок времени'],
     'Change aspect ratio': ['Изменить формат кадра', 'Горизонтальный, вертикальный или квадрат'],
     'Create GIF': ['Создать GIF', 'Превратить фрагмент в компактную анимацию'],
@@ -359,8 +424,18 @@ const toolTranslations: Record<Exclude<Language, 'en'>, Record<string, [string, 
     'PDF to JPEG': ['PDF a JPEG', 'Convierte páginas en imágenes'],
     'DOCX to PDF': ['DOCX a PDF', 'Crea un documento estable para compartir'],
     'Compress video': ['Comprimir vídeo', 'MP4 más pequeño para compartir'],
+    'Video to MP4': ['Vídeo a MP4', 'Convierte el vídeo a un formato compatible'],
     'Resize video': ['Redimensionar vídeo', 'Ajusta la resolución a cualquier pantalla'],
     'Extract audio': ['Extraer audio', 'Guarda la pista de sonido como MP3'],
+    'Optimize image': ['Optimizar imagen', 'Crea un WebP más ligero en este dispositivo'],
+    'Remove image metadata': [
+      'Eliminar metadatos',
+      'Borra localmente la ubicación y los datos de cámara',
+    ],
+    'Optimize audio': ['Optimizar audio', 'Reduce el tamaño con calidad equilibrada'],
+    'Audio to MP3': ['Audio a MP3', 'Crea un archivo compacto para reproducir'],
+    'Audio to WAV': ['Audio a WAV', 'Crea un archivo sin comprimir para editar'],
+    'Trim audio': ['Recortar audio', 'Conserva un fragmento exacto del audio'],
     'Trim video': ['Recortar vídeo', 'Conserva un intervalo exacto'],
     'Change aspect ratio': ['Cambiar proporción', 'Horizontal, vertical o cuadrado'],
     'Create GIF': ['Crear GIF', 'Convierte un clip en un bucle compacto'],
@@ -398,9 +473,14 @@ const localizedCopy = {
     bestOptions: 'Best options for',
     outcomeLead: 'Start with what you need. FileFlow handles the format details.',
     viewAll: 'View all tools',
+    toolCount: '15 working tools',
+    moreTools: 'more',
+    previousTools: 'Previous tools',
+    localMode: 'On device',
+    cloudMode: 'Protected cloud',
     nextMedia: 'Next-generation media',
     moreWays: 'More ways to shape every file.',
-    moreWaysLead: 'A focused media toolkit designed for creators, teams and repeatable workflows.',
+    moreWaysLead: 'Smaller previews of capabilities planned for future releases.',
     privacyArchitecture: 'Privacy architecture',
     privacyTitle: 'You always know where your file goes.',
     privacySteps: [
@@ -485,12 +565,16 @@ const localizedCopy = {
       '\u0412\u044b\u0431\u0435\u0440\u0438\u0442\u0435 \u0440\u0435\u0437\u0443\u043b\u044c\u0442\u0430\u0442 — FileFlow \u0440\u0430\u0437\u0431\u0435\u0440\u0451\u0442\u0441\u044f \u0441 \u0444\u043e\u0440\u043c\u0430\u0442\u043e\u043c.',
     viewAll:
       '\u0412\u0441\u0435 \u0438\u043d\u0441\u0442\u0440\u0443\u043c\u0435\u043d\u0442\u044b',
+    toolCount: '15 рабочих инструментов',
+    moreTools: 'ещё',
+    previousTools: 'Предыдущие инструменты',
+    localMode: 'На устройстве',
+    cloudMode: 'Защищённое облако',
     nextMedia:
       '\u041c\u0435\u0434\u0438\u0430 \u043d\u043e\u0432\u043e\u0433\u043e \u043f\u043e\u043a\u043e\u043b\u0435\u043d\u0438\u044f',
     moreWays:
       '\u0411\u043e\u043b\u044c\u0448\u0435 \u0432\u043e\u0437\u043c\u043e\u0436\u043d\u043e\u0441\u0442\u0435\u0439 \u0434\u043b\u044f \u043a\u0430\u0436\u0434\u043e\u0433\u043e \u0444\u0430\u0439\u043b\u0430.',
-    moreWaysLead:
-      '\u041d\u0430\u0431\u043e\u0440 \u043c\u0435\u0434\u0438\u0430-\u0438\u043d\u0441\u0442\u0440\u0443\u043c\u0435\u043d\u0442\u043e\u0432 \u0434\u043b\u044f \u0430\u0432\u0442\u043e\u0440\u043e\u0432, \u043a\u043e\u043c\u0430\u043d\u0434 \u0438 \u043f\u043e\u0432\u0442\u043e\u0440\u044f\u0435\u043c\u044b\u0445 \u043f\u0440\u043e\u0446\u0435\u0441\u0441\u043e\u0432.',
+    moreWaysLead: 'Компактные карточки функций, запланированных для будущих обновлений.',
     privacyArchitecture: 'Архитектура приватности',
     privacyTitle: 'Вы всегда знаете, куда отправляется файл.',
     privacySteps: [
@@ -551,9 +635,14 @@ const localizedCopy = {
     bestOptions: 'Mejores opciones para',
     outcomeLead: 'Elige el resultado. FileFlow se ocupa de los formatos.',
     viewAll: 'Ver herramientas',
+    toolCount: '15 herramientas activas',
+    moreTools: 'más',
+    previousTools: 'Herramientas anteriores',
+    localMode: 'En el dispositivo',
+    cloudMode: 'Nube protegida',
     nextMedia: 'Medios de nueva generación',
     moreWays: 'Más formas de transformar cada archivo.',
-    moreWaysLead: 'Herramientas para creadores, equipos y flujos repetibles.',
+    moreWaysLead: 'Vistas compactas de funciones previstas para futuras versiones.',
     privacyArchitecture: 'Arquitectura de privacidad',
     privacyTitle: 'Siempre sabes adónde va tu archivo.',
     privacySteps: [
@@ -596,35 +685,14 @@ const localizedCopy = {
 
 void copy;
 
-function detectSuggestedIntents(name: string): ToolItem[] {
-  const extension = name.split('.').pop()?.toLowerCase();
-  if (extension === 'pdf') return primaryTools.slice(0, 4);
-  if (['mp4', 'mov', 'avi', 'webm', 'mkv'].includes(extension ?? '')) {
-    return primaryTools.filter((tool) =>
-      ['compress-video', 'resize-video', 'extract-audio'].includes(tool.intent ?? ''),
-    );
-  }
-  if (['doc', 'docx'].includes(extension ?? '')) {
-    return primaryTools.filter((tool) => tool.intent === 'docx-to-pdf');
-  }
-  return primaryTools;
-}
-
 export function GlassHome() {
-  const inputRef = useRef<HTMLInputElement>(null);
+  const toolRailRef = useRef<HTMLDivElement>(null);
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
   const [mobileNav, setMobileNav] = useState(false);
-  const [dragging, setDragging] = useState(false);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [sourceUrl, setSourceUrl] = useState('');
-  const [urlError, setUrlError] = useState('');
+  const [selectedIntent, setSelectedIntent] = useState<OperationId>();
   const { language, setLanguage } = useFileFlowLanguage();
   const [userProfile, setUserProfile] = useState<{ displayName: string } | null>(null);
   const t = localizedCopy[language];
-  const suggestedTools = useMemo(
-    () => (selectedFile ? detectSuggestedIntents(selectedFile.name) : primaryTools),
-    [selectedFile],
-  );
 
   useEffect(() => {
     const saved = window.localStorage.getItem('fileflow-theme');
@@ -655,27 +723,21 @@ export function GlassHome() {
     };
   }, []);
 
-  function acceptFile(file?: File) {
-    if (!file) return;
-    setSelectedFile(file);
-    window.setTimeout(() => {
-      document.getElementById('tools')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }, 220);
+  function scrollTools(direction: -1 | 1) {
+    const rail = toolRailRef.current;
+    if (!rail) return;
+    rail.scrollBy({
+      left: direction * Math.max(rail.clientWidth * 0.82, 300),
+      behavior: 'smooth',
+    });
   }
 
-  function submitUrl(event: React.FormEvent) {
-    event.preventDefault();
-    try {
-      const parsed = new URL(sourceUrl);
-      const supported = ['youtube.com', 'youtu.be', 'instagram.com', 'tiktok.com'].some(
-        (host) => parsed.hostname === host || parsed.hostname.endsWith(`.${host}`),
-      );
-      if (!supported || parsed.protocol !== 'https:') throw new Error();
-      setUrlError('');
-      window.location.assign(`/workspace?source=${encodeURIComponent(sourceUrl)}`);
-    } catch {
-      setUrlError(t.urlError);
-    }
+  function chooseTool(intent?: OperationId) {
+    if (intent) setSelectedIntent(intent);
+    document.getElementById('workspace-flow')?.scrollIntoView({
+      behavior: 'smooth',
+      block: 'start',
+    });
   }
 
   return (
@@ -806,121 +868,8 @@ export function GlassHome() {
               id="workspace-flow"
               aria-label="Unified file workspace"
             >
-              <FileUrlInput language={language} />
+              <FileUrlInput initialIntent={selectedIntent} language={language} />
             </section>
-
-            <div className="ff-intake-grid">
-              <motion.section
-                className="ff-drop glass-panel"
-                data-dragging={dragging || undefined}
-                whileHover={{ y: -3 }}
-                onDragEnter={(event) => {
-                  event.preventDefault();
-                  setDragging(true);
-                }}
-                onDragOver={(event) => event.preventDefault()}
-                onDragLeave={(event) => {
-                  if (!event.currentTarget.contains(event.relatedTarget as Node))
-                    setDragging(false);
-                }}
-                onDrop={(event) => {
-                  event.preventDefault();
-                  setDragging(false);
-                  acceptFile(event.dataTransfer.files[0]);
-                }}
-              >
-                <input
-                  ref={inputRef}
-                  type="file"
-                  hidden
-                  accept="image/*,video/*,audio/*,.pdf,.doc,.docx"
-                  onChange={(event) => acceptFile(event.target.files?.[0])}
-                />
-                <motion.div
-                  className="ff-upload-orb"
-                  animate={{ y: dragging ? -8 : [0, -5, 0] }}
-                  transition={{ duration: dragging ? 0.2 : 4, repeat: dragging ? 0 : Infinity }}
-                >
-                  <UploadCloud size={38} strokeWidth={1.8} />
-                </motion.div>
-                <strong>{dragging ? t.dropActive : t.drop}</strong>
-                <span>{t.fileTypes}</span>
-                <button
-                  className="ff-primary-button"
-                  type="button"
-                  onClick={() => inputRef.current?.click()}
-                >
-                  {t.browse}
-                </button>
-                <AnimatePresence>
-                  {selectedFile ? (
-                    <motion.div
-                      className="ff-selected-file"
-                      initial={{ opacity: 0, y: 8 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0 }}
-                    >
-                      <FileText size={17} />
-                      <span>{selectedFile.name}</span>
-                      <button
-                        type="button"
-                        aria-label="Remove selected file"
-                        onClick={() => setSelectedFile(null)}
-                      >
-                        <X size={15} />
-                      </button>
-                    </motion.div>
-                  ) : null}
-                </AnimatePresence>
-              </motion.section>
-
-              <motion.section className="ff-link-card glass-panel" whileHover={{ y: -3 }}>
-                <div className="ff-card-heading">
-                  <div className="ff-icon-tile blue">
-                    <Link2 size={22} />
-                  </div>
-                  <div>
-                    <h2>{t.pasteLink}</h2>
-                    <p>{t.importMedia}</p>
-                  </div>
-                </div>
-                <form onSubmit={submitUrl} noValidate>
-                  <label className="sr-only" htmlFor="media-url">
-                    Public media URL
-                  </label>
-                  <div className="ff-url-input">
-                    <Link2 size={18} />
-                    <input
-                      id="media-url"
-                      type="url"
-                      inputMode="url"
-                      autoComplete="url"
-                      placeholder={t.urlPlaceholder}
-                      value={sourceUrl}
-                      aria-invalid={Boolean(urlError)}
-                      onChange={(event) => setSourceUrl(event.target.value)}
-                    />
-                  </div>
-                  <div className="ff-platforms" aria-label="Supported link sources">
-                    <span className="youtube" role="img" aria-label="YouTube" title="YouTube">
-                      <FaYoutube />
-                    </span>
-                    <span className="instagram" role="img" aria-label="Instagram" title="Instagram">
-                      <FaInstagram />
-                    </span>
-                    <span className="tiktok" role="img" aria-label="TikTok" title="TikTok">
-                      <FaTiktok />
-                    </span>
-                  </div>
-                  <button className="ff-primary-button wide" type="submit">
-                    {t.startLink} <ChevronRight size={18} />
-                  </button>
-                  <p className="ff-form-error" aria-live="polite">
-                    {urlError}
-                  </p>
-                </form>
-              </motion.section>
-            </div>
           </section>
 
           <section className="ff-tools-section" id="tools" aria-labelledby="tools-title">
@@ -929,15 +878,39 @@ export function GlassHome() {
                 <span className="ff-eyebrow">
                   <Grid2X2 size={15} /> {t.smartActions}
                 </span>
-                <h2 id="tools-title">
-                  {selectedFile ? `${t.bestOptions} ${selectedFile.name}` : t.chooseOutcome}
-                </h2>
+                <h2 id="tools-title">{t.chooseOutcome}</h2>
                 <p>{t.outcomeLead}</p>
               </div>
+              <div className="ff-tool-rail-actions">
+                <span>{t.toolCount}</span>
+                <button
+                  className="ff-tool-back"
+                  type="button"
+                  aria-label={t.previousTools}
+                  onClick={() => scrollTools(-1)}
+                >
+                  <ChevronLeft size={19} />
+                </button>
+                <button
+                  className="ff-tool-more glass-panel"
+                  type="button"
+                  onClick={() => scrollTools(1)}
+                >
+                  <Image src="/brand/fileflow-mark.png" alt="" width={28} height={25} />
+                  <span>{t.moreTools}</span>
+                  <ChevronRight size={18} />
+                </button>
+              </div>
             </div>
-            <motion.div className="ff-tool-grid" layout>
-              {suggestedTools.map((tool, index) => (
-                <ToolCard tool={tool} key={tool.title} index={index} language={language} />
+            <motion.div className="ff-tool-rail" ref={toolRailRef} layout aria-label={t.toolCount}>
+              {workingTools.map((tool, index) => (
+                <ToolCard
+                  tool={tool}
+                  key={tool.intent}
+                  index={index}
+                  language={language}
+                  onSelect={() => chooseTool(tool.intent)}
+                />
               ))}
             </motion.div>
           </section>
@@ -952,7 +925,7 @@ export function GlassHome() {
                 <p>{t.moreWaysLead}</p>
               </div>
             </div>
-            <div className="ff-advanced-grid">
+            <div className="ff-advanced-grid ff-roadmap-grid">
               {advancedTools.map((tool, index) => (
                 <ToolCard tool={tool} key={tool.title} index={index} language={language} />
               ))}
@@ -1086,20 +1059,21 @@ function ToolCard({
   tool,
   index,
   language,
+  onSelect,
 }: {
   tool: ToolItem;
   index: number;
   language: Language;
+  onSelect?: () => void;
 }) {
   const Icon = tool.icon;
-  const href = '#workspace-flow';
   const translated =
     language === 'en'
       ? [tool.title, tool.description]
       : (toolTranslations[language][tool.title] ?? [tool.title, tool.description]);
   return (
     <motion.article
-      className="ff-tool-card glass-panel"
+      className={`ff-tool-card glass-panel${tool.planned ? ' ff-roadmap-card' : ''}`}
       initial={{ opacity: 0, y: 14 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, amount: 0.3 }}
@@ -1115,13 +1089,19 @@ function ToolCard({
           {tool.planned ? <span>{localizedCopy[language].roadmap}</span> : null}
         </div>
         <p>{translated[1]}</p>
+        {!tool.planned && tool.executionMode ? (
+          <small className="ff-tool-mode">
+            {tool.executionMode === 'local'
+              ? localizedCopy[language].localMode
+              : localizedCopy[language].cloudMode}
+          </small>
+        ) : null}
       </div>
-      <Link
-        href={href}
-        aria-label={`${translated[0]}: ${tool.planned ? 'view roadmap' : 'open tool'}`}
-      >
-        <ChevronRight size={18} />
-      </Link>
+      {tool.planned ? null : (
+        <button type="button" aria-label={`${translated[0]}: open tool`} onClick={onSelect}>
+          <ChevronRight size={18} />
+        </button>
+      )}
     </motion.article>
   );
 }

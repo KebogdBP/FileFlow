@@ -10,6 +10,67 @@ import {
 import { Badge, Button, Select, Slider } from '@fileflow/ui';
 import { formatFileSize } from './input-policy';
 import { savingPercent, validateWebPResult, webPFileName } from './image-result';
+import type { FileFlowLanguage } from '../use-fileflow-language';
+
+const localImageCopy = {
+  en: {
+    badge: 'LOCAL IMAGE TOOL',
+    titles: ['Create a lighter WebP', 'Create a metadata-free WebP'],
+    metadata: 'Re-encoding removes embedded metadata',
+    quality: 'Quality',
+    dimension: 'Maximum dimension',
+    original: 'Keep original dimensions',
+    cancel: 'Cancel',
+    actions: ['Create WebP locally', 'Remove metadata locally'],
+    source: 'Source',
+    never: 'never uploaded',
+    valid: 'VALID WEBP',
+    saved: 'saved',
+    download: 'Download WebP',
+    unavailable: 'Local processing is unavailable.',
+    tooLarge: 'This image is too large for reliable processing on this device.',
+    reading: 'Reading source',
+    failed: 'Image processing failed.',
+  },
+  ru: {
+    badge: 'ЛОКАЛЬНЫЙ ИНСТРУМЕНТ',
+    titles: ['Создать лёгкий WebP', 'Создать WebP без метаданных'],
+    metadata: 'Повторное кодирование удаляет встроенные метаданные',
+    quality: 'Качество',
+    dimension: 'Максимальный размер',
+    original: 'Сохранить исходные размеры',
+    cancel: 'Отменить',
+    actions: ['Создать WebP локально', 'Удалить метаданные локально'],
+    source: 'Источник',
+    never: 'не загружается',
+    valid: 'ПРОВЕРЕННЫЙ WEBP',
+    saved: 'экономии',
+    download: 'Скачать WebP',
+    unavailable: 'Локальная обработка недоступна.',
+    tooLarge: 'Изображение слишком большое для надёжной обработки на этом устройстве.',
+    reading: 'Чтение файла',
+    failed: 'Не удалось обработать изображение.',
+  },
+  es: {
+    badge: 'HERRAMIENTA LOCAL',
+    titles: ['Crear un WebP más ligero', 'Crear un WebP sin metadatos'],
+    metadata: 'La recodificación elimina los metadatos incrustados',
+    quality: 'Calidad',
+    dimension: 'Dimensión máxima',
+    original: 'Conservar dimensiones originales',
+    cancel: 'Cancelar',
+    actions: ['Crear WebP localmente', 'Eliminar metadatos localmente'],
+    source: 'Origen',
+    never: 'nunca se carga',
+    valid: 'WEBP VERIFICADO',
+    saved: 'ahorrado',
+    download: 'Descargar WebP',
+    unavailable: 'El procesamiento local no está disponible.',
+    tooLarge: 'La imagen es demasiado grande para procesarla de forma fiable.',
+    reading: 'Leyendo archivo',
+    failed: 'No se pudo procesar la imagen.',
+  },
+} as const;
 
 type ToolState =
   | { status: 'idle' }
@@ -21,11 +82,14 @@ export function LocalImageTool({
   file,
   sourceMime,
   operationId = 'optimize-image',
+  language = 'en',
 }: {
   file: File;
   sourceMime: string;
   operationId?: string;
+  language?: FileFlowLanguage;
 }) {
+  const text = localImageCopy[language];
   const [quality, setQuality] = useState(82);
   const [maxDimension, setMaxDimension] = useState(0);
   const [state, setState] = useState<ToolState>({ status: 'idle' });
@@ -44,19 +108,19 @@ export function LocalImageTool({
     if (!capability.supported) {
       setState({
         status: 'error',
-        message: capability.reason ?? 'Local processing is unavailable.',
+        message: capability.reason ?? text.unavailable,
       });
       return;
     }
     if (file.size > capability.maxInputBytes) {
       setState({
         status: 'error',
-        message: 'This image is too large for reliable processing on this device.',
+        message: text.tooLarge,
       });
       return;
     }
 
-    setState({ status: 'running', progress: 0, stage: 'Reading source' });
+    setState({ status: 'running', progress: 0, stage: text.reading });
     try {
       const input = await file.arrayBuffer();
       const runner = new LocalJobRunner({
@@ -88,7 +152,7 @@ export function LocalImageTool({
     } catch (error) {
       setState({
         status: 'error',
-        message: error instanceof Error ? error.message : 'Image processing failed.',
+        message: error instanceof Error ? error.message : text.failed,
       });
     }
   }
@@ -98,19 +162,17 @@ export function LocalImageTool({
     <section className="local-image-tool" aria-labelledby="local-image-title">
       <div className="image-tool-heading">
         <div>
-          <Badge variant="local">LOCAL IMAGE TOOL</Badge>
+          <Badge variant="local">{text.badge}</Badge>
           <h3 id="local-image-title">
-            {operationId === 'remove-image-metadata'
-              ? 'Create a metadata-free WebP'
-              : 'Create a lighter WebP'}
+            {operationId === 'remove-image-metadata' ? text.titles[1] : text.titles[0]}
           </h3>
         </div>
-        <span>Re-encoding removes embedded metadata</span>
+        <span>{text.metadata}</span>
       </div>
       <div className="image-tool-controls">
         <Slider
           id="image-quality"
-          label="Quality"
+          label={text.quality}
           min={40}
           max={100}
           value={quality}
@@ -120,12 +182,12 @@ export function LocalImageTool({
         />
         <Select
           id="image-size"
-          label="Maximum dimension"
+          label={text.dimension}
           value={maxDimension}
           disabled={running}
           onChange={(event) => setMaxDimension(Number(event.target.value))}
         >
-          <option value={0}>Keep original dimensions</option>
+          <option value={0}>{text.original}</option>
           <option value={1920}>1920 px</option>
           <option value={1280}>1280 px</option>
           <option value={800}>800 px</option>
@@ -134,16 +196,16 @@ export function LocalImageTool({
       <div className="image-tool-action">
         {running ? (
           <Button type="button" variant="secondary" onClick={() => handle.current?.cancel()}>
-            Cancel
+            {text.cancel}
           </Button>
         ) : (
           <Button type="button" onClick={() => void processImage()}>
-            {operationId === 'remove-image-metadata'
-              ? 'Remove metadata locally'
-              : 'Create WebP locally'}
+            {operationId === 'remove-image-metadata' ? text.actions[1] : text.actions[0]}
           </Button>
         )}
-        <span>Source: {formatFileSize(file.size)} · never uploaded</span>
+        <span>
+          {text.source}: {formatFileSize(file.size)} · {text.never}
+        </span>
       </div>
       <div className="image-tool-feedback" aria-live="polite">
         {running ? (
@@ -164,17 +226,17 @@ export function LocalImageTool({
         {state.status === 'completed' ? (
           <div className="image-result-card">
             <div>
-              <Badge variant={state.size < file.size ? 'success' : 'warning'}>VALID WEBP</Badge>
+              <Badge variant={state.size < file.size ? 'success' : 'warning'}>{text.valid}</Badge>
               <strong>
                 {state.width} × {state.height}
               </strong>
               <span>
                 {formatFileSize(file.size)} → {formatFileSize(state.size)} ·{' '}
-                {savingPercent(file.size, state.size)}% saved
+                {savingPercent(file.size, state.size)}% {text.saved}
               </span>
             </div>
             <a className="image-download" href={state.url} download={webPFileName(file.name)}>
-              Download WebP
+              {text.download}
             </a>
           </div>
         ) : null}

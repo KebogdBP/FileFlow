@@ -179,8 +179,13 @@ const workspaceCopy = {
       'pdf-to-jpg': 'PDF в JPEG',
       'docx-to-pdf': 'DOCX в PDF',
       'compress-video': 'Сжать видео',
+      'video-to-mp4': 'Видео в MP4',
       'resize-video': 'Изменить размер видео',
       'extract-audio': 'Извлечь аудио',
+      'optimize-audio': 'Оптимизировать аудио',
+      'audio-to-mp3': 'Аудио в MP3',
+      'audio-to-wav': 'Аудио в WAV',
+      'trim-audio': 'Обрезать аудио',
       'optimize-image': 'Оптимизировать изображение',
       'remove-image-metadata': 'Удалить метаданные',
     },
@@ -285,8 +290,13 @@ const workspaceCopy = {
       'pdf-to-jpg': 'PDF a JPEG',
       'docx-to-pdf': 'DOCX a PDF',
       'compress-video': 'Comprimir vídeo',
+      'video-to-mp4': 'Vídeo a MP4',
       'resize-video': 'Redimensionar vídeo',
       'extract-audio': 'Extraer audio',
+      'optimize-audio': 'Optimizar audio',
+      'audio-to-mp3': 'Audio a MP3',
+      'audio-to-wav': 'Audio a WAV',
+      'trim-audio': 'Recortar audio',
       'optimize-image': 'Optimizar imagen',
       'remove-image-metadata': 'Eliminar metadatos',
     },
@@ -615,8 +625,8 @@ function BatchPanel({
           {text.batch[6]}
         </Button>
       </div>
-      {imageReady ? <BatchImageTool images={images} /> : null}
-      {pdfReady ? <CloudJobTool operationId="merge-pdf" files={pdfs} /> : null}
+      {imageReady ? <BatchImageTool images={images} language={language} /> : null}
+      {pdfReady ? <CloudJobTool operationId="merge-pdf" files={pdfs} language={language} /> : null}
     </>
   );
 }
@@ -908,12 +918,17 @@ function RecommendationPanel({
         </Button>
       </div>
       {confirmed && result.plan.mode === 'cloud' ? (
-        <CloudJobTool operationId={result.plan.operationId} files={[file]} />
+        <CloudJobTool operationId={result.plan.operationId} files={[file]} language={language} />
       ) : null}
       {confirmed &&
       result.plan.mode === 'local' &&
       (sourceMime === 'image/jpeg' || sourceMime === 'image/png') ? (
-        <LocalImageTool file={file} sourceMime={sourceMime} operationId={result.plan.operationId} />
+        <LocalImageTool
+          file={file}
+          sourceMime={sourceMime}
+          operationId={result.plan.operationId}
+          language={language}
+        />
       ) : null}
     </section>
   );
@@ -963,9 +978,82 @@ function UrlIntentPanel({
           {confirmed ? text.confirmedButton : text.urlImport[12]}
         </Button>
       </div>
-      {confirmed ? <SocialImportTool url={url} /> : null}
+      {confirmed ? <SocialImportTool url={url} language={language} /> : null}
     </section>
   );
+}
+
+const localizedPlanCopy = {
+  ru: {
+    outcome: 'После обработки вы получите проверенный файл в выбранном формате.',
+    reason: 'Действие соответствует типу выбранного файла и поддерживается движком FileFlow.',
+    expectation: 'Результат создаётся с безопасными ограничениями и проверяется перед скачиванием.',
+    privacyLocal: 'Обработка выполняется на этом устройстве. Исходный файл не загружается.',
+    privacyCloud: 'Файл временно обрабатывается в защищённом облаке и автоматически удаляется.',
+    defaultLabels: ['Результат', 'Качество', 'Настройки'],
+    defaultReason: 'Безопасное значение для выбранной операции.',
+    tradeoff: 'Изменение формата или сжатие может повлиять на размер и качество результата.',
+    alternativeOutcome: 'Альтернативное действие для этого типа файла.',
+  },
+  es: {
+    outcome: 'Después del procesamiento recibirás un archivo verificado en el formato elegido.',
+    reason: 'La acción corresponde al tipo de archivo y está admitida por el motor de FileFlow.',
+    expectation: 'El resultado usa límites seguros y se verifica antes de la descarga.',
+    privacyLocal: 'Se procesa en este dispositivo. El archivo original no se carga.',
+    privacyCloud: 'El archivo se procesa temporalmente en la nube protegida y se elimina después.',
+    defaultLabels: ['Resultado', 'Calidad', 'Ajustes'],
+    defaultReason: 'Valor seguro para la operación seleccionada.',
+    tradeoff: 'Cambiar el formato o comprimir puede afectar al tamaño y a la calidad.',
+    alternativeOutcome: 'Acción alternativa para este tipo de archivo.',
+  },
+} as const;
+
+const localizedPlanValues: Record<Exclude<FileFlowLanguage, 'en'>, Record<string, string>> = {
+  ru: {
+    Balanced: 'Сбалансировано',
+    Validated: 'Проверено',
+    Preserve: 'Сохранить',
+    'Print-ready': 'Для печати',
+    'Keep up to 1080p': 'Сохранить до 1080p',
+    'Remove private data': 'Удалить приватные данные',
+  },
+  es: {
+    Balanced: 'Equilibrado',
+    Validated: 'Verificado',
+    Preserve: 'Conservar',
+    'Print-ready': 'Listo para imprimir',
+    'Keep up to 1080p': 'Conservar hasta 1080p',
+    'Remove private data': 'Eliminar datos privados',
+  },
+};
+
+function localizeRecommendationPlan(
+  plan: RecommendationPlan,
+  language: FileFlowLanguage,
+): RecommendationPlan {
+  if (language === 'en') return plan;
+  const copy = localizedPlanCopy[language];
+  const operationNames = workspaceCopy[language].operationNames as Record<string, string>;
+  return {
+    ...plan,
+    title: operationNames[plan.operationId] ?? plan.title,
+    outcome: copy.outcome,
+    reason: copy.reason,
+    expectation: copy.expectation,
+    privacy: plan.mode === 'local' ? copy.privacyLocal : copy.privacyCloud,
+    defaults: plan.defaults.map((item, index) => ({
+      ...item,
+      label: copy.defaultLabels[index] ?? copy.defaultLabels[2],
+      value: localizedPlanValues[language][item.value] ?? item.value,
+      reason: copy.defaultReason,
+    })),
+    tradeoffs: plan.tradeoffs.length ? [copy.tradeoff] : [],
+    alternatives: plan.alternatives.map((alternative) => ({
+      ...alternative,
+      title: operationNames[alternative.operationId] ?? alternative.title,
+      outcome: copy.alternativeOutcome,
+    })),
+  };
 }
 
 function RecommendationPlanView({
@@ -976,36 +1064,39 @@ function RecommendationPlanView({
   language: FileFlowLanguage;
 }) {
   const text = workspaceCopy[language];
+  const visiblePlan = localizeRecommendationPlan(plan, language);
   return (
     <section className="recommendation-panel" aria-labelledby="recommendation-title">
       <div className="recommendation-heading">
         <div>
           <Badge variant="private">{text.plan[0]}</Badge>
-          <h3 id="recommendation-title">{plan.title}</h3>
-          <p>{plan.outcome}</p>
+          <h3 id="recommendation-title">{visiblePlan.title}</h3>
+          <p>{visiblePlan.outcome}</p>
         </div>
-        <Badge variant={plan.mode === 'local' ? 'local' : 'cloud'}>{plan.mode.toUpperCase()}</Badge>
+        <Badge variant={plan.mode === 'local' ? 'local' : 'cloud'}>
+          {plan.mode === 'local' ? text.onDevice : text.cloud}
+        </Badge>
       </div>
 
       <div className="recommendation-explanation">
         <div>
           <strong>{text.plan[1]}</strong>
-          <p>{plan.reason}</p>
+          <p>{visiblePlan.reason}</p>
         </div>
         <div>
           <strong>{text.plan[2]}</strong>
-          <p>{plan.expectation}</p>
+          <p>{visiblePlan.expectation}</p>
         </div>
         <div>
           <strong>{text.plan[3]}</strong>
-          <p>{plan.privacy}</p>
+          <p>{visiblePlan.privacy}</p>
         </div>
       </div>
 
       <div>
         <h4>{text.plan[4]}</h4>
         <dl className="recommendation-defaults">
-          {plan.defaults.map((item) => (
+          {visiblePlan.defaults.map((item) => (
             <div key={item.label}>
               <dt>{item.label}</dt>
               <dd>
@@ -1020,23 +1111,23 @@ function RecommendationPlanView({
       <div className="recommendation-tradeoffs">
         <strong>{text.plan[5]}</strong>
         <ul>
-          {plan.tradeoffs.map((tradeoff) => (
+          {visiblePlan.tradeoffs.map((tradeoff) => (
             <li key={tradeoff}>{tradeoff}</li>
           ))}
         </ul>
       </div>
 
-      {plan.alternatives.length ? (
+      {visiblePlan.alternatives.length ? (
         <div className="recommendation-alternatives">
           <h4>{text.plan[6]}</h4>
-          {plan.alternatives.map((alternative) => (
+          {visiblePlan.alternatives.map((alternative) => (
             <div key={alternative.operationId}>
               <span>
                 <strong>{alternative.title}</strong>
                 <small>{alternative.outcome}</small>
               </span>
               <Badge variant={alternative.mode === 'local' ? 'local' : 'cloud'}>
-                {alternative.mode.toUpperCase()}
+                {alternative.mode === 'local' ? text.onDevice : text.cloud}
               </Badge>
             </div>
           ))}
