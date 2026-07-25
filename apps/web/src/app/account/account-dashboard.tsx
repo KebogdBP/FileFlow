@@ -7,9 +7,9 @@ import { ACCOUNT_TOKEN_KEY, API_URL, downloadJobResult } from '../cloud-api';
 import { useFileFlowLanguage } from '../use-fileflow-language';
 
 const authCopy = {
-  en: { signIn: 'Sign in', create: 'Create account', name: 'Name or nickname', email: 'Email', password: 'Password', confirm: 'Confirm password', wait: 'Please wait…', mismatch: 'Passwords do not match.' },
-  ru: { signIn: 'Войти', create: 'Создать аккаунт', name: 'Имя или никнейм', email: 'Электронная почта', password: 'Пароль', confirm: 'Подтвердите пароль', wait: 'Подождите…', mismatch: 'Пароли не совпадают.' },
-  es: { signIn: 'Iniciar sesión', create: 'Crear cuenta', name: 'Nombre o apodo', email: 'Correo electrónico', password: 'Contraseña', confirm: 'Confirmar contraseña', wait: 'Espera…', mismatch: 'Las contraseñas no coinciden.' },
+  en: { signIn: 'Sign in', create: 'Create account', name: 'Name or nickname', email: 'Email', password: 'Password', confirm: 'Confirm password', wait: 'Please wait…', mismatch: 'Passwords do not match.', signOut: 'Sign out', account: 'Account overview', used: 'cloud jobs used today. Resets', history: 'Cloud history', emptyHistory: 'No authenticated cloud jobs yet. Local work is intentionally not recorded.', download: 'Download', cancel: 'Cancel', apiTitle: 'Developer API keys', apiLead: 'Create a revocable key for the FileFlow API and MCP adapter.', keyName: 'Key name', createKey: 'Create API key', copyKey: 'Copy this key now. It will not be shown again.', created: 'created', revoke: 'Revoke', noKeys: 'No active API keys.' },
+  ru: { signIn: 'Войти', create: 'Создать аккаунт', name: 'Имя или никнейм', email: 'Электронная почта', password: 'Пароль', confirm: 'Подтвердите пароль', wait: 'Подождите…', mismatch: 'Пароли не совпадают.', signOut: 'Выйти', account: 'Обзор аккаунта', used: 'облачных задач использовано сегодня. Сброс', history: 'Облачная история', emptyHistory: 'Авторизованных облачных задач пока нет. Локальная работа намеренно не записывается.', download: 'Скачать', cancel: 'Отменить', apiTitle: 'API-ключи разработчика', apiLead: 'Создайте отзывной ключ для API FileFlow и MCP-адаптера.', keyName: 'Название ключа', createKey: 'Создать API-ключ', copyKey: 'Скопируйте ключ сейчас. Он больше не будет показан.', created: 'создан', revoke: 'Отозвать', noKeys: 'Активных API-ключей нет.' },
+  es: { signIn: 'Iniciar sesión', create: 'Crear cuenta', name: 'Nombre o apodo', email: 'Correo electrónico', password: 'Contraseña', confirm: 'Confirmar contraseña', wait: 'Espera…', mismatch: 'Las contraseñas no coinciden.', signOut: 'Cerrar sesión', account: 'Resumen de la cuenta', used: 'trabajos en la nube usados hoy. Reinicio', history: 'Historial en la nube', emptyHistory: 'Aún no hay trabajos autenticados. El trabajo local no se registra.', download: 'Descargar', cancel: 'Cancelar', apiTitle: 'Claves API para desarrolladores', apiLead: 'Crea una clave revocable para la API de FileFlow y el adaptador MCP.', keyName: 'Nombre de la clave', createKey: 'Crear clave API', copyKey: 'Copia esta clave ahora. No se volverá a mostrar.', created: 'creada', revoke: 'Revocar', noKeys: 'No hay claves API activas.' },
 } as const;
 
 type Account = {
@@ -256,7 +256,7 @@ export function AccountDashboard() {
   }
 
   return (
-    <section className="account-dashboard" aria-label="Account overview">
+    <section className="account-dashboard" aria-label={text.account}>
       <Card>
         <div className="account-card-heading">
           <div>
@@ -265,7 +265,7 @@ export function AccountDashboard() {
             <p>{account.email}</p>
           </div>
           <Button variant="secondary" onClick={logout}>
-            Sign out
+            {text.signOut}
           </Button>
         </div>
         {limits && (
@@ -273,14 +273,14 @@ export function AccountDashboard() {
             <strong>
               {limits.cloud_jobs_used} of {limits.cloud_jobs_limit}
             </strong>{' '}
-            cloud jobs used today. Resets {new Date(limits.resets_at).toLocaleString()}.
+            {text.used} {new Date(limits.resets_at).toLocaleString(language)}.
           </p>
         )}
       </Card>
       <Card>
-        <h2>Cloud history</h2>
+        <h2>{text.history}</h2>
         {jobs.length === 0 ? (
-          <p>No authenticated cloud jobs yet. Local work is intentionally not recorded.</p>
+          <p>{text.emptyHistory}</p>
         ) : (
           <ul className="account-history">
             {jobs.map((job) => (
@@ -305,7 +305,7 @@ export function AccountDashboard() {
                       variant="ghost"
                       onClick={() => void downloadHistoryJob(job.id)}
                     >
-                      Download
+                      {text.download}
                     </Button>
                   ) : null}
                   {job.status === 'queued' || job.status === 'running' ? (
@@ -315,7 +315,7 @@ export function AccountDashboard() {
                       variant="ghost"
                       onClick={() => void cancelHistoryJob(job.id)}
                     >
-                      Cancel
+                      {text.cancel}
                     </Button>
                   ) : null}
                 </span>
@@ -325,15 +325,15 @@ export function AccountDashboard() {
         )}
       </Card>
       <Card className="api-key-card">
-        <h2>Developer API keys</h2>
-        <p>Create a revocable key for the FileFlow API and MCP adapter.</p>
+        <h2>{text.apiTitle}</h2>
+        <p>{text.apiLead}</p>
         <form onSubmit={createApiKey}>
-          <Input label="Key name" name="name" maxLength={80} required />
-          <Button type="submit">Create API key</Button>
+          <Input label={text.keyName} name="name" maxLength={80} required />
+          <Button type="submit">{text.createKey}</Button>
         </form>
         {createdKey ? (
           <div className="api-key-secret" role="status">
-            <strong>Copy this key now. It will not be shown again.</strong>
+            <strong>{text.copyKey}</strong>
             <code>{createdKey}</code>
           </div>
         ) : null}
@@ -344,7 +344,7 @@ export function AccountDashboard() {
                 <span>
                   <strong>{key.name}</strong>
                   <small>
-                    {key.prefix}… · created {new Date(key.created_at).toLocaleString()}
+                    {key.prefix}… · {text.created} {new Date(key.created_at).toLocaleString(language)}
                   </small>
                 </span>
                 <Button
@@ -353,13 +353,13 @@ export function AccountDashboard() {
                   variant="ghost"
                   onClick={() => void revokeApiKey(key.id)}
                 >
-                  Revoke
+                  {text.revoke}
                 </Button>
               </li>
             ))}
           </ul>
         ) : (
-          <p>No active API keys.</p>
+          <p>{text.noKeys}</p>
         )}
       </Card>
       {message ? (

@@ -58,6 +58,11 @@ const workspaceCopy = {
     metadata: ['Category', 'Format', 'Declared MIME', 'Detected MIME', 'Extension', 'Modified'],
     operationNames: {},
     invalidFile: 'This file cannot be used. Check its type and size.', invalidUrl: 'Enter a supported public HTTPS link.',
+    engine: ['CHECKING', 'LOCAL ENGINE', 'UNAVAILABLE', 'Browser worker readiness', 'This device allows guarded local jobs up to', 'Checking browser capabilities…', 'Cancel check', 'Test local engine', 'Local worker is ready.'],
+    batch: ['BATCH VERIFIED', 'REVIEW NEEDED', 'files inspected locally', 'All files are compatible JPG or PNG images and can share one local operation.', 'All files are verified PDFs and can be merged in the selected order.', 'Use a matching batch of verified JPG/PNG images or PDF files.', 'Clear batch'],
+    plan: ['RECOMMENDED', 'Why this fits', 'What to expect', 'Where it runs', 'Safe defaults', 'Trade-offs', 'Alternative', 'Plan only · nothing has started.', 'You will confirm settings before any processing.'],
+    selected: ['Ready for inspection', 'Validated · Ready for import review', 'Remove'],
+    urlImport: ['CLOUD IMPORT', 'Import media from', 'Outcome', 'A compatible video plus available title, creator and thumbnail metadata.', 'Where it runs', 'The platform import runs in an isolated cloud worker.', 'Safety', 'The imported result enters quarantine and malware scanning before processing.', 'Import intent confirmed', 'Nothing has been imported yet', 'The URL is ready for the asynchronous import workflow.', 'Confirm after reviewing the cloud and safety lifecycle.', 'Confirm import'],
   },
   ru: {
     badge: 'ПРИВАТНЫЙ ВВОД', title: 'Начните с файла или ссылки', nothing: 'Ничего не загружено',
@@ -82,6 +87,11 @@ const workspaceCopy = {
       'optimize-image': 'Оптимизировать изображение', 'remove-image-metadata': 'Удалить метаданные',
     },
     invalidFile: 'Этот файл нельзя использовать. Проверьте тип и размер.', invalidUrl: 'Введите поддерживаемую публичную HTTPS-ссылку.',
+    engine: ['ПРОВЕРКА', 'ЛОКАЛЬНЫЙ ДВИЖОК', 'НЕДОСТУПНО', 'Готовность браузерного обработчика', 'Это устройство поддерживает защищённые локальные задачи до', 'Проверяем возможности браузера…', 'Отменить проверку', 'Проверить локальный движок', 'Локальный обработчик готов.'],
+    batch: ['ПАКЕТ ПРОВЕРЕН', 'НУЖНА ПРОВЕРКА', 'файлов проверено локально', 'Все файлы — совместимые JPG или PNG и подходят для одной локальной операции.', 'Все файлы — проверенные PDF и могут быть объединены в выбранном порядке.', 'Используйте однородный пакет проверенных JPG/PNG или PDF.', 'Очистить пакет'],
+    plan: ['РЕКОМЕНДОВАНО', 'Почему подходит', 'Что ожидать', 'Где выполняется', 'Безопасные настройки', 'Компромиссы', 'Альтернатива', 'Только план · ничего не запущено.', 'Вы подтвердите настройки до начала обработки.'],
+    selected: ['Готов к проверке', 'Проверено · готово к проверке импорта', 'Удалить'],
+    urlImport: ['ОБЛАЧНЫЙ ИМПОРТ', 'Импортировать медиа из', 'Результат', 'Совместимое видео, а также доступные название, автор и превью.', 'Где выполняется', 'Импорт платформы выполняется в изолированном облачном обработчике.', 'Безопасность', 'Перед обработкой результат проходит карантин и проверку на вредоносное ПО.', 'Импорт подтверждён', 'Импорт ещё не начался', 'Ссылка готова для асинхронного импорта.', 'Подтвердите после проверки облачного режима и мер безопасности.', 'Подтвердить импорт'],
   },
   es: {
     badge: 'ENTRADA PRIVADA', title: 'Empieza con un archivo o enlace', nothing: 'Nada cargado',
@@ -106,6 +116,11 @@ const workspaceCopy = {
       'optimize-image': 'Optimizar imagen', 'remove-image-metadata': 'Eliminar metadatos',
     },
     invalidFile: 'No se puede usar este archivo. Comprueba el tipo y el tamaño.', invalidUrl: 'Introduce un enlace HTTPS público compatible.',
+    engine: ['COMPROBANDO', 'MOTOR LOCAL', 'NO DISPONIBLE', 'Preparación del motor del navegador', 'Este dispositivo admite trabajos locales protegidos de hasta', 'Comprobando el navegador…', 'Cancelar prueba', 'Probar motor local', 'El motor local está listo.'],
+    batch: ['LOTE VERIFICADO', 'REVISIÓN NECESARIA', 'archivos inspeccionados localmente', 'Todos son JPG o PNG compatibles y pueden compartir una operación local.', 'Todos son PDF verificados y pueden unirse en el orden elegido.', 'Usa un lote uniforme de JPG/PNG o PDF verificados.', 'Limpiar lote'],
+    plan: ['RECOMENDADO', 'Por qué encaja', 'Qué esperar', 'Dónde se ejecuta', 'Valores seguros', 'Compromisos', 'Alternativa', 'Solo es un plan · nada ha comenzado.', 'Confirmarás los ajustes antes de procesar.'],
+    selected: ['Listo para inspección', 'Validado · listo para revisar la importación', 'Eliminar'],
+    urlImport: ['IMPORTACIÓN EN LA NUBE', 'Importar medios de', 'Resultado', 'Un vídeo compatible con título, autor y miniatura disponibles.', 'Dónde se ejecuta', 'La importación se ejecuta en un motor aislado en la nube.', 'Seguridad', 'El resultado pasa por cuarentena y análisis de malware antes de procesarse.', 'Importación confirmada', 'Aún no se ha importado nada', 'La URL está lista para el flujo de importación asíncrono.', 'Confirma después de revisar el ciclo de nube y seguridad.', 'Confirmar importación'],
   },
 } as const;
 
@@ -315,8 +330,8 @@ export function FileUrlInput({
             {error}
           </p>
         ) : null}
-        {source ? <SelectedSource source={source} onRemove={reset} /> : null}
-        {batch ? <BatchPanel batch={batch} onRemove={reset} /> : null}
+        {source ? <SelectedSource source={source} onRemove={reset} language={language} /> : null}
+        {batch ? <BatchPanel batch={batch} onRemove={reset} language={language} /> : null}
         {source?.kind === 'file' ? (
           <FileInspectorPanel
             state={inspection}
@@ -326,7 +341,7 @@ export function FileUrlInput({
           />
         ) : null}
         {source?.kind === 'url' ? (
-          <UrlIntentPanel platform={source.platform} url={source.url} />
+          <UrlIntentPanel platform={source.platform} url={source.url} language={language} />
         ) : null}
       </div>
 
@@ -345,7 +360,7 @@ export function FileUrlInput({
           </p>
         </div>
       </div>
-      <LocalEngineStatus />
+      <LocalEngineStatus language={language} />
     </Card>
   );
 }
@@ -353,10 +368,13 @@ export function FileUrlInput({
 function BatchPanel({
   batch,
   onRemove,
+  language,
 }: {
   batch: readonly BatchInspection[];
   onRemove: () => void;
+  language: FileFlowLanguage;
 }) {
+  const text = workspaceCopy[language];
   const images: { file: File; sourceMime: 'image/jpeg' | 'image/png' }[] = [];
   const pdfs: File[] = [];
   for (const { file, result } of batch) {
@@ -374,19 +392,19 @@ function BatchPanel({
       <div className="batch-summary">
         <div>
           <Badge variant={ready ? 'success' : 'warning'}>
-            {ready ? 'BATCH VERIFIED' : 'REVIEW NEEDED'}
+            {ready ? text.batch[0] : text.batch[1]}
           </Badge>
-          <strong>{batch.length} files inspected locally</strong>
+          <strong>{batch.length} {text.batch[2]}</strong>
           <p>
             {imageReady
-              ? 'All files are compatible JPG or PNG images and can share one local operation.'
+              ? text.batch[3]
               : pdfReady
-                ? 'All files are verified PDFs and can be merged in the selected order.'
-                : 'Use a matching batch of verified JPG/PNG images or PDF files.'}
+                ? text.batch[4]
+                : text.batch[5]}
           </p>
         </div>
         <Button type="button" size="sm" variant="ghost" onClick={onRemove}>
-          Clear batch
+          {text.batch[6]}
         </Button>
       </div>
       {imageReady ? <BatchImageTool images={images} /> : null}
@@ -401,7 +419,8 @@ type EngineState =
   | { status: 'completed' }
   | { status: 'error'; message: string };
 
-function LocalEngineStatus() {
+function LocalEngineStatus({ language }: { language: FileFlowLanguage }) {
+  const text = workspaceCopy[language];
   const [capability, setCapability] = useState<LocalCapability>();
   const [state, setState] = useState<EngineState>({ status: 'idle' });
   const handle = useRef<LocalJobHandle | null>(null);
@@ -444,22 +463,22 @@ function LocalEngineStatus() {
       <div>
         <Badge variant={capability?.supported ? 'local' : 'neutral'}>
           {capability === undefined
-            ? 'CHECKING'
+            ? text.engine[0]
             : capability.supported
-              ? 'LOCAL ENGINE'
-              : 'UNAVAILABLE'}
+              ? text.engine[1]
+              : text.engine[2]}
         </Badge>
-        <h3 id="local-engine-title">Browser worker readiness</h3>
+        <h3 id="local-engine-title">{text.engine[3]}</h3>
         <p>
           {capability?.supported
-            ? `This device allows guarded local jobs up to ${formatFileSize(capability.maxInputBytes)}.`
-            : (capability?.reason ?? 'Checking browser capabilities…')}
+            ? `${text.engine[4]} ${formatFileSize(capability.maxInputBytes)}.`
+            : (capability?.reason ?? text.engine[5])}
         </p>
       </div>
       <div className="local-engine-actions">
         {running ? (
           <Button type="button" variant="secondary" onClick={() => handle.current?.cancel()}>
-            Cancel check
+            {text.engine[6]}
           </Button>
         ) : (
           <Button
@@ -468,7 +487,7 @@ function LocalEngineStatus() {
             disabled={!capability?.supported}
             onClick={runReadinessCheck}
           >
-            Test local engine
+            {text.engine[7]}
           </Button>
         )}
       </div>
@@ -484,7 +503,7 @@ function LocalEngineStatus() {
           </div>
         ) : null}
         {state.status === 'completed' ? (
-          <p className="engine-success">Local worker is ready.</p>
+          <p className="engine-success">{text.engine[8]}</p>
         ) : null}
         {state.status === 'error' ? (
           <p className="input-error" role="alert">
@@ -664,7 +683,7 @@ function RecommendationPanel({
           );
         })}
       </div>
-      <RecommendationPlanView plan={result.plan} />
+      <RecommendationPlanView plan={result.plan} language={language} />
       <div className="intent-confirmation" data-confirmed={confirmed || undefined}>
         <div>
           <strong>{confirmed ? text.confirmed : text.review}</strong>
@@ -692,41 +711,50 @@ function RecommendationPanel({
   );
 }
 
-function UrlIntentPanel({ platform, url }: { platform: InputPlatform; url: string }) {
+function UrlIntentPanel({
+  platform,
+  url,
+  language,
+}: {
+  platform: InputPlatform;
+  url: string;
+  language: FileFlowLanguage;
+}) {
+  const text = workspaceCopy[language];
   const [confirmed, setConfirmed] = useState(false);
   return (
     <section className="intent-workspace url-intent" aria-labelledby="url-intent-title">
       <div className="intent-heading">
         <div>
-          <Badge variant="cloud">CLOUD IMPORT</Badge>
-          <h3 id="url-intent-title">Import media from {platform}</h3>
+          <Badge variant="cloud">{text.urlImport[0]}</Badge>
+          <h3 id="url-intent-title">{text.urlImport[1]} {platform}</h3>
         </div>
       </div>
       <div className="recommendation-explanation">
         <div>
-          <strong>Outcome</strong>
-          <p>A compatible video plus available title, creator and thumbnail metadata.</p>
+          <strong>{text.urlImport[2]}</strong>
+          <p>{text.urlImport[3]}</p>
         </div>
         <div>
-          <strong>Where it runs</strong>
-          <p>The platform import runs in an isolated cloud worker.</p>
+          <strong>{text.urlImport[4]}</strong>
+          <p>{text.urlImport[5]}</p>
         </div>
         <div>
-          <strong>Safety</strong>
-          <p>The imported result enters quarantine and malware scanning before processing.</p>
+          <strong>{text.urlImport[6]}</strong>
+          <p>{text.urlImport[7]}</p>
         </div>
       </div>
       <div className="intent-confirmation" data-confirmed={confirmed || undefined}>
         <div>
-          <strong>{confirmed ? 'Import intent confirmed' : 'Nothing has been imported yet'}</strong>
+          <strong>{confirmed ? text.urlImport[8] : text.urlImport[9]}</strong>
           <p>
             {confirmed
-              ? 'The URL is ready for the asynchronous import workflow.'
-              : 'Confirm after reviewing the cloud and safety lifecycle.'}
+              ? text.urlImport[10]
+              : text.urlImport[11]}
           </p>
         </div>
         <Button type="button" onClick={() => setConfirmed(true)} disabled={confirmed}>
-          {confirmed ? 'Confirmed' : 'Confirm import'}
+          {confirmed ? text.confirmedButton : text.urlImport[12]}
         </Button>
       </div>
       {confirmed ? <SocialImportTool url={url} /> : null}
@@ -734,12 +762,19 @@ function UrlIntentPanel({ platform, url }: { platform: InputPlatform; url: strin
   );
 }
 
-function RecommendationPlanView({ plan }: { plan: RecommendationPlan }) {
+function RecommendationPlanView({
+  plan,
+  language,
+}: {
+  plan: RecommendationPlan;
+  language: FileFlowLanguage;
+}) {
+  const text = workspaceCopy[language];
   return (
     <section className="recommendation-panel" aria-labelledby="recommendation-title">
       <div className="recommendation-heading">
         <div>
-          <Badge variant="private">RECOMMENDED</Badge>
+          <Badge variant="private">{text.plan[0]}</Badge>
           <h3 id="recommendation-title">{plan.title}</h3>
           <p>{plan.outcome}</p>
         </div>
@@ -748,21 +783,21 @@ function RecommendationPlanView({ plan }: { plan: RecommendationPlan }) {
 
       <div className="recommendation-explanation">
         <div>
-          <strong>Why this fits</strong>
+          <strong>{text.plan[1]}</strong>
           <p>{plan.reason}</p>
         </div>
         <div>
-          <strong>What to expect</strong>
+          <strong>{text.plan[2]}</strong>
           <p>{plan.expectation}</p>
         </div>
         <div>
-          <strong>Where it runs</strong>
+          <strong>{text.plan[3]}</strong>
           <p>{plan.privacy}</p>
         </div>
       </div>
 
       <div>
-        <h4>Safe defaults</h4>
+        <h4>{text.plan[4]}</h4>
         <dl className="recommendation-defaults">
           {plan.defaults.map((item) => (
             <div key={item.label}>
@@ -777,7 +812,7 @@ function RecommendationPlanView({ plan }: { plan: RecommendationPlan }) {
       </div>
 
       <div className="recommendation-tradeoffs">
-        <strong>Trade-offs</strong>
+        <strong>{text.plan[5]}</strong>
         <ul>
           {plan.tradeoffs.map((tradeoff) => (
             <li key={tradeoff}>{tradeoff}</li>
@@ -787,7 +822,7 @@ function RecommendationPlanView({ plan }: { plan: RecommendationPlan }) {
 
       {plan.alternatives.length ? (
         <div className="recommendation-alternatives">
-          <h4>Alternative</h4>
+          <h4>{text.plan[6]}</h4>
           {plan.alternatives.map((alternative) => (
             <div key={alternative.operationId}>
               <span>
@@ -805,15 +840,23 @@ function RecommendationPlanView({ plan }: { plan: RecommendationPlan }) {
       <div className="recommendation-plan-status">
         <span aria-hidden="true">◇</span>
         <p>
-          <strong>Plan only · nothing has started.</strong> You will confirm settings before any
-          processing.
+          <strong>{text.plan[7]}</strong> {text.plan[8]}
         </p>
       </div>
     </section>
   );
 }
 
-function SelectedSource({ source, onRemove }: { source: Source; onRemove: () => void }) {
+function SelectedSource({
+  source,
+  onRemove,
+  language,
+}: {
+  source: Source;
+  onRemove: () => void;
+  language: FileFlowLanguage;
+}) {
+  const text = workspaceCopy[language];
   const file = source.kind === 'file' ? source.file : undefined;
   return (
     <div className="selected-source" data-source-kind={source.kind}>
@@ -824,8 +867,8 @@ function SelectedSource({ source, onRemove }: { source: Source; onRemove: () => 
         <strong>{source.kind === 'file' ? source.file.name : `${source.platform} link`}</strong>
         <span>
           {file
-            ? `${formatFileSize(file.size)} · Ready for inspection`
-            : 'Validated · Ready for import review'}
+            ? `${formatFileSize(file.size)} · ${text.selected[0]}`
+            : text.selected[1]}
         </span>
       </div>
       <Button
@@ -833,9 +876,9 @@ function SelectedSource({ source, onRemove }: { source: Source; onRemove: () => 
         size="sm"
         variant="ghost"
         onClick={onRemove}
-        aria-label="Remove selected source"
+        aria-label={text.selected[2]}
       >
-        Remove
+        {text.selected[2]}
       </Button>
     </div>
   );
