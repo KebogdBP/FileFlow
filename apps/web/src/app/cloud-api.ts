@@ -1,4 +1,8 @@
-export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000/api/v1';
+export const API_URL =
+  process.env.NEXT_PUBLIC_API_URL ??
+  (process.env.NODE_ENV === 'production'
+    ? 'https://api.135.148.47.174.sslip.io/api/v1'
+    : 'http://localhost:8000/api/v1');
 export const ACCOUNT_TOKEN_KEY = 'fileflow.account-token';
 
 export type UploadRecord = {
