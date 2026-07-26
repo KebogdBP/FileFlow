@@ -31,6 +31,7 @@ class Settings(BaseSettings):
     malware_scanner_port: int = Field(default=3310, ge=1, le=65535)
     malware_scanner_timeout_seconds: float = Field(default=30.0, gt=0, le=300)
     safety_header_bytes: int = Field(default=16 * 1024, ge=512, le=1024 * 1024)
+    cross_origin_resource_policy: Literal["same-site", "cross-origin"] = "same-site"
     redis_url: str = "redis://localhost:6379/0"
     job_soft_time_limit_seconds: int = Field(default=14 * 60, ge=30)
     job_time_limit_seconds: int = Field(default=15 * 60, ge=60)

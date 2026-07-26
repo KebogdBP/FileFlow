@@ -58,6 +58,14 @@ def test_security_headers_are_applied_to_every_response() -> None:
     assert response.headers["x-frame-options"] == "DENY"
 
 
+def test_cross_origin_resource_policy_can_be_relaxed_for_a_separate_frontend() -> None:
+    api = TestClient(
+        create_app(Settings(environment="test", cross_origin_resource_policy="cross-origin"))
+    )
+
+    assert api.get("/").headers["cross-origin-resource-policy"] == "cross-origin"
+
+
 def test_production_enables_transport_security() -> None:
     response = client("production").get("/")
 

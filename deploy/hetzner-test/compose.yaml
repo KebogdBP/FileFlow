@@ -1,0 +1,201 @@
+name: fileflow-test
+
+x-app-environment: &app-environment
+  FILEFLOW_ENVIRONMENT: production
+  FILEFLOW_DATABASE_URL: postgresql+psycopg://fileflow:${POSTGRES_PASSWORD}@postgres:5432/fileflow
+  FILEFLOW_REDIS_URL: redis://redis:6379/0
+  FILEFLOW_S3_ENDPOINT_URL: http://minio:9000
+  FILEFLOW_S3_ACCESS_KEY: ${MINIO_ROOT_USER}
+  FILEFLOW_S3_SECRET_KEY: ${MINIO_ROOT_PASSWORD}
+  FILEFLOW_S3_BUCKET: fileflow-temporary
+  FILEFLOW_MALWARE_SCANNER_HOST: clamav
+  FILEFLOW_ALLOWED_ORIGINS: '["${FILEFLOW_WEB_ORIGIN}"]'
+  FILEFLOW_TRUSTED_HOSTS: '["${FILEFLOW_API_HOST}","api"]'
+  FILEFLOW_CROSS_ORIGIN_RESOURCE_POLICY: cross-origin
+  FILEFLOW_MAX_UPLOAD_BYTES: 536870912
+  FILEFLOW_WORKER_MAX_OUTPUT_BYTES: 1073741824
+  FILEFLOW_UPLOAD_RETENTION_SECONDS: 3600
+  FILEFLOW_FREE_DAILY_CLOUD_JOBS: 10
+
+services:
+  caddy:
+    image: caddy:2.10-alpine
+    restart: unless-stopped
+    depends_on:
+      api:
+        condition: service_healthy
+    environment:
+      FILEFLOW_API_HOST: ${FILEFLOW_API_HOST}
+    ports:
+      - '80:80'
+      - '443:443'
+      - '443:443/udp'
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    mem_limit: 192m
+
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: fileflow
+      POSTGRES_USER: fileflow
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U fileflow']
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    mem_limit: 768m
+
+  redis:
+    image: redis:8-alpine
+    restart: unless-stopped
+    command: ['redis-server', '--appendonly', 'yes', '--maxmemory', '192mb']
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    mem_limit: 256m
+
+  minio:
+    image: minio/minio:latest
+    restart: unless-stopped
+    command: server /data
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+    volumes:
+      - minio_data:/data
+    mem_limit: 640m
+
+  minio-init:
+    image: minio/mc:latest
+    restart: 'no'
+    depends_on:
+      - minio
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+    entrypoint: ['/bin/sh', '-ec']
+    command:
+      - |
+        until mc alias set local http://minio:9000 "$${MINIO_ROOT_USER}" "$${MINIO_ROOT_PASSWORD}"; do sleep 2; done
+        mc mb --ignore-existing local/fileflow-temporary
+
+  object-cleanup:
+    image: minio/mc:latest
+    restart: unless-stopped
+    depends_on:
+      minio-init:
+        condition: service_completed_successfully
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+    entrypoint: ['/bin/sh', '-ec']
+    command:
+      - |
+        mc alias set local http://minio:9000 "$${MINIO_ROOT_USER}" "$${MINIO_ROOT_PASSWORD}"
+        while true; do
+          mc rm --recursive --force --older-than 75m local/fileflow-temporary/temporary/ || true
+          mc rm --recursive --force --incomplete --older-than 75m local/fileflow-temporary/ || true
+          sleep 600
+        done
+    mem_limit: 128m
+
+  clamav:
+    image: clamav/clamav:1.4_base
+    restart: unless-stopped
+    volumes:
+      - clamav_signatures:/var/lib/clamav
+    mem_limit: 2g
+
+  api:
+    image: fileflow-backend:test
+    build:
+      context: ../..
+      dockerfile: apps/media-worker/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio-init:
+        condition: service_completed_successfully
+      clamav:
+        condition: service_started
+    command:
+      - /bin/sh
+      - -ec
+      - alembic upgrade head && uvicorn fileflow_api.main:app --host 0.0.0.0 --port 8000 --workers 1
+    environment: *app-environment
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/v1/health/live', timeout=3)"
+      interval: 10s
+      timeout: 5s
+      retries: 20
+    mem_limit: 768m
+
+  safety-worker:
+    image: fileflow-backend:test
+    restart: unless-stopped
+    depends_on:
+      api:
+        condition: service_healthy
+    command:
+      - celery
+      - -A
+      - fileflow_api.jobs.worker:celery_app
+      - worker
+      - --queues
+      - safety
+      - --pool
+      - solo
+      - --concurrency
+      - '1'
+      - --loglevel
+      - INFO
+    environment: *app-environment
+    mem_limit: 768m
+
+  processing-worker:
+    image: fileflow-backend:test
+    restart: unless-stopped
+    depends_on:
+      api:
+        condition: service_healthy
+    command:
+      - celery
+      - -A
+      - fileflow_api.jobs.worker:celery_app
+      - worker
+      - --queues
+      - processing,imports
+      - --pool
+      - solo
+      - --concurrency
+      - '1'
+      - --loglevel
+      - INFO
+    environment: *app-environment
+    mem_limit: 3g
+
+volumes:
+  caddy_data:
+  caddy_config:
+  postgres_data:
+  redis_data:
+  minio_data:
+  clamav_signatures:
