@@ -1,4 +1,4 @@
-import { cpSync, rmSync } from 'node:fs';
+import { cpSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
@@ -9,6 +9,10 @@ const nextBin = fileURLToPath(
 );
 const output = fileURLToPath(new URL('../apps/web/out', import.meta.url));
 const dist = fileURLToPath(new URL('../dist', import.meta.url));
+const clientDist = fileURLToPath(new URL('../dist/client', import.meta.url));
+const serverDist = fileURLToPath(new URL('../dist/server', import.meta.url));
+const hostingDist = fileURLToPath(new URL('../dist/.openai', import.meta.url));
+const hostingConfig = fileURLToPath(new URL('../.openai/hosting.json', import.meta.url));
 
 const build = spawnSync(process.execPath, [nextBin, 'build'], {
   cwd: webRoot,
@@ -23,6 +27,14 @@ if (build.error) throw build.error;
 if (build.status !== 0) process.exit(build.status ?? 1);
 
 rmSync(dist, { recursive: true, force: true });
-cpSync(output, dist, { recursive: true });
+mkdirSync(clientDist, { recursive: true });
+mkdirSync(serverDist, { recursive: true });
+mkdirSync(hostingDist, { recursive: true });
+cpSync(output, clientDist, { recursive: true });
+cpSync(hostingConfig, `${hostingDist}/hosting.json`);
+writeFileSync(
+  `${serverDist}/index.js`,
+  "export default { fetch(request, env) { return env.ASSETS.fetch(request); } };\n",
+);
 
 console.log(`Static site copied to ${dist.replace(`${projectRoot}\\`, '')}`);
