@@ -1,8 +1,7 @@
 # FileFlow single-VPS test deployment
 
-This profile runs the FileFlow API and its dependencies on one small server. The public web
-frontend can remain on the existing Sites deployment. Only Caddy exposes ports; PostgreSQL,
-Redis, MinIO and ClamAV stay private inside Docker.
+This profile runs the FileFlow web frontend, API and dependencies on one small server. Only
+Caddy exposes ports; PostgreSQL, Redis, MinIO and ClamAV stay private inside Docker.
 
 ## Server
 
@@ -32,11 +31,14 @@ apt-get update
 apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 ```
 
-Clone FileFlow on the server and enter this directory. Copy `.env.example` to `.env`, replace
-the example API address with the `sslip.io` hostname containing the real server IPv4, and
-generate long random secrets:
+Clone FileFlow on the server and enter this directory. Build the static frontend, copy
+`.env.example` to `.env`, replace the example API address with the `sslip.io` hostname
+containing the real server IPv4, set `FILEFLOW_WEB_HOST` and `FILEFLOW_WEB_ORIGIN` to the
+registered domain, and generate long random secrets:
 
 ```sh
+NEXT_PUBLIC_API_URL=https://api.SERVER_IPV4.sslip.io/api/v1 \
+NEXT_PUBLIC_SITE_URL=https://YOUR_DOMAIN pnpm build
 cp .env.example .env
 openssl rand -hex 32
 openssl rand -hex 32
@@ -51,12 +53,9 @@ curl https://api.SERVER_IPV4.sslip.io/api/v1/health/live
 curl https://api.SERVER_IPV4.sslip.io/api/v1/health/beta
 ```
 
-The `beta` health endpoint must return `status: ready`. Caddy obtains and renews HTTPS
-certificates automatically.
-
-After the API is healthy, set the existing Sites frontend variable
-`NEXT_PUBLIC_API_URL=https://api.SERVER_IPV4.sslip.io/api/v1` and publish a new frontend
-version. The test frontend origin is already allowed by the example configuration.
+The `beta` health endpoint must return `status: ready`. Point the domain's apex `A` record to
+the server IPv4 and point `www` to the apex with a `CNAME` record. Caddy obtains and renews
+HTTPS certificates automatically after DNS resolves to the server.
 
 ## Test limits
 

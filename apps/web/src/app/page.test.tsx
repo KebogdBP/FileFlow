@@ -13,7 +13,8 @@ describe('glass File Flow landing page', () => {
 
   it('presents the product positioning and current module', () => {
     expect(MODULE_MARKER).toBe('M22');
-    expect(markup).toContain('Convert, compress and download');
+    expect(markup).toContain('FileFlow');
+    expect(markup).toContain('Fast Forward Docs Images Video Audio');
     expect(markup).toContain('Private file workspace');
     expect(metadata.description).toContain('Convert images, video, audio, PDF and DOCX');
   });
@@ -22,7 +23,7 @@ describe('glass File Flow landing page', () => {
     expect(markup).toContain('Inspect locally');
     expect(markup).toContain('Review the plan');
     expect(markup).toContain('Clean up');
-    expect(markup).toContain('Local processing whenever possible');
+    expect(markup).not.toContain('Fast by default');
   });
 
   it('has functional inputs and landmark navigation', () => {

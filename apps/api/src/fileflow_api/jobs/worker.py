@@ -57,7 +57,17 @@ register_document_operations(
     runner,
 )
 executor = CloudJobExecutor(jobs, safety, storage, operations, settings)
-imports = SocialImportService(sessions, storage, queue, YtDlpClient(), settings)
+imports = SocialImportService(
+    sessions,
+    storage,
+    queue,
+    YtDlpClient(
+        settings.social_import_cookies_file,
+        settings.social_import_pot_provider_url,
+        settings.social_import_proxy_url,
+    ),
+    settings,
+)
 
 
 @celery_app.task(  # type: ignore[untyped-decorator]

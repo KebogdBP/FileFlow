@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session, sessionmaker
 
 from fileflow_api.config import Settings
 from fileflow_api.imports.contracts import ImportCreate
-from fileflow_api.imports.downloader import ImportClient
+from fileflow_api.imports.downloader import ImportClient, ImportDownloadError
 from fileflow_api.imports.models import ImportStatus, SocialImport
 from fileflow_api.imports.url_policy import validate_social_url
 from fileflow_api.jobs.queue import TaskQueue
@@ -108,12 +108,20 @@ class SocialImportService:
                 stored = session.get(SocialImport, item.id)
                 assert stored is not None
                 session.add(upload)
+                # There is no ORM relationship between these models, so
+                # SQLAlchemy cannot infer that Upload must be inserted first.
+                session.flush()
                 stored.status = ImportStatus.COMPLETED
                 stored.upload_id = upload.id
                 stored.title = media.title
                 stored.creator = media.creator
                 stored.thumbnail_url = media.thumbnail_url
                 stored.finished_at = now
+        except ImportDownloadError as error:
+            if uploaded:
+                self._storage.delete_object(key)
+            self._fail(item.id, error.code)
+            raise
         except Exception:
             if uploaded:
                 self._storage.delete_object(key)
@@ -128,6 +136,24 @@ class SocialImportService:
                 stored_upload.safety_status = SafetyStatus.ERROR
                 stored_upload.rejection_reason = "queue_unavailable"
         return self.get(item.id)
+
+    def downloadable_upload(self, import_id: str) -> Upload:
+        with self._sessions() as session:
+            item = session.get(SocialImport, import_id)
+            if item is None:
+                raise HTTPException(status_code=404, detail="Import was not found.")
+            if item.status != ImportStatus.COMPLETED or item.upload_id is None:
+                raise HTTPException(status_code=409, detail="Import is not ready.")
+            upload = session.get(Upload, item.upload_id)
+            if upload is None or upload.status != UploadStatus.COMPLETED:
+                raise HTTPException(status_code=409, detail="Imported media is not available.")
+            if upload.safety_status != SafetyStatus.CLEAN:
+                raise HTTPException(
+                    status_code=409,
+                    detail="Imported media has not passed the safety scan.",
+                )
+            session.expunge(upload)
+            return upload
 
     def _fail(self, import_id: str, code: str) -> SocialImport:
         with self._sessions.begin() as session:

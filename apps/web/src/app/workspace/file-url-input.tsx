@@ -1,13 +1,6 @@
 'use client';
 
-import React, { useEffect, useId, useRef, useState } from 'react';
-import {
-  getLocalProcessingCapability,
-  LocalJobRunner,
-  type LocalCapability,
-  type LocalJobHandle,
-  type WorkerTransport,
-} from '@fileflow/local-processing';
+import React, { useId, useRef, useState } from 'react';
 import {
   availableOperations,
   recommendOperation,
@@ -42,7 +35,7 @@ type InspectionState =
 const workspaceCopy = {
   en: {
     badge: 'PRIVATE INPUT',
-    title: 'Start with a file or link',
+    title: 'Drop a File or Link',
     nothing: 'Nothing uploaded',
     readyOne: '1 source ready',
     filesReady: 'files ready',
@@ -50,7 +43,7 @@ const workspaceCopy = {
     link: 'From a link',
     release: 'Release to add your file',
     drop: 'Drop a file here',
-    formats: `Images, video, audio, PDF or DOCX · select up to ${MAX_BATCH_FILES}`,
+    formats: `Docs, Images, Video, Audio, PDF or DOCX · select up to ${MAX_BATCH_FILES}`,
     choose: 'Choose a file',
     publicUrl: 'Public media URL',
     useLink: 'Use this link',
@@ -487,7 +480,17 @@ export function FileUrlInput({
         >
           <div
             className="file-drop-zone"
+            role="button"
+            tabIndex={0}
+            aria-label={text.choose}
             data-drag-active={dragActive || undefined}
+            onClick={() => inputRef.current?.click()}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                inputRef.current?.click();
+              }
+            }}
             onDragEnter={(event) => {
               event.preventDefault();
               setDragActive(true);
@@ -519,9 +522,9 @@ export function FileUrlInput({
             </span>
             <strong>{dragActive ? text.release : text.drop}</strong>
             <span id={`${id}-file-help`}>{text.formats}</span>
-            <label className="input-picker-button" htmlFor={`${id}-file`}>
+            <span className="input-picker-button" aria-hidden="true">
               {text.choose}
-            </label>
+            </span>
           </div>
         </div>
       ) : (
@@ -573,16 +576,6 @@ export function FileUrlInput({
         ) : null}
       </div>
 
-      <div className="input-privacy-note">
-        <Badge variant={source?.kind === 'url' ? 'cloud' : 'local'}>
-          {source?.kind === 'url' ? text.linkBadge : text.local}
-        </Badge>
-        <div>
-          <strong>{source?.kind === 'url' ? text.noImport : text.privateTitle}</strong>
-          <p>{source?.kind === 'url' ? text.linkNote : text.localNote}</p>
-        </div>
-      </div>
-      <LocalEngineStatus language={language} />
     </Card>
   );
 }
@@ -628,106 +621,6 @@ function BatchPanel({
       {imageReady ? <BatchImageTool images={images} language={language} /> : null}
       {pdfReady ? <CloudJobTool operationId="merge-pdf" files={pdfs} language={language} /> : null}
     </>
-  );
-}
-
-type EngineState =
-  | { status: 'idle' }
-  | { status: 'running'; progress: number; stage: string }
-  | { status: 'completed' }
-  | { status: 'error'; message: string };
-
-function LocalEngineStatus({ language }: { language: FileFlowLanguage }) {
-  const text = workspaceCopy[language];
-  const [capability, setCapability] = useState<LocalCapability>();
-  const [state, setState] = useState<EngineState>({ status: 'idle' });
-  const handle = useRef<LocalJobHandle | null>(null);
-
-  useEffect(() => setCapability(getLocalProcessingCapability()), []);
-
-  function runReadinessCheck() {
-    if (!capability?.supported) return;
-    const runner = new LocalJobRunner({
-      capability,
-      timeoutMs: 10_000,
-      createWorker: () =>
-        new Worker(new URL('./local-readiness.worker.ts', import.meta.url), {
-          type: 'module',
-        }) as WorkerTransport,
-    });
-    setState({ status: 'running', progress: 0, stage: 'Preparing' });
-    const job = runner.run(
-      {
-        id: `readiness-${Date.now()}`,
-        operationId: 'readiness',
-        input: new ArrayBuffer(8),
-      },
-      ({ progress, stage }) => setState({ status: 'running', progress, stage }),
-    );
-    handle.current = job;
-    void job.promise
-      .then(() => setState({ status: 'completed' }))
-      .catch((error: unknown) =>
-        setState({
-          status: 'error',
-          message: error instanceof Error ? error.message : 'Local readiness check failed.',
-        }),
-      );
-  }
-
-  const running = state.status === 'running';
-  return (
-    <section className="local-engine-status" aria-labelledby="local-engine-title">
-      <div>
-        <Badge variant={capability?.supported ? 'local' : 'neutral'}>
-          {capability === undefined
-            ? text.engine[0]
-            : capability.supported
-              ? text.engine[1]
-              : text.engine[2]}
-        </Badge>
-        <h3 id="local-engine-title">{text.engine[3]}</h3>
-        <p>
-          {capability?.supported
-            ? `${text.engine[4]} ${formatFileSize(capability.maxInputBytes)}.`
-            : (capability?.reason ?? text.engine[5])}
-        </p>
-      </div>
-      <div className="local-engine-actions">
-        {running ? (
-          <Button type="button" variant="secondary" onClick={() => handle.current?.cancel()}>
-            {text.engine[6]}
-          </Button>
-        ) : (
-          <Button
-            type="button"
-            variant="secondary"
-            disabled={!capability?.supported}
-            onClick={runReadinessCheck}
-          >
-            {text.engine[7]}
-          </Button>
-        )}
-      </div>
-      <div className="local-engine-feedback" aria-live="polite">
-        {running ? (
-          <div>
-            <span>
-              <span style={{ width: `${state.progress}%` }} />
-            </span>
-            <small>
-              {state.stage} · {state.progress}%
-            </small>
-          </div>
-        ) : null}
-        {state.status === 'completed' ? <p className="engine-success">{text.engine[8]}</p> : null}
-        {state.status === 'error' ? (
-          <p className="input-error" role="alert">
-            {state.message}
-          </p>
-        ) : null}
-      </div>
-    </section>
   );
 }
 

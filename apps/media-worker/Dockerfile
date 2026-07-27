@@ -11,6 +11,9 @@ WORKDIR /app
 COPY apps/api /app/apps/api
 RUN python -m pip install --no-cache-dir /app/apps/api
 COPY --from=javascript-runtime /usr/local/bin/node /usr/local/bin/node
+RUN node --version \
+    && ffmpeg -version | head -n 1 \
+    && python -c "import importlib.metadata as m; import yt_dlp_ejs; assert m.version('bgutil-ytdlp-pot-provider') == '1.3.1'"
 
 USER fileflow
 WORKDIR /app/apps/api

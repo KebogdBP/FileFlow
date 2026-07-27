@@ -2,7 +2,6 @@
 
 import {
   AudioLines,
-  BadgeCheck,
   BookOpen,
   ChevronLeft,
   ChevronRight,
@@ -32,7 +31,6 @@ import {
   Sun,
   UserRound,
   WandSparkles,
-  Zap,
 } from 'lucide-react';
 import { AnimatePresence, MotionConfig, motion } from 'motion/react';
 import Image from 'next/image';
@@ -248,9 +246,9 @@ const copy = {
     signIn: 'Sign in',
     createAccount: 'Create account',
     privateWorkspace: 'Private file workspace',
-    headline: 'Convert, compress and download —',
-    headlineAccent: ' all in one flow.',
-    lead: 'Fast tools for documents, images, video and audio. Local processing whenever possible, with transparent cloud handling when it is needed.',
+    headline: 'FileFlow',
+    headlineAccent: '',
+    lead: 'Fast Forward Docs Images Video Audio',
     trust: ['Fast by default', 'Privacy visible', 'Results checked'],
     drop: 'Drop files here',
     dropActive: 'Release to add your file',
@@ -457,7 +455,7 @@ const localizedCopy = {
     eyebrow: 'Private file workspace',
     headline: 'Convert, compress and download —',
     headlineAccent: ' all in one flow.',
-    lead: 'Fast tools for documents, images, video and audio. Local processing whenever possible, with transparent cloud handling when it is needed.',
+    lead: 'Fast Forward Docs Images Video Audio',
     trust: ['Fast by default', 'Privacy visible', 'Results checked'],
     drop: 'Drop files here',
     dropActive: 'Release to add your file',
@@ -845,22 +843,17 @@ export function GlassHome() {
                 <Sparkles size={15} />
                 {t.eyebrow}
               </span>
-              <h1 id="home-title">
-                {t.headline}
-                <span>{t.headlineAccent}</span>
+              <h1 className="ff-hero-brand" id="home-title">
+                <Image
+                  src="/brand/fileflow-mark.png"
+                  alt=""
+                  width={132}
+                  height={116}
+                  priority
+                />
+                <span>FileFlow</span>
               </h1>
               <p>{t.lead}</p>
-              <div className="ff-trust-row">
-                <span>
-                  <Zap size={15} /> {t.trust[0]}
-                </span>
-                <span>
-                  <ShieldCheck size={15} /> {t.trust[1]}
-                </span>
-                <span>
-                  <BadgeCheck size={15} /> {t.trust[2]}
-                </span>
-              </div>
             </motion.div>
 
             <section
@@ -1089,11 +1082,9 @@ function ToolCard({
           {tool.planned ? <span>{localizedCopy[language].roadmap}</span> : null}
         </div>
         <p>{translated[1]}</p>
-        {!tool.planned && tool.executionMode ? (
+        {!tool.planned && tool.executionMode === 'local' ? (
           <small className="ff-tool-mode">
-            {tool.executionMode === 'local'
-              ? localizedCopy[language].localMode
-              : localizedCopy[language].cloudMode}
+            {localizedCopy[language].localMode}
           </small>
         ) : null}
       </div>

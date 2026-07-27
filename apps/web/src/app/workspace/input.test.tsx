@@ -201,12 +201,13 @@ describe('M05 file and URL input UI', () => {
     expect(markup).toContain('aria-describedby=');
   });
 
-  it('starts empty and explains that selection does not upload', () => {
+  it('starts empty with one accessible file drop target', () => {
     expect(markup).toContain('Nothing uploaded');
-    expect(markup).toContain('Selecting a file does not upload it');
+    expect(markup).toContain('Drop a File or Link');
+    expect(markup).toContain('class="file-drop-zone" role="button"');
     expect(markup).toContain('aria-live="polite"');
-    expect(markup).toContain('Browser worker readiness');
-    expect(markup).toContain('Test local engine');
+    expect(markup).not.toContain('Selecting a file does not upload it');
+    expect(markup).not.toContain('Browser worker readiness');
   });
 
   it('moves a valid picker selection into the ready state', async () => {

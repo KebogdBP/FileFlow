@@ -2,13 +2,20 @@ from pathlib import Path
 
 import pytest
 from fastapi import HTTPException
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, event
 from sqlalchemy.pool import StaticPool
 
 from fileflow_api.config import Settings
 from fileflow_api.database import Base, build_session_factory
+from fileflow_api.imports import downloader as downloader_module
 from fileflow_api.imports.contracts import ImportCreate
-from fileflow_api.imports.downloader import ImportedMedia
+from fileflow_api.imports.downloader import (
+    ImportDownloadError,
+    ImportedMedia,
+    YtDlpClient,
+    _download_error_code,
+    _single_video_url,
+)
 from fileflow_api.imports.models import ImportStatus
 from fileflow_api.imports.service import SocialImportService
 from fileflow_api.imports.url_policy import validate_social_url
@@ -54,17 +61,35 @@ class FakeClient:
         return ImportedMedia(path, "My video", "Creator", "https://i.ytimg.com/cover.jpg")
 
 
-def import_service() -> tuple[SocialImportService, FakeStorage, FakeQueue]:
+class FailingClient:
+    def download(self, url: str, workspace: Path, max_bytes: int) -> ImportedMedia:
+        raise ImportDownloadError("platform_auth_required")
+
+
+def import_service(
+    client: FakeClient | FailingClient | None = None,
+) -> tuple[SocialImportService, FakeStorage, FakeQueue]:
     engine = create_engine(
         "sqlite+pysqlite:///:memory:",
         connect_args={"check_same_thread": False},
         poolclass=StaticPool,
     )
+
+    @event.listens_for(engine, "connect")
+    def enable_foreign_keys(dbapi_connection: object, _: object) -> None:
+        cursor = dbapi_connection.cursor()  # type: ignore[attr-defined]
+        cursor.execute("PRAGMA foreign_keys=ON")
+        cursor.close()
+
     Base.metadata.create_all(engine)
     storage = FakeStorage()
     queue = FakeQueue()
     service = SocialImportService(
-        build_session_factory(engine), storage, queue, FakeClient(), Settings(environment="test")
+        build_session_factory(engine),
+        storage,
+        queue,
+        client or FakeClient(),
+        Settings(environment="test"),
     )
     return service, storage, queue
 
@@ -76,6 +101,8 @@ def import_service() -> tuple[SocialImportService, FakeStorage, FakeQueue]:
         ("https://youtu.be/abc", "youtube"),
         ("https://www.instagram.com/reel/abc/", "instagram"),
         ("https://www.tiktok.com/@creator/video/123", "tiktok"),
+        ("https://vk.com/video-1_2", "vk"),
+        ("https://vkvideo.ru/video-1_2", "vk"),
         ("https://www.youtube.com/playlist?list=abc", "youtube"),
         ("https://www.youtube.com/@creator/live", "youtube"),
         ("https://www.instagram.com/creator/", "instagram"),
@@ -117,3 +144,217 @@ def test_import_without_rights_attestation_enters_existing_safety_pipeline() -> 
 
 def test_import_contract_only_requires_a_platform_url() -> None:
     assert str(ImportCreate(url="https://youtu.be/abc").url) == "https://youtu.be/abc"
+
+
+def test_youtube_single_video_url_removes_playlist_radio_parameters() -> None:
+    assert (
+        _single_video_url(
+            "https://www.youtube.com/watch?v=abc&list=playlist&index=2&start_radio=1&t=15"
+        )
+        == "https://www.youtube.com/watch?v=abc&t=15"
+    )
+    assert _single_video_url("https://www.instagram.com/reel/abc/?list=keep") == (
+        "https://www.instagram.com/reel/abc/?list=keep"
+    )
+
+
+def test_downloader_enables_node_and_format_fallbacks_for_public_youtube(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    captured: dict[str, object] = {}
+
+    class FakeYoutubeDL:
+        def __init__(self, options: dict[str, object]) -> None:
+            captured.update(options)
+
+        def __enter__(self) -> "FakeYoutubeDL":
+            return self
+
+        def __exit__(self, *args: object) -> None:
+            pass
+
+        def extract_info(self, url: str, download: bool) -> dict[str, str]:
+            assert url == "https://www.youtube.com/watch?v=abc"
+            assert download is True
+            (tmp_path / "source.mp4").write_bytes(b"\x00\x00\x00\x18ftypisom-public-video")
+            return {"title": "Video", "uploader": "Creator"}
+
+    monkeypatch.setattr(downloader_module, "YoutubeDL", FakeYoutubeDL)
+    result = YtDlpClient().download(
+        "https://www.youtube.com/watch?v=abc&list=playlist&index=2",
+        tmp_path,
+        1024 * 1024,
+    )
+
+    assert result.path.name == "source.mp4"
+    assert captured["noplaylist"] is True
+    assert captured["retries"] == 5
+    assert captured["extractor_retries"] == 5
+    assert "extractor_args" not in captured
+    assert captured["js_runtimes"] == {"node": {}}
+    assert captured["format"] == (
+        "bestvideo[ext=mp4]+bestaudio[ext=m4a]/"
+        "bestvideo[ext=webm]+bestaudio[ext=webm]/"
+        "bestvideo+bestaudio/best[ext=mp4]/best"
+    )
+    assert captured["postprocessors"] == [{"key": "FFmpegVideoRemuxer", "preferedformat": "mp4"}]
+
+
+def test_non_youtube_import_does_not_force_youtube_runtime(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    captured: dict[str, object] = {}
+
+    class FakeYoutubeDL:
+        def __init__(self, options: dict[str, object]) -> None:
+            captured.update(options)
+
+        def __enter__(self) -> "FakeYoutubeDL":
+            return self
+
+        def __exit__(self, *args: object) -> None:
+            pass
+
+        def extract_info(self, url: str, download: bool) -> dict[str, str]:
+            assert url == "https://www.instagram.com/reel/abc/"
+            assert download is True
+            (tmp_path / "source.mp4").write_bytes(b"\x00\x00\x00\x18ftypisom-public-video")
+            return {"title": "Video"}
+
+    monkeypatch.setattr(downloader_module, "YoutubeDL", FakeYoutubeDL)
+    YtDlpClient().download("https://www.instagram.com/reel/abc/", tmp_path, 1024 * 1024)
+
+    assert "extractor_args" not in captured
+    assert "js_runtimes" not in captured
+
+
+def test_youtube_uses_internal_pot_provider_when_configured(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    captured: dict[str, object] = {}
+
+    class FakeYoutubeDL:
+        def __init__(self, options: dict[str, object]) -> None:
+            captured.update(options)
+
+        def __enter__(self) -> "FakeYoutubeDL":
+            return self
+
+        def __exit__(self, *args: object) -> None:
+            pass
+
+        def extract_info(self, url: str, download: bool) -> dict[str, str]:
+            (tmp_path / "source.mp4").write_bytes(b"\x00\x00\x00\x18ftypisom-public-video")
+            return {"title": "Video"}
+
+    monkeypatch.setattr(downloader_module, "YoutubeDL", FakeYoutubeDL)
+    YtDlpClient(pot_provider_url="http://pot-provider:4416/").download(
+        "https://www.youtube.com/watch?v=abc",
+        tmp_path,
+        1024 * 1024,
+    )
+
+    assert captured["extractor_args"] == {
+        "youtube": {
+            "player_client": ["mweb"],
+            "fetch_pot": ["always"],
+        },
+        "youtubepot-bgutilhttp": {
+            "base_url": ["http://pot-provider:4416"],
+        },
+    }
+
+
+def test_youtube_retries_with_public_tv_client(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    attempts: list[dict[str, object]] = []
+
+    class FakeYoutubeDL:
+        def __init__(self, options: dict[str, object]) -> None:
+            attempts.append(options)
+
+        def __enter__(self) -> "FakeYoutubeDL":
+            return self
+
+        def __exit__(self, *args: object) -> None:
+            pass
+
+        def extract_info(self, url: str, download: bool) -> dict[str, str]:
+            if len(attempts) == 1:
+                (tmp_path / "source.part").write_bytes(b"partial")
+                raise downloader_module.DownloadError("primary client failed")
+            assert not (tmp_path / "source.part").exists()
+            (tmp_path / "source.mp4").write_bytes(b"\x00\x00\x00\x18ftypisom-public-video")
+            return {"title": "Video"}
+
+    monkeypatch.setattr(downloader_module, "YoutubeDL", FakeYoutubeDL)
+    YtDlpClient(pot_provider_url="http://pot-provider:4416").download(
+        "https://www.youtube.com/watch?v=abc",
+        tmp_path,
+        1024 * 1024,
+    )
+
+    assert len(attempts) == 2
+    assert attempts[1]["extractor_args"] == {"youtube": {"player_client": ["tv"]}}
+
+
+def test_downloader_passes_configured_egress_proxy(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    captured: dict[str, object] = {}
+
+    class FakeYoutubeDL:
+        def __init__(self, options: dict[str, object]) -> None:
+            captured.update(options)
+
+        def __enter__(self) -> "FakeYoutubeDL":
+            return self
+
+        def __exit__(self, *args: object) -> None:
+            pass
+
+        def extract_info(self, url: str, download: bool) -> dict[str, str]:
+            (tmp_path / "source.mp4").write_bytes(b"\x00\x00\x00\x18ftypisom-public-video")
+            return {"title": "Video"}
+
+    monkeypatch.setattr(downloader_module, "YoutubeDL", FakeYoutubeDL)
+    YtDlpClient(proxy_url="socks5://proxy.internal:1080").download(
+        "https://www.youtube.com/watch?v=abc",
+        tmp_path,
+        1024 * 1024,
+    )
+
+    assert captured["proxy"] == "socks5://proxy.internal:1080"
+
+
+@pytest.mark.parametrize(
+    ("message", "code"),
+    [
+        (
+            "Sign in to confirm you're not a bot. Use cookies for the authentication.",
+            "platform_auth_required",
+        ),
+        (
+            "Your IP address is blocked from accessing this post",
+            "platform_ip_blocked",
+        ),
+        ("Video unavailable", "media_unavailable"),
+        ("Requested format is not available", "supported_format_unavailable"),
+        ("Network failure", "import_failed"),
+    ],
+)
+def test_download_failures_are_classified(message: str, code: str) -> None:
+    assert _download_error_code(message) == code
+
+
+def test_platform_auth_failure_is_preserved_for_the_frontend() -> None:
+    service, _, _ = import_service(FailingClient())
+    item = service.create(ImportCreate(url="https://www.youtube.com/watch?v=abc"))
+
+    with pytest.raises(ImportDownloadError):
+        service.execute(item.id)
+
+    failed = service.get(item.id)
+    assert failed.status == ImportStatus.FAILED
+    assert failed.error_code == "platform_auth_required"

@@ -17,6 +17,44 @@ M17 adds YouTube, Instagram and TikTok media imports.
 - imported media enters the same temporary retention, quarantine and malware-scan pipeline as direct uploads;
 - downstream M16 operations provide audio extraction and conversion after a clean verdict.
 
-Platform extraction is attempted without product-level content restrictions. Availability still depends on what the upstream extractor can access without credentials and on the single-result media contract. Extractor failures fail closed and must be monitored.
+YouTube playlist and radio parameters are removed before extraction so one pasted
+video URL always produces one import. The importer disables third-party yt-dlp
+plugins and uses bounded retries. It keeps yt-dlp's maintained default YouTube
+client selection rather than forcing the TV client, which can expose only
+DRM-marked formats. The importer explicitly enables the Node 22 JavaScript runtime
+bundled in the worker image so yt-dlp can solve YouTube signature and `n`
+challenges. MP4/M4A is preferred, with WebM and generic DASH fallbacks remuxed to
+the single MP4 artifact required by the FileFlow pipeline.
+
+The VPS profile also runs a private `bgutil` Proof-of-Origin token provider.
+The processing worker reaches it only over the Docker network and asks yt-dlp
+to use the `mweb` client with a fresh, video-bound token. Port 4416 is not
+published by Caddy or Docker. This handles current YouTube GVS verification on
+datacenter IP addresses without exposing tokens or provider endpoints to users.
+
+If YouTube has already blocked the VPS address at the player API layer, a PO
+token cannot repair that address. Configure a reputable HTTP(S) or SOCKS egress
+proxy through `FILEFLOW_SOCIAL_IMPORT_PROXY_URL`; the processing worker passes it
+to yt-dlp for both metadata and media requests. Keep proxy credentials only in
+the server `.env`, never in source control.
+
+Platform extraction is attempted without product-level content restrictions.
+Availability still depends on what the upstream extractor can access from the
+server's network and on the single-result media contract. Extractor failures fail
+closed and are persisted as stable error codes for the web client.
+
+YouTube can require an authenticated browser session for datacenter IP addresses.
+When that happens, export a Netscape-format cookies file from an account that is
+permitted to access the video, mount it read-only outside the application image,
+and set:
+
+```text
+FILEFLOW_SOCIAL_IMPORT_COOKIES_FILE=/run/secrets/social-import-cookies.txt
+```
+
+Never commit this file, put it in a Docker image, or expose it to the web client.
+Rotate or remove it if the account session changes. Without configured cookies the
+importer returns `platform_auth_required`; when a configured file is missing it
+returns `platform_auth_unavailable`.
 
 The importer image includes Node 22 because current yt-dlp YouTube extraction requires a supported external JavaScript runtime. Network policy should allow only required platform/CDN destinations and deny private address ranges at the infrastructure layer.

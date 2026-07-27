@@ -108,10 +108,16 @@
   border-radius: var(--ff-radius-xl);
   background: color-mix(in srgb, var(--ff-color-primary-soft) 45%, transparent);
   text-align: center;
+  cursor: pointer;
   transition:
     border-color var(--ff-transition-fast),
     background var(--ff-transition-fast),
     transform var(--ff-transition-fast);
+}
+
+.file-drop-zone:focus-visible {
+  outline: 3px solid var(--ff-color-primary);
+  outline-offset: 3px;
 }
 
 .file-drop-zone[data-drag-active='true'] {
@@ -153,6 +159,7 @@
   align-items: center;
   margin-top: var(--ff-space-4);
   padding: 0 18px;
+  border: 0;
   border-radius: var(--ff-radius-sm);
   color: #fff;
   background: var(--ff-color-primary);

@@ -337,8 +337,23 @@
   letter-spacing: -0.065em;
 }
 
-.ff-hero h1 span {
-  color: var(--home-blue);
+.ff-hero h1.ff-hero-brand {
+  display: flex;
+  align-items: center;
+  gap: clamp(16px, 2.5vw, 30px);
+  font-size: clamp(4.4rem, 9vw, 9rem);
+  letter-spacing: -0.075em;
+}
+
+.ff-hero-brand img {
+  width: clamp(78px, 10vw, 132px);
+  height: auto;
+  flex: 0 0 auto;
+  object-fit: contain;
+}
+
+.ff-hero h1.ff-hero-brand span {
+  color: var(--home-text);
 }
 
 .ff-hero-copy > p {
@@ -731,7 +746,7 @@
 
 .ff-tool-card h3 {
   margin: 0;
-  font-size: 28px;
+  font-size: 19px;
   line-height: 1.05;
   letter-spacing: -0.02em;
 }
@@ -1201,8 +1216,12 @@
   .ff-hero {
     padding-top: 10px;
   }
-  .ff-hero h1 {
-    font-size: clamp(3rem, 14vw, 4.7rem);
+  .ff-hero h1.ff-hero-brand {
+    gap: 14px;
+    font-size: clamp(3.4rem, 16vw, 5.6rem);
+  }
+  .ff-hero-brand img {
+    width: clamp(64px, 18vw, 92px);
   }
   .ff-trust-row {
     display: grid;

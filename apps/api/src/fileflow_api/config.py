@@ -54,6 +54,9 @@ class Settings(BaseSettings):
     qpdf_path: str = "/usr/bin/qpdf"
     ghostscript_path: str = "/usr/bin/gs"
     pdftoppm_path: str = "/usr/bin/pdftoppm"
+    social_import_cookies_file: str | None = None
+    social_import_pot_provider_url: str | None = None
+    social_import_proxy_url: str | None = None
     allowed_origins: list[AnyHttpUrl] = Field(
         default_factory=lambda: [AnyHttpUrl("http://localhost:3000")]
     )

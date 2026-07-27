@@ -6,6 +6,15 @@ PROVIDER_HOSTS = {
     "youtube": {"youtube.com", "www.youtube.com", "m.youtube.com", "youtu.be"},
     "instagram": {"instagram.com", "www.instagram.com"},
     "tiktok": {"tiktok.com", "www.tiktok.com", "vm.tiktok.com", "vt.tiktok.com"},
+    "vk": {
+        "vk.com",
+        "www.vk.com",
+        "m.vk.com",
+        "vk.ru",
+        "www.vk.ru",
+        "vkvideo.ru",
+        "www.vkvideo.ru",
+    },
 }
 
 
