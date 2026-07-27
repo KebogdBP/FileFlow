@@ -19,6 +19,7 @@ const socialCopy = {
     stages: ['Queueing import', 'Importing from'],
     cancelled: 'Waiting was cancelled. The server task may finish in the background.',
     failed: 'Import failed.',
+    chooseFile: 'Choose a file instead',
     invalidRange: 'End time must be greater than start time.',
     start: 'Import media',
     importing: 'IMPORTING',
@@ -53,6 +54,7 @@ const socialCopy = {
     stages: ['Добавляем импорт в очередь', 'Импортируем из'],
     cancelled: 'Ожидание отменено. Серверная задача может завершиться в фоне.',
     failed: 'Не удалось импортировать медиа.',
+    chooseFile: 'Выбрать файл с устройства',
     invalidRange: 'Конечное время должно быть больше начального.',
     start: 'Импортировать медиа',
     importing: 'ИМПОРТ',
@@ -87,6 +89,7 @@ const socialCopy = {
     stages: ['Añadiendo la importación a la cola', 'Importando desde'],
     cancelled: 'La espera se canceló. La tarea puede terminar en segundo plano.',
     failed: 'La importación falló.',
+    chooseFile: 'Elegir un archivo del dispositivo',
     invalidRange: 'El tiempo final debe ser mayor que el inicial.',
     start: 'Importar contenido',
     importing: 'IMPORTANDO',
@@ -122,9 +125,11 @@ const socialCopy = {
 export function SocialImportTool({
   url,
   language = 'en',
+  onChooseFile,
 }: {
   url: string;
   language?: FileFlowLanguage;
+  onChooseFile?: () => void;
 }) {
   const text = socialCopy[language];
   const [mediaType, setMediaType] = useState<'video' | 'audio'>('video');
@@ -289,9 +294,16 @@ export function SocialImportTool({
         </div>
       ) : null}
       {state.status === 'error' ? (
-        <p className="input-error" role="alert">
-          {state.message}
-        </p>
+        <div className="social-import-error">
+          <p className="input-error" role="alert">
+            {state.message}
+          </p>
+          {onChooseFile ? (
+            <Button type="button" variant="secondary" onClick={onChooseFile}>
+              {text.chooseFile}
+            </Button>
+          ) : null}
+        </div>
       ) : null}
       {state.status === 'completed' && state.item.upload_id ? (
         <>

@@ -437,6 +437,15 @@ export function FileUrlInput({
     setError('');
   }
 
+  function chooseFileInstead() {
+    setTab('file');
+    setSource(undefined);
+    setBatch(undefined);
+    setError('');
+    setInspection({ status: 'idle' });
+    window.requestAnimationFrame(() => inputRef.current?.click());
+  }
+
   return (
     <Card className="input-card" variant="glass">
       <div className="input-tabs" role="tablist" aria-label="Input source">
@@ -563,7 +572,12 @@ export function FileUrlInput({
           />
         ) : null}
         {source?.kind === 'url' ? (
-          <UrlIntentPanel platform={source.platform} url={source.url} language={language} />
+          <UrlIntentPanel
+            platform={source.platform}
+            url={source.url}
+            language={language}
+            onChooseFile={chooseFileInstead}
+          />
         ) : null}
       </div>
     </Card>
@@ -793,10 +807,12 @@ function UrlIntentPanel({
   platform,
   url,
   language,
+  onChooseFile,
 }: {
   platform: InputPlatform;
   url: string;
   language: FileFlowLanguage;
+  onChooseFile: () => void;
 }) {
   const text = workspaceCopy[language];
   const [confirmed, setConfirmed] = useState(false);
@@ -833,7 +849,9 @@ function UrlIntentPanel({
           {confirmed ? text.confirmedButton : text.urlImport[12]}
         </Button>
       </div>
-      {confirmed ? <SocialImportTool url={url} language={language} /> : null}
+      {confirmed ? (
+        <SocialImportTool url={url} language={language} onChooseFile={onChooseFile} />
+      ) : null}
     </section>
   );
 }

@@ -957,6 +957,18 @@
   gap: var(--ff-space-2);
 }
 
+.social-import-error {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ff-space-3);
+  flex-wrap: wrap;
+}
+
+.social-import-error .input-error {
+  margin: 0;
+}
+
 .cloud-progress > span {
   height: 9px;
   overflow: hidden;

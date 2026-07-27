@@ -1,7 +1,7 @@
 import React, { act } from 'react';
 import { createRoot } from 'react-dom/client';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { FileUrlInput } from './file-url-input';
 import { inspectFile } from './file-inspector';
 import { savingPercent, validateWebPResult, webPFileName } from './image-result';
@@ -358,6 +358,42 @@ describe('M05 file and URL input UI', () => {
     expect(container.textContent).toContain('Import media from youtube');
     expect(container.textContent).toContain('Confirm import');
     expect(container.textContent).toContain('Nothing has been imported yet');
+    await act(async () => root.unmount());
+  });
+
+  it('offers a real device-upload action when a platform import fails', async () => {
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockRejectedValue(new TypeError('Failed to fetch'));
+    const container = document.createElement('div');
+    const root = createRoot(container);
+    await act(async () => root.render(<FileUrlInput />));
+    const linkTab = [...container.querySelectorAll('[role="tab"]')].find((element) =>
+      element.textContent?.includes('From a link'),
+    ) as HTMLButtonElement;
+    await act(async () => linkTab.click());
+    const input = container.querySelector('input[type="url"]') as HTMLInputElement;
+    const valueSetter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set;
+    await act(async () => {
+      valueSetter?.call(input, 'https://youtube.com/watch?v=abc');
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+      container
+        .querySelector('form')
+        ?.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    });
+    const confirm = [...container.querySelectorAll('button')].find(
+      (button) => button.textContent === 'Confirm import',
+    ) as HTMLButtonElement;
+    await act(async () => confirm.click());
+    const start = [...container.querySelectorAll('button')].find(
+      (button) => button.textContent === 'Import media',
+    ) as HTMLButtonElement;
+    await act(async () => {
+      start.click();
+      await Promise.resolve();
+    });
+
+    expect(container.textContent).toContain('Failed to fetch');
+    expect(container.textContent).toContain('Choose a file instead');
+    fetchMock.mockRestore();
     await act(async () => root.unmount());
   });
 
