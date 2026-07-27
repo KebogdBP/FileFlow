@@ -34,7 +34,8 @@ apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin do
 Clone FileFlow on the server and enter this directory. Build the static frontend, copy
 `.env.example` to `.env`, replace the example API address with the `sslip.io` hostname
 containing the real server IPv4, set `FILEFLOW_WEB_HOST` and `FILEFLOW_WEB_ORIGIN` to the
-registered domain, and generate long random secrets:
+registered domain, set `FILEFLOW_SITES_ORIGIN` to the published Sites frontend origin, and
+generate long random secrets:
 
 ```sh
 NEXT_PUBLIC_API_URL=https://YOUR_DOMAIN/api/v1 \
