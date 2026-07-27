@@ -16,6 +16,7 @@ from fileflow_api.imports.downloader import (
     YtDlpClient,
     _download_error_code,
     _single_video_url,
+    _video_format,
 )
 from fileflow_api.imports.models import ImportStatus
 from fileflow_api.imports.service import SocialImportService
@@ -181,6 +182,12 @@ def test_youtube_single_video_url_removes_playlist_radio_parameters() -> None:
     assert _single_video_url("https://www.instagram.com/reel/abc/?list=keep") == (
         "https://www.instagram.com/reel/abc/?list=keep"
     )
+
+
+def test_bounded_video_quality_falls_back_for_single_format_platforms() -> None:
+    assert _video_format("480").endswith("/best[ext=mp4]/best")
+    assert _video_format("best").endswith("/best[ext=mp4]/best")
+    assert _video_format("best").count("/best[ext=mp4]/best") == 1
 
 
 def test_downloader_enables_node_and_format_fallbacks_for_public_youtube(
@@ -422,6 +429,10 @@ def test_downloader_passes_configured_egress_proxy(
         (
             "Your IP address is blocked from accessing this post",
             "platform_ip_blocked",
+        ),
+        (
+            "Instagram sent an empty media response. Use cookies for the authentication.",
+            "platform_auth_required",
         ),
         ("Video unavailable", "media_unavailable"),
         ("Requested format is not available", "supported_format_unavailable"),

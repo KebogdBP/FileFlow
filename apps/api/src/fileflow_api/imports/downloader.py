@@ -214,11 +214,17 @@ def _javascript_options(allow_remote_ejs: bool) -> dict[str, Any]:
 
 def _video_format(quality: str) -> str:
     height = "" if quality == "best" else f"[height<={int(quality)}]"
-    return (
+    bounded = (
         f"bestvideo[ext=mp4]{height}+bestaudio[ext=m4a]/"
         f"bestvideo[ext=webm]{height}+bestaudio[ext=webm]/"
         f"bestvideo{height}+bestaudio/best[ext=mp4]{height}/best{height}"
     )
+    if quality == "best":
+        return bounded
+    # Short-form platforms often expose only one progressive MP4 at the
+    # source resolution. Prefer the requested ceiling, but keep the import
+    # functional when the platform offers no rendition at or below it.
+    return f"{bounded}/best[ext=mp4]/best"
 
 
 def _is_mp3_header(header: bytes) -> bool:
@@ -250,7 +256,12 @@ def _download_error_code(message: str) -> str:
     normalized = message.lower()
     if "ip address is blocked" in normalized or "blocked from accessing" in normalized:
         return "platform_ip_blocked"
-    if "sign in to confirm" in normalized or "cookies for the authentication" in normalized:
+    if (
+        "sign in to confirm" in normalized
+        or "cookies for the authentication" in normalized
+        or "empty media response" in normalized
+        or "locked behind the login page" in normalized
+    ):
         return "platform_auth_required"
     if "video unavailable" in normalized or "media is not available" in normalized:
         return "media_unavailable"
