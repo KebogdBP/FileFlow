@@ -117,6 +117,7 @@ def import_service(
         ("https://www.tiktok.com/@creator/video/123", "tiktok"),
         ("https://vk.com/video-1_2", "vk"),
         ("https://vkvideo.ru/video-1_2", "vk"),
+        ("https://rutube.ru/video/3eac3b4561676c17df9132a9a1e62e3e/", "rutube"),
         ("https://www.youtube.com/playlist?list=abc", "youtube"),
         ("https://www.youtube.com/@creator/live", "youtube"),
         ("https://www.instagram.com/creator/", "instagram"),

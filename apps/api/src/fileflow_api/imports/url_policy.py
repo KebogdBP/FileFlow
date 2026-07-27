@@ -15,6 +15,7 @@ PROVIDER_HOSTS = {
         "vkvideo.ru",
         "www.vkvideo.ru",
     },
+    "rutube": {"rutube.ru", "www.rutube.ru"},
 }
 
 

@@ -2,7 +2,7 @@ export const MAX_INPUT_BYTES = 2 * 1024 * 1024 * 1024;
 
 export const FILE_ACCEPT = ['image/*', 'video/*', 'audio/*', 'application/pdf', '.docx'] as const;
 
-export type InputPlatform = 'youtube' | 'instagram' | 'tiktok';
+export type InputPlatform = 'youtube' | 'instagram' | 'tiktok' | 'vk' | 'rutube';
 
 export type InputValidationResult<T> = { ok: true; value: T } | { ok: false; error: string };
 
@@ -66,6 +66,17 @@ function getPlatform(hostname: string): InputPlatform | undefined {
   }
   if (hostname === 'instagram.com' || hostname.endsWith('.instagram.com')) return 'instagram';
   if (hostname === 'tiktok.com' || hostname.endsWith('.tiktok.com')) return 'tiktok';
+  if (
+    hostname === 'vk.com' ||
+    hostname.endsWith('.vk.com') ||
+    hostname === 'vk.ru' ||
+    hostname.endsWith('.vk.ru') ||
+    hostname === 'vkvideo.ru' ||
+    hostname.endsWith('.vkvideo.ru')
+  ) {
+    return 'vk';
+  }
+  if (hostname === 'rutube.ru' || hostname.endsWith('.rutube.ru')) return 'rutube';
   return undefined;
 }
 

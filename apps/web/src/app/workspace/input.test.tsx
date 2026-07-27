@@ -71,6 +71,8 @@ describe('M05 file input policy', () => {
     ['https://www.youtube.com/watch?v=abc', 'youtube'],
     ['https://instagram.com/reel/abc', 'instagram'],
     ['https://m.tiktok.com/v/abc', 'tiktok'],
+    ['https://vkvideo.ru/video-1_2', 'vk'],
+    ['https://rutube.ru/video/3eac3b4561676c17df9132a9a1e62e3e/', 'rutube'],
   ])('accepts supported public URL %s', (url, platform) => {
     expect(validateSourceUrl(url)).toMatchObject({ ok: true, value: { platform } });
   });
