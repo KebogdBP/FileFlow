@@ -9,7 +9,7 @@
   },
   "scripts": {
     "dev": "turbo dev",
-    "build": "pnpm --filter @fileflow/web build",
+    "build": "npm --prefix apps/web run build",
     "build:all": "turbo build && apps/api/.venv/bin/python -m compileall -q apps/api/src",
     "lint": "turbo lint && apps/api/.venv/bin/python -m ruff check apps/api",
     "typecheck": "turbo typecheck && apps/api/.venv/bin/python -m mypy --config-file apps/api/pyproject.toml",
