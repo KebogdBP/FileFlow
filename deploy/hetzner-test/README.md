@@ -14,9 +14,9 @@ Caddy exposes ports; PostgreSQL, Redis, MinIO and ClamAV stay private inside Doc
 
 ## One-time server setup
 
-For the cheapest test, no domain purchase is required. Use an automatic DNS hostname in the
-form `api.SERVER_IPV4.sslip.io`, replacing `SERVER_IPV4` with the server address. For example,
-server `203.0.113.10` uses `api.203.0.113.10.sslip.io`.
+Create an `A` record for `api.fileflow.pro` pointing to the server IPv4 address. The frontend
+and API then use only first-party FileFlow hostnames, avoiding dependency on public wildcard
+DNS services.
 
 Connect over SSH and install Docker:
 
@@ -37,7 +37,7 @@ containing the real server IPv4, set `FILEFLOW_WEB_HOST` and `FILEFLOW_WEB_ORIGI
 registered domain, and generate long random secrets:
 
 ```sh
-NEXT_PUBLIC_API_URL=https://api.SERVER_IPV4.sslip.io/api/v1 \
+NEXT_PUBLIC_API_URL=https://YOUR_DOMAIN/api/v1 \
 NEXT_PUBLIC_SITE_URL=https://YOUR_DOMAIN pnpm build
 cp .env.example .env
 openssl rand -hex 32
@@ -49,8 +49,8 @@ Keep only SSH, HTTP and HTTPS open in the host firewall. Start the stack:
 ```sh
 docker compose up -d --build
 docker compose ps
-curl https://api.SERVER_IPV4.sslip.io/api/v1/health/live
-curl https://api.SERVER_IPV4.sslip.io/api/v1/health/beta
+curl https://YOUR_DOMAIN/api/v1/health/live
+curl https://YOUR_DOMAIN/api/v1/health/beta
 ```
 
 The `beta` health endpoint must return `status: ready`. Point the domain's apex `A` record to

@@ -4,9 +4,16 @@ www.{$FILEFLOW_WEB_HOST} {
 
 {$FILEFLOW_WEB_HOST} {
 	encode zstd gzip
-	root * /srv/fileflow
-	try_files {path} {path}/ {path}.html /404.html
-	file_server
+
+	handle /api/* {
+		reverse_proxy api:8000
+	}
+
+	handle {
+		root * /srv/fileflow
+		try_files {path} {path}/ {path}.html /404.html
+		file_server
+	}
 
 	log {
 		output stdout
@@ -14,7 +21,7 @@ www.{$FILEFLOW_WEB_HOST} {
 	}
 }
 
-{$FILEFLOW_API_HOST} {
+api.fileflow.pro, {$FILEFLOW_API_HOST} {
 	encode zstd gzip
 	reverse_proxy api:8000
 
