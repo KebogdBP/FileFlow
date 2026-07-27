@@ -48,6 +48,7 @@ const workspaceCopy = {
     choose: 'Choose a file',
     publicUrl: 'Public media URL',
     useLink: 'Use this link',
+    chooseFileInstead: 'Choose a file instead',
     linkHelp: 'YouTube, Instagram and TikTok public links',
     local: 'LOCAL',
     linkBadge: 'LINK',
@@ -136,6 +137,7 @@ const workspaceCopy = {
     choose: 'Выбрать файл',
     publicUrl: 'Публичная ссылка на медиа',
     useLink: 'Использовать ссылку',
+    chooseFileInstead: 'Выбрать файл с устройства',
     linkHelp: 'Публичные ссылки YouTube, Instagram и TikTok',
     local: 'ЛОКАЛЬНО',
     linkBadge: 'ССЫЛКА',
@@ -247,6 +249,7 @@ const workspaceCopy = {
     choose: 'Elegir archivo',
     publicUrl: 'URL pública de medios',
     useLink: 'Usar este enlace',
+    chooseFileInstead: 'Elegir un archivo del dispositivo',
     linkHelp: 'Enlaces públicos de YouTube, Instagram y TikTok',
     local: 'LOCAL',
     linkBadge: 'ENLACE',
@@ -847,6 +850,9 @@ function UrlIntentPanel({
         </div>
         <Button type="button" onClick={() => setConfirmed(true)} disabled={confirmed}>
           {confirmed ? text.confirmedButton : text.urlImport[12]}
+        </Button>
+        <Button type="button" variant="secondary" onClick={onChooseFile}>
+          {text.chooseFileInstead}
         </Button>
       </div>
       {confirmed ? (

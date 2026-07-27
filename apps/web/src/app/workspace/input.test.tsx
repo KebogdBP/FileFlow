@@ -357,6 +357,7 @@ describe('M05 file and URL input UI', () => {
     );
     expect(container.textContent).toContain('Import media from youtube');
     expect(container.textContent).toContain('Confirm import');
+    expect(container.textContent).toContain('Choose a file instead');
     expect(container.textContent).toContain('Nothing has been imported yet');
     await act(async () => root.unmount());
   });
