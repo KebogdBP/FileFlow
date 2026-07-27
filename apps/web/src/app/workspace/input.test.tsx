@@ -202,8 +202,8 @@ describe('M05 file and URL input UI', () => {
   });
 
   it('starts empty with one accessible file drop target', () => {
-    expect(markup).toContain('Nothing uploaded');
-    expect(markup).toContain('Drop a File or Link');
+    expect(markup).not.toContain('PRIVATE INPUT');
+    expect(markup).not.toContain('Drop a File or Link');
     expect(markup).toContain('class="file-drop-zone" role="button"');
     expect(markup).toContain('aria-live="polite"');
     expect(markup).not.toContain('Selecting a file does not upload it');
@@ -228,13 +228,13 @@ describe('M05 file and URL input UI', () => {
 
     expect(container.textContent).toContain('holiday.jpg');
     expect(container.textContent).toContain('Ready for inspection');
-    expect(container.textContent).toContain('1 source ready');
+    expect(container.textContent).not.toContain('1 source ready');
     expect(container.textContent).toContain('Format verified from the local file header');
     expect(container.textContent).toContain('Make this image lighter');
     expect(container.textContent).toContain('What would you like to do?');
     expect(container.textContent).toContain('Remove private metadata');
     expect(container.textContent).toContain('Confirm intent');
-    expect(container.textContent).toContain('Plan only · nothing has started');
+    expect(container.textContent).not.toContain('Plan only');
     const confirm = [...container.querySelectorAll('button')].find(
       (button) => button.textContent === 'Confirm intent',
     );
@@ -282,7 +282,7 @@ describe('M05 file and URL input UI', () => {
       await Promise.resolve();
       await Promise.resolve();
     });
-    expect(container.textContent).toContain('2 files ready');
+    expect(container.textContent).not.toContain('2 files ready');
     expect(container.textContent).toContain('BATCH VERIFIED');
     expect(container.textContent).toContain('Optimize 2 images together');
     expect(container.textContent).toContain('Process batch locally');

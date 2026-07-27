@@ -1,6 +1,7 @@
+from datetime import datetime
 from typing import Annotated
 
-from fastapi import APIRouter, Header, HTTPException, Query, Request, status
+from fastapi import APIRouter, Header, HTTPException, Query, Request, Response, status
 
 from fileflow_api.accounts.contracts import (
     AccountCreate,
@@ -12,13 +13,19 @@ from fileflow_api.accounts.contracts import (
     ApiKeyResponse,
     HistoryResponse,
     LimitResponse,
+    PasswordChange,
+    PasswordForgot,
+    PasswordReset,
     SessionResponse,
 )
 from fileflow_api.accounts.models import Account
 from fileflow_api.accounts.service import AccountService
+from fileflow_api.contracts import MessageResponse
 from fileflow_api.jobs.contracts import JobResponse
 
 router = APIRouter(prefix="/account", tags=["account"])
+MAX_AVATAR_BYTES = 5 * 1024 * 1024
+AVATAR_TYPES = {"image/jpeg", "image/png", "image/webp"}
 
 
 def service(request: Request) -> AccountService:
@@ -41,26 +48,95 @@ def current_account(
     return service(request).authenticate(bearer(authorization))
 
 
+def session_response(account: Account, token: str, expires_at: datetime) -> SessionResponse:
+    return SessionResponse(
+        access_token=token,
+        expires_at=expires_at,
+        account=AccountResponse.model_validate(account, from_attributes=True),
+    )
+
+
 @router.post("/register", response_model=SessionResponse, status_code=status.HTTP_201_CREATED)
 def register(payload: AccountCreate, request: Request) -> SessionResponse:
     account, token, expires_at = service(request).register(
         payload.email, payload.password, payload.display_name
     )
-    return SessionResponse(
-        access_token=token,
-        expires_at=expires_at,
-        account=AccountResponse.model_validate(account, from_attributes=True),
-    )
+    return session_response(account, token, expires_at)
 
 
 @router.post("/login", response_model=SessionResponse)
 def login(payload: AccountLogin, request: Request) -> SessionResponse:
     account, token, expires_at = service(request).login(payload.email, payload.password)
-    return SessionResponse(
-        access_token=token,
-        expires_at=expires_at,
-        account=AccountResponse.model_validate(account, from_attributes=True),
+    return session_response(account, token, expires_at)
+
+
+@router.post(
+    "/password/forgot", response_model=MessageResponse, status_code=status.HTTP_202_ACCEPTED
+)
+def forgot_password(payload: PasswordForgot, request: Request) -> MessageResponse:
+    service(request).request_password_reset(payload.email)
+    return MessageResponse(
+        message="If an account uses this email, a password reset link has been sent."
     )
+
+
+@router.post("/password/reset", response_model=SessionResponse)
+def reset_password(payload: PasswordReset, request: Request) -> SessionResponse:
+    account, token, expires_at = service(request).reset_password(
+        payload.token, payload.new_password
+    )
+    return session_response(account, token, expires_at)
+
+
+@router.post("/password/change", response_model=SessionResponse)
+def change_password(
+    payload: PasswordChange,
+    request: Request,
+    authorization: Annotated[str | None, Header()] = None,
+) -> SessionResponse:
+    account = current_account(request, authorization)
+    updated, token, expires_at = service(request).change_password(
+        account.id, payload.current_password, payload.new_password
+    )
+    return session_response(updated, token, expires_at)
+
+
+@router.put("/avatar", status_code=status.HTTP_204_NO_CONTENT)
+async def upload_avatar(
+    request: Request, authorization: Annotated[str | None, Header()] = None
+) -> None:
+    account = current_account(request, authorization)
+    content_type = request.headers.get("content-type", "").split(";", 1)[0].lower()
+    if content_type not in AVATAR_TYPES:
+        raise HTTPException(status_code=415, detail="Avatar must be a JPEG, PNG, or WebP image.")
+    chunks: list[bytes] = []
+    size = 0
+    async for chunk in request.stream():
+        size += len(chunk)
+        if size > MAX_AVATAR_BYTES:
+            raise HTTPException(status_code=413, detail="Avatar must not exceed 5 MB.")
+        chunks.append(chunk)
+    data = b"".join(chunks)
+    valid = (
+        (content_type == "image/jpeg" and data.startswith(b"\xff\xd8\xff"))
+        or (content_type == "image/png" and data.startswith(b"\x89PNG\r\n\x1a\n"))
+        or (
+            content_type == "image/webp"
+            and len(data) >= 12
+            and data.startswith(b"RIFF")
+            and data[8:12] == b"WEBP"
+        )
+    )
+    if not valid:
+        raise HTTPException(status_code=400, detail="Avatar file signature is invalid.")
+    service(request).save_avatar(account.id, content_type, data)
+
+
+@router.get("/avatar")
+def avatar(request: Request, authorization: Annotated[str | None, Header()] = None) -> Response:
+    account = current_account(request, authorization)
+    content_type, data = service(request).avatar(account.id)
+    return Response(content=data, media_type=content_type)
 
 
 @router.delete("/session", status_code=status.HTTP_204_NO_CONTENT)

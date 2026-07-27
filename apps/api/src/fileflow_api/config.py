@@ -38,6 +38,14 @@ class Settings(BaseSettings):
     max_active_jobs_per_upload: int = Field(default=1, ge=1, le=10)
     free_daily_cloud_jobs: int = Field(default=10, ge=1, le=1000)
     account_session_ttl_seconds: int = Field(default=30 * 24 * 60 * 60, ge=300)
+    password_reset_ttl_seconds: int = Field(default=30 * 60, ge=300, le=24 * 60 * 60)
+    web_base_url: str = "http://localhost:3000"
+    smtp_host: str | None = None
+    smtp_port: int = Field(default=587, ge=1, le=65535)
+    smtp_username: str | None = None
+    smtp_password: str | None = None
+    smtp_from_email: str = "no-reply@fileflow.pro"
+    smtp_use_tls: bool = True
     worker_max_output_bytes: int = Field(default=2 * 1024 * 1024 * 1024, gt=0)
     worker_memory_limit_bytes: int = Field(default=2 * 1024 * 1024 * 1024, ge=128 * 1024 * 1024)
     worker_cpu_limit_seconds: int = Field(default=15 * 60, ge=10)

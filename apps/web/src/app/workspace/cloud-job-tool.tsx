@@ -135,6 +135,22 @@ const cloudCopy = {
   },
 } as const;
 
+const pageSelectionCopy = {
+  en: { mode: 'Pages to extract', all: 'All pages', selected: 'Selected pages', pages: 'Pages' },
+  ru: {
+    mode: 'Какие страницы извлечь',
+    all: 'Все страницы',
+    selected: 'Выбранные страницы',
+    pages: 'Страницы (например, 1,3-5)',
+  },
+  es: {
+    mode: 'Páginas para extraer',
+    all: 'Todas las páginas',
+    selected: 'Páginas seleccionadas',
+    pages: 'Páginas (por ejemplo, 1,3-5)',
+  },
+} as const;
+
 type State =
   | { status: 'idle' }
   | { status: 'running'; progress: number; stage: string }
@@ -422,17 +438,19 @@ function OperationControls({
           />
         </label>
         <label>
-          {labels[8]}
+          {language === 'ru'
+            ? 'Конец (секунды)'
+            : language === 'es'
+              ? 'Fin (segundos)'
+              : 'End (seconds)'}
           <input
             type="number"
             min="0.1"
             max="86400"
             step="0.1"
-            value={Number(parameters.duration_ms) / 1000}
+            value={Number(parameters.end_ms) / 1000}
             disabled={disabled}
-            onChange={(event) =>
-              update('duration_ms', Math.round(Number(event.target.value) * 1000))
-            }
+            onChange={(event) => update('end_ms', Math.round(Number(event.target.value) * 1000))}
           />
         </label>
       </div>
@@ -456,28 +474,33 @@ function OperationControls({
     );
   }
   if (operationId === 'split-pdf') {
+    const pageText = pageSelectionCopy[language];
+    const allPages = parameters.pages === 'all';
     return (
       <div className="cloud-controls">
-        <label>
-          {labels[12]}
-          <input
-            type="number"
-            min="1"
-            value={parameters.start_page}
-            disabled={disabled}
-            onChange={(event) => update('start_page', Number(event.target.value))}
-          />
-        </label>
-        <label>
-          {labels[13]}
-          <input
-            type="number"
-            min="1"
-            value={parameters.end_page}
-            disabled={disabled}
-            onChange={(event) => update('end_page', Number(event.target.value))}
-          />
-        </label>
+        <Select
+          id="pdf-page-mode"
+          label={pageText.mode}
+          value={allPages ? 'all' : 'selected'}
+          disabled={disabled}
+          onChange={(event) => update('pages', event.target.value === 'all' ? 'all' : '1')}
+        >
+          <option value="all">{pageText.all}</option>
+          <option value="selected">{pageText.selected}</option>
+        </Select>
+        {!allPages ? (
+          <label>
+            {pageText.pages}
+            <input
+              type="text"
+              inputMode="numeric"
+              placeholder="1,3-5"
+              value={parameters.pages}
+              disabled={disabled}
+              onChange={(event) => update('pages', event.target.value)}
+            />
+          </label>
+        ) : null}
       </div>
     );
   }
@@ -526,9 +549,9 @@ function defaultParameters(operationId: string): Record<string, string | number>
     return { quality: 23, preset: 'medium', max_height: 1080 };
   if (['extract-audio', 'audio-to-mp3', 'optimize-audio'].includes(operationId))
     return { bitrate_kbps: 192 };
-  if (operationId === 'trim-audio') return { start_ms: 0, duration_ms: 30000 };
+  if (operationId === 'trim-audio') return { start_ms: 0, end_ms: 30000 };
   if (operationId === 'compress-pdf') return { quality: 'balanced' };
-  if (operationId === 'split-pdf') return { start_page: 1, end_page: 1 };
+  if (operationId === 'split-pdf') return { pages: 'all' };
   if (operationId === 'pdf-to-jpg') return { page: 1, dpi: 150, quality: 85 };
   return {};
 }

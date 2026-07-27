@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useId, useRef, useState } from 'react';
+import Image from 'next/image';
+import React, { useEffect, useId, useRef, useState } from 'react';
 import {
   availableOperations,
   recommendOperation,
@@ -438,16 +439,6 @@ export function FileUrlInput({
 
   return (
     <Card className="input-card" variant="glass">
-      <div className="input-card-heading">
-        <div>
-          <Badge variant="private">{text.badge}</Badge>
-          <h2 id={`${id}-title`}>{text.title}</h2>
-        </div>
-        <span className="input-empty-status">
-          {batch ? `${batch.length} ${text.filesReady}` : source ? text.readyOne : text.nothing}
-        </span>
-      </div>
-
       <div className="input-tabs" role="tablist" aria-label="Input source">
         <button
           type="button"
@@ -575,7 +566,6 @@ export function FileUrlInput({
           <UrlIntentPanel platform={source.platform} url={source.url} language={language} />
         ) : null}
       </div>
-
     </Card>
   );
 }
@@ -668,18 +658,14 @@ function FileInspectorPanel({
   };
   return (
     <>
-      <section className="file-inspector" aria-labelledby="file-inspector-title">
-        <div className="file-inspector-heading">
-          <div>
-            <Badge variant={item.confidence === 'mismatch' ? 'warning' : 'success'}>
-              {item.confidence === 'verified' ? 'VERIFIED' : item.confidence.toUpperCase()}
-            </Badge>
-            <h3 id="file-inspector-title">{text.fileSummary}</h3>
-          </div>
-          <span>
-            {item.bytesRead} {text.bytesRead}
-          </span>
-        </div>
+      <RecommendationPanel
+        context={context}
+        initialIntent={initialIntent}
+        file={file}
+        sourceMime={item.detectedMime}
+        language={language}
+      />
+      <section className="file-inspector" aria-label={text.fileSummary}>
         <dl className="file-metadata-grid">
           <div>
             <dt>{text.metadata[0]}</dt>
@@ -714,13 +700,6 @@ function FileInspectorPanel({
           {item.notice}
         </p>
       </section>
-      <RecommendationPanel
-        context={context}
-        initialIntent={initialIntent}
-        file={file}
-        sourceMime={item.detectedMime}
-        language={language}
-      />
     </>
   );
 }
@@ -764,13 +743,7 @@ function RecommendationPanel({
   return (
     <section className="intent-workspace" aria-labelledby="intent-title">
       <div className="intent-heading">
-        <div>
-          <Badge variant="private">{text.chooseIntent}</Badge>
-          <h3 id="intent-title">{text.whatDo}</h3>
-        </div>
-        <span>
-          {options.length} {text.available}
-        </span>
+        <h3 id="intent-title">{text.whatDo}</h3>
       </div>
       <div className="intent-options" role="group" aria-label={text.availableOps}>
         {options.map((option) => {
@@ -789,23 +762,12 @@ function RecommendationPanel({
               <strong>
                 {(text.operationNames as Record<string, string>)[option.id] ?? option.displayName}
               </strong>
-              <small>{option.executionMode === 'local' ? text.onDevice : text.cloud}</small>
             </button>
           );
         })}
       </div>
       <RecommendationPlanView plan={result.plan} language={language} />
       <div className="intent-confirmation" data-confirmed={confirmed || undefined}>
-        <div>
-          <strong>{confirmed ? text.confirmed : text.review}</strong>
-          <p>
-            {confirmed
-              ? result.plan.mode === 'local'
-                ? 'The local tool is ready below. Your source stays on this device.'
-                : 'This operation is ready for the protected upload and job workflow.'
-              : 'Confirm the operation after reviewing its mode, defaults and trade-offs.'}
-          </p>
-        </div>
         <Button type="button" onClick={() => setConfirmed(true)} disabled={confirmed}>
           {confirmed ? text.confirmedButton : text.confirm}
         </Button>
@@ -956,83 +918,11 @@ function RecommendationPlanView({
   plan: RecommendationPlan;
   language: FileFlowLanguage;
 }) {
-  const text = workspaceCopy[language];
   const visiblePlan = localizeRecommendationPlan(plan, language);
   return (
-    <section className="recommendation-panel" aria-labelledby="recommendation-title">
-      <div className="recommendation-heading">
-        <div>
-          <Badge variant="private">{text.plan[0]}</Badge>
-          <h3 id="recommendation-title">{visiblePlan.title}</h3>
-          <p>{visiblePlan.outcome}</p>
-        </div>
-        <Badge variant={plan.mode === 'local' ? 'local' : 'cloud'}>
-          {plan.mode === 'local' ? text.onDevice : text.cloud}
-        </Badge>
-      </div>
-
-      <div className="recommendation-explanation">
-        <div>
-          <strong>{text.plan[1]}</strong>
-          <p>{visiblePlan.reason}</p>
-        </div>
-        <div>
-          <strong>{text.plan[2]}</strong>
-          <p>{visiblePlan.expectation}</p>
-        </div>
-        <div>
-          <strong>{text.plan[3]}</strong>
-          <p>{visiblePlan.privacy}</p>
-        </div>
-      </div>
-
-      <div>
-        <h4>{text.plan[4]}</h4>
-        <dl className="recommendation-defaults">
-          {visiblePlan.defaults.map((item) => (
-            <div key={item.label}>
-              <dt>{item.label}</dt>
-              <dd>
-                <strong>{item.value}</strong>
-                <span>{item.reason}</span>
-              </dd>
-            </div>
-          ))}
-        </dl>
-      </div>
-
-      <div className="recommendation-tradeoffs">
-        <strong>{text.plan[5]}</strong>
-        <ul>
-          {visiblePlan.tradeoffs.map((tradeoff) => (
-            <li key={tradeoff}>{tradeoff}</li>
-          ))}
-        </ul>
-      </div>
-
-      {visiblePlan.alternatives.length ? (
-        <div className="recommendation-alternatives">
-          <h4>{text.plan[6]}</h4>
-          {visiblePlan.alternatives.map((alternative) => (
-            <div key={alternative.operationId}>
-              <span>
-                <strong>{alternative.title}</strong>
-                <small>{alternative.outcome}</small>
-              </span>
-              <Badge variant={alternative.mode === 'local' ? 'local' : 'cloud'}>
-                {alternative.mode === 'local' ? text.onDevice : text.cloud}
-              </Badge>
-            </div>
-          ))}
-        </div>
-      ) : null}
-
-      <div className="recommendation-plan-status">
-        <span aria-hidden="true">◇</span>
-        <p>
-          <strong>{text.plan[7]}</strong> {text.plan[8]}
-        </p>
-      </div>
+    <section className="recommendation-panel recommendation-summary" aria-live="polite">
+      <strong>{visiblePlan.title}</strong>
+      <span>{visiblePlan.outcome}</span>
     </section>
   );
 }
@@ -1050,9 +940,7 @@ function SelectedSource({
   const file = source.kind === 'file' ? source.file : undefined;
   return (
     <div className="selected-source" data-source-kind={source.kind}>
-      <span className="selected-source-icon" aria-hidden="true">
-        {file ? '◫' : '↗'}
-      </span>
+      <SourcePreview source={source} />
       <div>
         <strong>{source.kind === 'file' ? source.file.name : `${source.platform} link`}</strong>
         <span>
@@ -1069,5 +957,55 @@ function SelectedSource({
         {text.selected[2]}
       </Button>
     </div>
+  );
+}
+
+function SourcePreview({ source }: { source: Source }) {
+  const [previewUrl, setPreviewUrl] = useState('');
+  const file = source.kind === 'file' ? source.file : undefined;
+
+  useEffect(() => {
+    if (!file || typeof URL.createObjectURL !== 'function') return;
+    const url = URL.createObjectURL(file);
+    setPreviewUrl(url);
+    return () => URL.revokeObjectURL(url);
+  }, [file]);
+
+  if (!file || !previewUrl) {
+    return (
+      <span className="selected-source-icon" aria-hidden="true">
+        {source.kind === 'file' ? 'FILE' : '↗'}
+      </span>
+    );
+  }
+  if (file.type.startsWith('image/')) {
+    return (
+      <Image
+        className="selected-source-preview"
+        src={previewUrl}
+        alt=""
+        width={64}
+        height={64}
+        unoptimized
+      />
+    );
+  }
+  if (file.type.startsWith('video/')) {
+    return <video className="selected-source-preview" src={previewUrl} muted playsInline />;
+  }
+  if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
+    return (
+      <object
+        className="selected-source-preview"
+        data={`${previewUrl}#page=1&toolbar=0&navpanes=0`}
+        type="application/pdf"
+        aria-label=""
+      />
+    );
+  }
+  return (
+    <span className="selected-source-icon" aria-hidden="true">
+      {file.name.split('.').pop()?.slice(0, 4).toUpperCase() || 'FILE'}
+    </span>
   );
 }

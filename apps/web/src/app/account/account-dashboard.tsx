@@ -1,6 +1,7 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import Image from 'next/image';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type { FormEvent } from 'react';
 import { Badge, Button, Card, Input } from '@fileflow/ui';
 import { ACCOUNT_TOKEN_KEY, API_URL, downloadJobResult } from '../cloud-api';
@@ -85,12 +86,61 @@ const authCopy = {
   },
 } as const;
 
+const accountExtraCopy = {
+  en: {
+    forgot: 'Forgot password?',
+    resetTitle: 'Choose a new password',
+    sendReset: 'Send reset link',
+    resetSent: 'If this email is registered, a reset link has been sent.',
+    newPassword: 'New password',
+    currentPassword: 'Current password',
+    changePassword: 'Change password',
+    passwordChanged: 'Password changed.',
+    profile: 'Profile settings',
+    avatar: 'Avatar (JPEG, PNG or WebP, up to 5 MB)',
+    uploadAvatar: 'Upload avatar',
+    avatarUpdated: 'Avatar updated.',
+    invalidAvatar: 'Choose a JPEG, PNG or WebP image up to 5 MB.',
+  },
+  ru: {
+    forgot: 'Забыли пароль?',
+    resetTitle: 'Задайте новый пароль',
+    sendReset: 'Отправить ссылку для сброса',
+    resetSent: 'Если этот email зарегистрирован, ссылка для сброса отправлена.',
+    newPassword: 'Новый пароль',
+    currentPassword: 'Текущий пароль',
+    changePassword: 'Изменить пароль',
+    passwordChanged: 'Пароль изменён.',
+    profile: 'Настройки профиля',
+    avatar: 'Аватар (JPEG, PNG или WebP, до 5 МБ)',
+    uploadAvatar: 'Загрузить аватар',
+    avatarUpdated: 'Аватар обновлён.',
+    invalidAvatar: 'Выберите JPEG, PNG или WebP до 5 МБ.',
+  },
+  es: {
+    forgot: '¿Olvidaste la contraseña?',
+    resetTitle: 'Elige una nueva contraseña',
+    sendReset: 'Enviar enlace',
+    resetSent: 'Si el correo está registrado, se ha enviado un enlace.',
+    newPassword: 'Nueva contraseña',
+    currentPassword: 'Contraseña actual',
+    changePassword: 'Cambiar contraseña',
+    passwordChanged: 'Contraseña cambiada.',
+    profile: 'Ajustes del perfil',
+    avatar: 'Avatar (JPEG, PNG o WebP, hasta 5 MB)',
+    uploadAvatar: 'Subir avatar',
+    avatarUpdated: 'Avatar actualizado.',
+    invalidAvatar: 'Elige una imagen JPEG, PNG o WebP de hasta 5 MB.',
+  },
+} as const;
+
 type Account = {
   id: string;
   email: string;
   display_name: string;
   plan: 'free';
   created_at: string;
+  has_avatar: boolean;
 };
 type Limits = {
   cloud_jobs_used: number;
@@ -125,44 +175,67 @@ function apiRequest(path: string, accessToken: string, init?: RequestInit) {
 export function AccountDashboard() {
   const { language } = useFileFlowLanguage();
   const text = authCopy[language];
+  const extra = accountExtraCopy[language];
   const [token, setToken] = useState<string | null>(null);
   const [account, setAccount] = useState<Account | null>(null);
   const [limits, setLimits] = useState<Limits | null>(null);
   const [jobs, setJobs] = useState<Job[]>([]);
   const [apiKeys, setApiKeys] = useState<ApiKey[]>([]);
   const [createdKey, setCreatedKey] = useState('');
-  const [mode, setMode] = useState<'login' | 'register'>('login');
+  const [mode, setMode] = useState<'login' | 'register' | 'forgot' | 'reset'>('login');
   const [message, setMessage] = useState('');
   const [busy, setBusy] = useState(false);
+  const [avatarUrl, setAvatarUrl] = useState('');
+  const avatarUrlRef = useRef('');
 
-  const loadAccount = useCallback(async (accessToken: string) => {
-    const [profileResponse, limitsResponse, historyResponse, keysResponse] = await Promise.all([
-      apiRequest('/account/me', accessToken),
-      apiRequest('/account/limits', accessToken),
-      apiRequest('/account/history?limit=20', accessToken),
-      apiRequest('/account/api-keys', accessToken),
-    ]);
-    if (!profileResponse.ok || !limitsResponse.ok || !historyResponse.ok || !keysResponse.ok) {
-      window.localStorage.removeItem(ACCOUNT_TOKEN_KEY);
-      setToken(null);
-      return;
-    }
-    setToken(accessToken);
-    const profile = (await profileResponse.json()) as Account;
-    setAccount(profile);
-    window.localStorage.setItem(
-      'fileflow-user-profile',
-      JSON.stringify({ displayName: profile.display_name }),
-    );
-    window.dispatchEvent(new Event('fileflow-profile-change'));
-    setLimits((await limitsResponse.json()) as Limits);
-    setJobs(((await historyResponse.json()) as { items: Job[] }).items);
-    setApiKeys(((await keysResponse.json()) as { items: ApiKey[] }).items);
+  const loadAvatar = useCallback(async (accessToken: string) => {
+    const response = await fetch(`${API_URL}/account/avatar`, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+    if (!response.ok) return;
+    const url = URL.createObjectURL(await response.blob());
+    if (avatarUrlRef.current) URL.revokeObjectURL(avatarUrlRef.current);
+    avatarUrlRef.current = url;
+    setAvatarUrl(url);
   }, []);
 
+  const loadAccount = useCallback(
+    async (accessToken: string) => {
+      const [profileResponse, limitsResponse, historyResponse, keysResponse] = await Promise.all([
+        apiRequest('/account/me', accessToken),
+        apiRequest('/account/limits', accessToken),
+        apiRequest('/account/history?limit=20', accessToken),
+        apiRequest('/account/api-keys', accessToken),
+      ]);
+      if (!profileResponse.ok || !limitsResponse.ok || !historyResponse.ok || !keysResponse.ok) {
+        window.localStorage.removeItem(ACCOUNT_TOKEN_KEY);
+        setToken(null);
+        return;
+      }
+      setToken(accessToken);
+      const profile = (await profileResponse.json()) as Account;
+      setAccount(profile);
+      if (profile.has_avatar) void loadAvatar(accessToken);
+      window.localStorage.setItem(
+        'fileflow-user-profile',
+        JSON.stringify({ displayName: profile.display_name }),
+      );
+      window.dispatchEvent(new Event('fileflow-profile-change'));
+      setLimits((await limitsResponse.json()) as Limits);
+      setJobs(((await historyResponse.json()) as { items: Job[] }).items);
+      setApiKeys(((await keysResponse.json()) as { items: ApiKey[] }).items);
+    },
+    [loadAvatar],
+  );
+
   useEffect(() => {
+    const resetToken = new URLSearchParams(window.location.search).get('reset_token');
+    if (resetToken) setMode('reset');
     const saved = window.localStorage.getItem(ACCOUNT_TOKEN_KEY);
     if (saved) void loadAccount(saved);
+    return () => {
+      if (avatarUrlRef.current) URL.revokeObjectURL(avatarUrlRef.current);
+    };
   }, [loadAccount]);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
@@ -170,31 +243,62 @@ export function AccountDashboard() {
     setMessage('');
     const data = new FormData(event.currentTarget);
     const password = String(data.get('password') ?? '');
-    if (mode === 'register' && password !== String(data.get('confirmPassword') ?? '')) {
+    if (
+      (mode === 'register' || mode === 'reset') &&
+      password !== String(data.get('confirmPassword') ?? '')
+    ) {
       setMessage(text.mismatch);
       return;
     }
     setBusy(true);
     try {
-      const response = await fetch(`${API_URL}/account/${mode}`, {
+      const path =
+        mode === 'forgot'
+          ? '/account/password/forgot'
+          : mode === 'reset'
+            ? '/account/password/reset'
+            : `/account/${mode}`;
+      const response = await fetch(`${API_URL}${path}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: data.get('email'),
-          password,
-          ...(mode === 'register' ? { display_name: data.get('displayName') } : {}),
-        }),
+        body: JSON.stringify(
+          mode === 'forgot'
+            ? { email: data.get('email') }
+            : mode === 'reset'
+              ? {
+                  token: new URLSearchParams(window.location.search).get('reset_token'),
+                  new_password: password,
+                }
+              : {
+                  email: data.get('email'),
+                  password,
+                  ...(mode === 'register' ? { display_name: data.get('displayName') } : {}),
+                },
+        ),
       });
       const payload = (await response.json()) as {
         access_token?: string;
+        account?: Account;
+        message?: string;
         error?: { message: string };
       };
+      if (mode === 'forgot' && response.ok) {
+        setMessage(extra.resetSent);
+        return;
+      }
       if (!response.ok || !payload.access_token) {
         setMessage(payload.error?.message ?? 'Account request failed.');
         return;
       }
       window.localStorage.setItem(ACCOUNT_TOKEN_KEY, payload.access_token);
-      await loadAccount(payload.access_token);
+      if (payload.account) {
+        window.localStorage.setItem(
+          'fileflow-user-profile',
+          JSON.stringify({ displayName: payload.account.display_name }),
+        );
+        window.dispatchEvent(new Event('fileflow-profile-change'));
+      }
+      window.location.assign('/');
     } catch {
       setMessage('The account service is not available. Try again shortly.');
     } finally {
@@ -268,19 +372,98 @@ export function AccountDashboard() {
     }
   }
 
+  async function uploadAvatar(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!token) return;
+    const form = event.currentTarget;
+    const file = new FormData(form).get('avatar');
+    if (
+      !(file instanceof File) ||
+      !['image/jpeg', 'image/png', 'image/webp'].includes(file.type) ||
+      file.size === 0 ||
+      file.size > 5 * 1024 * 1024
+    ) {
+      setMessage(extra.invalidAvatar);
+      return;
+    }
+    setBusy(true);
+    try {
+      const response = await fetch(`${API_URL}/account/avatar`, {
+        method: 'PUT',
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': file.type },
+        body: file,
+      });
+      if (!response.ok) {
+        const payload = (await response.json().catch(() => null)) as {
+          error?: { message?: string };
+        } | null;
+        setMessage(payload?.error?.message ?? extra.invalidAvatar);
+        return;
+      }
+      await loadAvatar(token);
+      setAccount((current) => (current ? { ...current, has_avatar: true } : current));
+      form.reset();
+      setMessage(extra.avatarUpdated);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function changePassword(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!token) return;
+    const form = event.currentTarget;
+    const data = new FormData(form);
+    const newPassword = String(data.get('newPassword') ?? '');
+    if (newPassword !== String(data.get('confirmPassword') ?? '')) {
+      setMessage(text.mismatch);
+      return;
+    }
+    setBusy(true);
+    try {
+      const response = await apiRequest('/account/password/change', token, {
+        method: 'POST',
+        body: JSON.stringify({
+          current_password: data.get('currentPassword'),
+          new_password: newPassword,
+        }),
+      });
+      const payload = (await response.json()) as {
+        access_token?: string;
+        error?: { message?: string };
+      };
+      if (!response.ok || !payload.access_token) {
+        setMessage(payload.error?.message ?? 'Could not change password.');
+        return;
+      }
+      window.localStorage.setItem(ACCOUNT_TOKEN_KEY, payload.access_token);
+      setToken(payload.access_token);
+      form.reset();
+      setMessage(extra.passwordChanged);
+    } finally {
+      setBusy(false);
+    }
+  }
+
   if (!account) {
     return (
       <Card className="account-auth">
         <div className="account-mode" aria-label="Account action">
           <Button
             variant={mode === 'login' ? 'primary' : 'secondary'}
-            onClick={() => setMode('login')}
+            onClick={() => {
+              setMode('login');
+              setMessage('');
+            }}
           >
             {text.signIn}
           </Button>
           <Button
             variant={mode === 'register' ? 'primary' : 'secondary'}
-            onClick={() => setMode('register')}
+            onClick={() => {
+              setMode('register');
+              setMessage('');
+            }}
           >
             {text.create}
           </Button>
@@ -296,16 +479,22 @@ export function AccountDashboard() {
               required
             />
           ) : null}
-          <Input label={text.email} name="email" type="email" autoComplete="email" required />
-          <Input
-            label={text.password}
-            name="password"
-            type="password"
-            autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
-            minLength={mode === 'register' ? 12 : 1}
-            required
-          />
-          {mode === 'register' ? (
+          {mode !== 'reset' ? (
+            <Input label={text.email} name="email" type="email" autoComplete="email" required />
+          ) : (
+            <h2>{extra.resetTitle}</h2>
+          )}
+          {mode !== 'forgot' ? (
+            <Input
+              label={mode === 'reset' ? extra.newPassword : text.password}
+              name="password"
+              type="password"
+              autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
+              minLength={mode === 'login' ? 1 : 12}
+              required
+            />
+          ) : null}
+          {mode === 'register' || mode === 'reset' ? (
             <Input
               label={text.confirm}
               name="confirmPassword"
@@ -321,8 +510,28 @@ export function AccountDashboard() {
             </p>
           )}
           <Button type="submit" disabled={busy}>
-            {busy ? text.wait : mode === 'login' ? text.signIn : text.create}
+            {busy
+              ? text.wait
+              : mode === 'login'
+                ? text.signIn
+                : mode === 'register'
+                  ? text.create
+                  : mode === 'forgot'
+                    ? extra.sendReset
+                    : extra.resetTitle}
           </Button>
+          {mode === 'login' ? (
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => {
+                setMode('forgot');
+                setMessage('');
+              }}
+            >
+              {extra.forgot}
+            </Button>
+          ) : null}
         </form>
       </Card>
     );
@@ -332,10 +541,26 @@ export function AccountDashboard() {
     <section className="account-dashboard" aria-label={text.account}>
       <Card>
         <div className="account-card-heading">
-          <div>
-            <Badge variant="private">{account.plan}</Badge>
-            <h2>{account.display_name}</h2>
-            <p>{account.email}</p>
+          <div className="account-identity">
+            {avatarUrl ? (
+              <Image
+                className="account-avatar"
+                src={avatarUrl}
+                alt=""
+                width={72}
+                height={72}
+                unoptimized
+              />
+            ) : (
+              <span className="account-avatar account-avatar-fallback" aria-hidden="true">
+                {account.display_name.slice(0, 1).toUpperCase()}
+              </span>
+            )}
+            <div>
+              <Badge variant="private">{account.plan}</Badge>
+              <h2>{account.display_name}</h2>
+              <p>{account.email}</p>
+            </div>
           </div>
           <Button variant="secondary" onClick={logout}>
             {text.signOut}
@@ -349,6 +574,46 @@ export function AccountDashboard() {
             {text.used} {new Date(limits.resets_at).toLocaleString(language)}.
           </p>
         )}
+      </Card>
+      <Card className="account-profile-settings">
+        <h2>{extra.profile}</h2>
+        <form onSubmit={uploadAvatar}>
+          <label>
+            {extra.avatar}
+            <input name="avatar" type="file" accept="image/jpeg,image/png,image/webp" required />
+          </label>
+          <Button type="submit" disabled={busy}>
+            {extra.uploadAvatar}
+          </Button>
+        </form>
+        <form onSubmit={changePassword}>
+          <Input
+            label={extra.currentPassword}
+            name="currentPassword"
+            type="password"
+            autoComplete="current-password"
+            required
+          />
+          <Input
+            label={extra.newPassword}
+            name="newPassword"
+            type="password"
+            autoComplete="new-password"
+            minLength={12}
+            required
+          />
+          <Input
+            label={text.confirm}
+            name="confirmPassword"
+            type="password"
+            autoComplete="new-password"
+            minLength={12}
+            required
+          />
+          <Button type="submit" disabled={busy}>
+            {extra.changePassword}
+          </Button>
+        </form>
       </Card>
       <Card>
         <h2>{text.history}</h2>

@@ -1,7 +1,8 @@
 import os
+import re
 import shutil
 from collections.abc import Mapping
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from zipfile import BadZipFile, ZipFile
 
 from fileflow_api.media.handlers import CommandRunner, integer_parameter, reject_unknown
@@ -13,7 +14,10 @@ PDF_TYPE = "application/pdf"
 
 class DocumentHandler:
     def __init__(self, tools: Mapping[str, str], runner: CommandRunner, operation: str) -> None:
-        if any(not Path(path).is_absolute() for path in tools.values()):
+        if any(
+            not (Path(path).is_absolute() or PurePosixPath(path).is_absolute())
+            for path in tools.values()
+        ):
             raise ValueError("document tool paths must be absolute")
         self._tools = tools
         self._runner = runner
@@ -87,23 +91,38 @@ class DocumentHandler:
         )
 
     def _split_pdf(self, request: WorkRequest) -> None:
-        reject_unknown(request.parameters, {"start_page", "end_page"})
-        start = integer_parameter(request.parameters, "start_page", 1, range(1, 100_001))
-        end = integer_parameter(request.parameters, "end_page", start, range(1, 100_001))
-        if end < start or len(request.input_paths) != 1:
+        reject_unknown(request.parameters, {"pages"})
+        pages = request.parameters.get("pages", "all")
+        if not isinstance(pages, str) or len(request.input_paths) != 1:
             raise ValueError("invalid PDF page range")
+        selection = self._page_selection(pages)
         self._runner.run(
             [
                 self._tools["qpdf"],
                 str(request.input_path),
                 "--pages",
                 ".",
-                f"{start}-{end}",
+                selection,
                 "--",
                 str(request.output_path),
             ],
             request.output_path.parent,
         )
+
+    @staticmethod
+    def _page_selection(value: str) -> str:
+        normalized = value.strip().lower().replace(" ", "")
+        if normalized == "all":
+            return "1-z"
+        if not normalized or not re.fullmatch(r"\d+(?:-\d+)?(?:,\d+(?:-\d+)?)*", normalized):
+            raise ValueError("invalid PDF page selection")
+        for item in normalized.split(","):
+            bounds = [int(part) for part in item.split("-")]
+            if any(page < 1 or page > 100_000 for page in bounds):
+                raise ValueError("invalid PDF page selection")
+            if len(bounds) == 2 and bounds[1] < bounds[0]:
+                raise ValueError("invalid PDF page selection")
+        return normalized
 
     def _compress_pdf(self, request: WorkRequest) -> None:
         reject_unknown(request.parameters, {"quality"})

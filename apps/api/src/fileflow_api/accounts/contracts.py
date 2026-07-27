@@ -33,12 +33,27 @@ class AccountLogin(BaseModel):
     password: str = Field(min_length=1, max_length=128)
 
 
+class PasswordForgot(BaseModel):
+    email: str = Field(min_length=3, max_length=320)
+
+
+class PasswordReset(BaseModel):
+    token: str = Field(min_length=32, max_length=256)
+    new_password: str = Field(min_length=12, max_length=128)
+
+
+class PasswordChange(BaseModel):
+    current_password: str = Field(min_length=1, max_length=128)
+    new_password: str = Field(min_length=12, max_length=128)
+
+
 class AccountResponse(BaseModel):
     id: str
     email: str
     display_name: str
     plan: AccountPlan
     created_at: datetime
+    has_avatar: bool = False
 
 
 class SessionResponse(BaseModel):

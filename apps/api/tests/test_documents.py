@@ -86,7 +86,7 @@ def test_merge_requires_multiple_clean_materialized_sources(tmp_path: Path) -> N
 @pytest.mark.parametrize(
     ("operation", "parameters", "tool"),
     [
-        ("split-pdf", {"start_page": 2, "end_page": 4}, "/usr/bin/qpdf"),
+        ("split-pdf", {"pages": "2,4-6"}, "/usr/bin/qpdf"),
         ("compress-pdf", {"quality": "balanced"}, "/usr/bin/gs"),
         ("pdf-to-jpg", {"page": 2, "dpi": 150, "quality": 80}, "/usr/bin/pdftoppm"),
     ],
@@ -102,7 +102,8 @@ def test_pdf_operations_have_bounded_parameters(
 @pytest.mark.parametrize(
     ("operation", "parameters"),
     [
-        ("split-pdf", {"start_page": 0}),
+        ("split-pdf", {"pages": "0,2"}),
+        ("split-pdf", {"pages": "4-2"}),
         ("compress-pdf", {"quality": "$(whoami)"}),
         ("pdf-to-jpg", {"dpi": 1200}),
         ("pdf-to-jpg", {"unexpected": "value"}),
@@ -122,3 +123,13 @@ def test_document_registry_exposes_reviewed_operations_and_types() -> None:
     register_document_operations(registry, TOOLS, RecordingRunner())
     assert all(registry.resolve(operation) is not None for operation in DOCUMENT_OPERATIONS)
     assert registry.resolve("docx-to-pdf").accepts(DOCX_TYPE)  # type: ignore[union-attr]
+
+
+@pytest.mark.parametrize(("pages", "expected"), [("all", "1-z"), ("1,3-5", "1,3-5")])
+def test_pdf_page_extraction_supports_all_or_selected_pages(
+    tmp_path: Path, pages: str, expected: str
+) -> None:
+    runner = RecordingRunner()
+    DocumentHandler(TOOLS, runner, "split-pdf").execute(pdf_request(tmp_path, {"pages": pages}))
+    command = runner.commands[0]
+    assert command[command.index(".") + 1] == expected

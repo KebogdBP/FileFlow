@@ -202,6 +202,45 @@
 .account-card-heading h2 {
   margin: 0.75rem 0;
 }
+.account-identity {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+.account-avatar {
+  width: 4.5rem;
+  height: 4.5rem;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  object-fit: cover;
+  box-shadow: 0 10px 28px rgba(36, 116, 255, 0.2);
+}
+.account-avatar-fallback {
+  display: grid;
+  place-items: center;
+  color: white;
+  font-size: 1.75rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, var(--account-blue), #8a5cff);
+}
+.account-profile-settings {
+  display: grid;
+  gap: 1.25rem;
+}
+.account-profile-settings form {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) auto;
+  align-items: end;
+  gap: var(--ff-space-3);
+}
+.account-profile-settings form:first-of-type {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+.account-profile-settings input[type='file'] {
+  display: block;
+  width: 100%;
+  margin-top: 0.45rem;
+}
 .account-history {
   list-style: none;
   padding: 0;
@@ -271,6 +310,10 @@
     padding-inline: 0.75rem !important;
   }
   .api-key-card form {
+    grid-template-columns: 1fr;
+  }
+  .account-profile-settings form,
+  .account-profile-settings form:first-of-type {
     grid-template-columns: 1fr;
   }
 }

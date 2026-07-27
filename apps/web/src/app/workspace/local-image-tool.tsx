@@ -9,7 +9,13 @@ import {
 } from '@fileflow/local-processing';
 import { Badge, Button, Select, Slider } from '@fileflow/ui';
 import { formatFileSize } from './input-policy';
-import { savingPercent, validateWebPResult, webPFileName } from './image-result';
+import {
+  metadataFreeJpegFileName,
+  savingPercent,
+  validateJpegResult,
+  validateWebPResult,
+  webPFileName,
+} from './image-result';
 import type { FileFlowLanguage } from '../use-fileflow-language';
 
 const localImageCopy = {
@@ -72,6 +78,27 @@ const localImageCopy = {
   },
 } as const;
 
+const metadataResultCopy = {
+  en: {
+    title: 'Remove JPEG metadata',
+    note: 'Embedded metadata is removed without changing JPEG quality',
+    valid: 'VALID JPEG',
+    download: 'Download JPEG',
+  },
+  ru: {
+    title: 'Удалить метаданные JPEG',
+    note: 'Метаданные удаляются без изменения качества JPEG',
+    valid: 'ПРОВЕРЕННЫЙ JPEG',
+    download: 'Скачать JPEG',
+  },
+  es: {
+    title: 'Eliminar metadatos JPEG',
+    note: 'Los metadatos se eliminan sin cambiar la calidad JPEG',
+    valid: 'JPEG VERIFICADO',
+    download: 'Descargar JPEG',
+  },
+} as const;
+
 type ToolState =
   | { status: 'idle' }
   | { status: 'running'; progress: number; stage: string }
@@ -90,6 +117,7 @@ export function LocalImageTool({
   language?: FileFlowLanguage;
 }) {
   const text = localImageCopy[language];
+  const metadataOnlyJpeg = operationId === 'remove-image-metadata' && sourceMime === 'image/jpeg';
   const [quality, setQuality] = useState(82);
   const [maxDimension, setMaxDimension] = useState(0);
   const [state, setState] = useState<ToolState>({ status: 'idle' });
@@ -135,18 +163,27 @@ export function LocalImageTool({
           id: `image-${Date.now()}`,
           operationId,
           input,
-          options: { sourceMime, quality: quality / 100, maxDimension },
+          options: {
+            sourceMime,
+            quality: quality / 100,
+            maxDimension,
+            removeMetadataOnly: operationId === 'remove-image-metadata',
+          },
         },
         ({ progress, stage }) => setState({ status: 'running', progress, stage }),
       );
       handle.current = job;
       const result = await job.promise;
-      const validation = validateWebPResult(result.output);
+      const validation = metadataOnlyJpeg
+        ? validateJpegResult(result.output)
+        : validateWebPResult(result.output);
       if (!validation.ok) throw new Error(validation.error);
       const width = Number(result.metadata?.width ?? 0);
       const height = Number(result.metadata?.height ?? 0);
       if (resultUrl.current) URL.revokeObjectURL(resultUrl.current);
-      const url = URL.createObjectURL(new Blob([result.output], { type: 'image/webp' }));
+      const url = URL.createObjectURL(
+        new Blob([result.output], { type: metadataOnlyJpeg ? 'image/jpeg' : 'image/webp' }),
+      );
       resultUrl.current = url;
       setState({ status: 'completed', url, size: validation.size, width, height });
     } catch (error) {
@@ -164,35 +201,41 @@ export function LocalImageTool({
         <div>
           <Badge variant="local">{text.badge}</Badge>
           <h3 id="local-image-title">
-            {operationId === 'remove-image-metadata' ? text.titles[1] : text.titles[0]}
+            {metadataOnlyJpeg
+              ? metadataResultCopy[language].title
+              : operationId === 'remove-image-metadata'
+                ? text.titles[1]
+                : text.titles[0]}
           </h3>
         </div>
-        <span>{text.metadata}</span>
+        <span>{metadataOnlyJpeg ? metadataResultCopy[language].note : text.metadata}</span>
       </div>
-      <div className="image-tool-controls">
-        <Slider
-          id="image-quality"
-          label={text.quality}
-          min={40}
-          max={100}
-          value={quality}
-          valueLabel={`${quality}%`}
-          disabled={running}
-          onChange={(event) => setQuality(Number(event.target.value))}
-        />
-        <Select
-          id="image-size"
-          label={text.dimension}
-          value={maxDimension}
-          disabled={running}
-          onChange={(event) => setMaxDimension(Number(event.target.value))}
-        >
-          <option value={0}>{text.original}</option>
-          <option value={1920}>1920 px</option>
-          <option value={1280}>1280 px</option>
-          <option value={800}>800 px</option>
-        </Select>
-      </div>
+      {operationId !== 'remove-image-metadata' ? (
+        <div className="image-tool-controls">
+          <Slider
+            id="image-quality"
+            label={text.quality}
+            min={40}
+            max={100}
+            value={quality}
+            valueLabel={`${quality}%`}
+            disabled={running}
+            onChange={(event) => setQuality(Number(event.target.value))}
+          />
+          <Select
+            id="image-size"
+            label={text.dimension}
+            value={maxDimension}
+            disabled={running}
+            onChange={(event) => setMaxDimension(Number(event.target.value))}
+          >
+            <option value={0}>{text.original}</option>
+            <option value={1920}>1920 px</option>
+            <option value={1280}>1280 px</option>
+            <option value={800}>800 px</option>
+          </Select>
+        </div>
+      ) : null}
       <div className="image-tool-action">
         {running ? (
           <Button type="button" variant="secondary" onClick={() => handle.current?.cancel()}>
@@ -226,17 +269,27 @@ export function LocalImageTool({
         {state.status === 'completed' ? (
           <div className="image-result-card">
             <div>
-              <Badge variant={state.size < file.size ? 'success' : 'warning'}>{text.valid}</Badge>
-              <strong>
-                {state.width} × {state.height}
-              </strong>
+              <Badge variant={state.size < file.size ? 'success' : 'warning'}>
+                {metadataOnlyJpeg ? metadataResultCopy[language].valid : text.valid}
+              </Badge>
+              {state.width > 0 && state.height > 0 ? (
+                <strong>
+                  {state.width} × {state.height}
+                </strong>
+              ) : null}
               <span>
                 {formatFileSize(file.size)} → {formatFileSize(state.size)} ·{' '}
                 {savingPercent(file.size, state.size)}% {text.saved}
               </span>
             </div>
-            <a className="image-download" href={state.url} download={webPFileName(file.name)}>
-              {text.download}
+            <a
+              className="image-download"
+              href={state.url}
+              download={
+                metadataOnlyJpeg ? metadataFreeJpegFileName(file.name) : webPFileName(file.name)
+              }
+            >
+              {metadataOnlyJpeg ? metadataResultCopy[language].download : text.download}
             </a>
           </div>
         ) : null}

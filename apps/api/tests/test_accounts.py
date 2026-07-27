@@ -8,7 +8,15 @@ from fileflow_api.config import Settings
 from fileflow_api.database import Base, build_session_factory
 
 
-def client(daily_limit: int = 10) -> TestClient:
+class RecordingMailer:
+    def __init__(self) -> None:
+        self.messages: list[tuple[str, str]] = []
+
+    def send_password_reset(self, email: str, reset_url: str) -> None:
+        self.messages.append((email, reset_url))
+
+
+def client(daily_limit: int = 10, mailer: RecordingMailer | None = None) -> TestClient:
     engine = create_engine(
         "sqlite+pysqlite:///:memory:",
         connect_args={"check_same_thread": False},
@@ -16,7 +24,7 @@ def client(daily_limit: int = 10) -> TestClient:
     )
     Base.metadata.create_all(engine)
     settings = Settings(environment="test", free_daily_cloud_jobs=daily_limit)
-    accounts = AccountService(build_session_factory(engine), settings)
+    accounts = AccountService(build_session_factory(engine), settings, mailer)
     return TestClient(create_app(settings, account_service=accounts))
 
 
@@ -108,3 +116,62 @@ def test_developer_api_keys_are_shown_once_and_revocable() -> None:
     assert (
         api.get("/api/v1/account/me", headers={"Authorization": f"Bearer {key}"}).status_code == 401
     )
+
+
+def test_password_reset_and_authenticated_password_change() -> None:
+    mailer = RecordingMailer()
+    api = client(mailer=mailer)
+    registered = api.post(
+        "/api/v1/account/register",
+        json={"email": "person@example.com", "password": "long-test-password"},
+    ).json()
+
+    forgot = api.post("/api/v1/account/password/forgot", json={"email": "person@example.com"})
+    assert forgot.status_code == 202
+    assert mailer.messages[0][0] == "person@example.com"
+    reset_token = mailer.messages[0][1].split("reset_token=", 1)[1]
+    reset = api.post(
+        "/api/v1/account/password/reset",
+        json={"token": reset_token, "new_password": "new-long-password"},
+    )
+    assert reset.status_code == 200
+    assert (
+        api.post(
+            "/api/v1/account/login",
+            json={"email": "person@example.com", "password": "long-test-password"},
+        ).status_code
+        == 401
+    )
+
+    changed = api.post(
+        "/api/v1/account/password/change",
+        headers={"Authorization": f"Bearer {reset.json()['access_token']}"},
+        json={
+            "current_password": "new-long-password",
+            "new_password": "newer-long-password",
+        },
+    )
+    assert changed.status_code == 200
+    assert changed.json()["access_token"] != registered["access_token"]
+
+
+def test_avatar_is_limited_validated_and_returned() -> None:
+    api = client()
+    registered = api.post(
+        "/api/v1/account/register",
+        json={"email": "person@example.com", "password": "long-test-password"},
+    ).json()
+    headers = {
+        "Authorization": f"Bearer {registered['access_token']}",
+        "Content-Type": "image/jpeg",
+    }
+    image = b"\xff\xd8\xffavatar"
+    assert api.put("/api/v1/account/avatar", headers=headers, content=image).status_code == 204
+    profile = api.get("/api/v1/account/me", headers=headers).json()
+    assert profile["has_avatar"] is True
+    returned = api.get("/api/v1/account/avatar", headers=headers)
+    assert returned.content == image
+    assert returned.headers["content-type"] == "image/jpeg"
+
+    too_large = b"\xff\xd8\xff" + b"x" * (5 * 1024 * 1024)
+    assert api.put("/api/v1/account/avatar", headers=headers, content=too_large).status_code == 413

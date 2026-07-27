@@ -9,7 +9,14 @@ from sqlalchemy import delete, func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, sessionmaker
 
-from fileflow_api.accounts.models import Account, AccountPlan, AccountSession, DeveloperApiKey
+from fileflow_api.accounts.mailer import PasswordResetMailer, SmtpPasswordResetMailer
+from fileflow_api.accounts.models import (
+    Account,
+    AccountPlan,
+    AccountSession,
+    DeveloperApiKey,
+    PasswordResetToken,
+)
 from fileflow_api.config import Settings
 from fileflow_api.jobs.models import Job
 
@@ -36,9 +43,15 @@ def _token_hash(token: str) -> str:
 
 
 class AccountService:
-    def __init__(self, sessions: sessionmaker[Session], settings: Settings) -> None:
+    def __init__(
+        self,
+        sessions: sessionmaker[Session],
+        settings: Settings,
+        mailer: PasswordResetMailer | None = None,
+    ) -> None:
         self._sessions = sessions
         self._settings = settings
+        self._mailer = mailer or SmtpPasswordResetMailer(settings)
 
     def register(
         self, email: str, password: str, display_name: str
@@ -149,6 +162,90 @@ class AccountService:
             session.execute(
                 delete(AccountSession).where(AccountSession.token_hash == _token_hash(token))
             )
+
+    def request_password_reset(self, email: str) -> None:
+        normalized_email = email.strip().lower()
+        with self._sessions.begin() as session:
+            account = session.scalar(select(Account).where(Account.email == normalized_email))
+            if account is None:
+                return
+            session.execute(
+                delete(PasswordResetToken).where(PasswordResetToken.account_id == account.id)
+            )
+            token = secrets.token_urlsafe(32)
+            now = datetime.now(UTC)
+            session.add(
+                PasswordResetToken(
+                    id=uuid4().hex,
+                    account_id=account.id,
+                    token_hash=_token_hash(token),
+                    created_at=now,
+                    expires_at=now + timedelta(seconds=self._settings.password_reset_ttl_seconds),
+                )
+            )
+            target_email = account.email
+        reset_url = f"{self._settings.web_base_url.rstrip('/')}/account?reset_token={token}"
+        self._mailer.send_password_reset(target_email, reset_url)
+
+    def reset_password(self, token: str, new_password: str) -> tuple[Account, str, datetime]:
+        now = datetime.now(UTC)
+        with self._sessions.begin() as session:
+            reset = session.scalar(
+                select(PasswordResetToken).where(
+                    PasswordResetToken.token_hash == _token_hash(token),
+                    PasswordResetToken.expires_at > now,
+                )
+            )
+            if reset is None:
+                raise HTTPException(status_code=400, detail="Reset link is invalid or expired.")
+            account = session.get(Account, reset.account_id)
+            if account is None:
+                raise HTTPException(status_code=400, detail="Reset link is invalid or expired.")
+            account.password_hash = _password_hash(new_password)
+            session.execute(delete(AccountSession).where(AccountSession.account_id == account.id))
+            session.execute(
+                delete(PasswordResetToken).where(PasswordResetToken.account_id == account.id)
+            )
+            session.flush()
+            session.expunge(account)
+        session_token, expires_at = self._create_session(account.id)
+        return account, session_token, expires_at
+
+    def change_password(
+        self, account_id: str, current_password: str, new_password: str
+    ) -> tuple[Account, str, datetime]:
+        with self._sessions.begin() as session:
+            account = session.get(Account, account_id)
+            if account is None or not _password_matches(current_password, account.password_hash):
+                raise HTTPException(status_code=400, detail="Current password is incorrect.")
+            account.password_hash = _password_hash(new_password)
+            session.execute(delete(AccountSession).where(AccountSession.account_id == account.id))
+            session.execute(
+                delete(PasswordResetToken).where(PasswordResetToken.account_id == account.id)
+            )
+            session.flush()
+            session.expunge(account)
+        token, expires_at = self._create_session(account.id)
+        return account, token, expires_at
+
+    def save_avatar(self, account_id: str, content_type: str, data: bytes) -> None:
+        with self._sessions.begin() as session:
+            account = session.get(Account, account_id)
+            if account is None:
+                raise HTTPException(status_code=404, detail="Account was not found.")
+            account.avatar_content_type = content_type
+            account.avatar_data = data
+
+    def avatar(self, account_id: str) -> tuple[str, bytes]:
+        with self._sessions() as session:
+            account = session.get(Account, account_id)
+            if (
+                account is None
+                or account.avatar_content_type is None
+                or account.avatar_data is None
+            ):
+                raise HTTPException(status_code=404, detail="Avatar was not found.")
+            return account.avatar_content_type, account.avatar_data
 
     def history(self, account_id: str, limit: int, offset: int) -> list[Job]:
         with self._sessions() as session:

@@ -58,7 +58,7 @@ def test_video_compression_uses_bounded_server_owned_ffmpeg_arguments(tmp_path: 
         ("extract-audio", {"bitrate_kbps": 128}, "audio/mpeg", "mp3"),
         ("audio-to-mp3", {}, "audio/mpeg", "mp3"),
         ("audio-to-wav", {}, "audio/wav", "wav"),
-        ("trim-audio", {"start_ms": 500, "duration_ms": 1500}, "audio/mpeg", "mp3"),
+        ("trim-audio", {"start_ms": 500, "end_ms": 1500}, "audio/mpeg", "mp3"),
     ],
 )
 def test_audio_operations_have_explicit_output_contracts(
@@ -76,6 +76,26 @@ def test_audio_operations_have_explicit_output_contracts(
     assert result.content_type == content_type
     assert command[command.index("-f") + 1] == output_format
     assert "-vn" in command
+
+
+def test_audio_trim_seeks_to_start_and_uses_end_as_an_absolute_time(tmp_path: Path) -> None:
+    runner = RecordingRunner()
+    FfmpegHandler("/usr/bin/ffmpeg", runner, "trim-audio").execute(
+        request(tmp_path, {"start_ms": 5_000, "end_ms": 12_500})
+    )
+    command = runner.commands[0]
+    assert command.index("-ss") < command.index("-i")
+    assert command[command.index("-ss") + 1] == "5.000"
+    assert command[command.index("-t") + 1] == "7.500"
+
+
+def test_audio_trim_rejects_an_end_before_the_start(tmp_path: Path) -> None:
+    runner = RecordingRunner()
+    with pytest.raises(ValueError, match="invalid audio trim range"):
+        FfmpegHandler("/usr/bin/ffmpeg", runner, "trim-audio").execute(
+            request(tmp_path, {"start_ms": 10_000, "end_ms": 2_000})
+        )
+    assert runner.commands == []
 
 
 @pytest.mark.parametrize(

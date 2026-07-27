@@ -1,5 +1,5 @@
 from collections.abc import Mapping, Sequence
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import Protocol
 
 from fileflow_api.workers.contracts import Parameter, WorkRequest, WorkResult
@@ -35,7 +35,7 @@ def reject_unknown(parameters: Mapping[str, Parameter], allowed: set[str]) -> No
 
 class FfmpegHandler:
     def __init__(self, ffmpeg_path: str, runner: CommandRunner, operation: str) -> None:
-        if not Path(ffmpeg_path).is_absolute():
+        if not (Path(ffmpeg_path).is_absolute() or PurePosixPath(ffmpeg_path).is_absolute()):
             raise ValueError("ffmpeg path must be absolute")
         self._ffmpeg = ffmpeg_path
         self._runner = runner
@@ -132,16 +132,18 @@ class FfmpegHandler:
                 "audio/wav",
             )
         if self._operation == "trim-audio":
-            reject_unknown(parameters, {"start_ms", "duration_ms"})
+            reject_unknown(parameters, {"start_ms", "end_ms"})
             start_ms = integer_parameter(parameters, "start_ms", 0, range(0, 86_400_001))
-            duration_ms = integer_parameter(
-                parameters, "duration_ms", 30_000, range(100, 86_400_001)
-            )
+            end_ms = integer_parameter(parameters, "end_ms", 30_000, range(100, 86_400_001))
+            if end_ms <= start_ms:
+                raise ValueError("invalid audio trim range")
+            duration_ms = end_ms - start_ms
             return (
                 [
-                    *common,
+                    self._ffmpeg,
                     "-ss",
                     f"{start_ms / 1000:.3f}",
+                    *common[1:],
                     "-t",
                     f"{duration_ms / 1000:.3f}",
                     "-vn",
