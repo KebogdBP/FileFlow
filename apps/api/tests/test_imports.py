@@ -12,6 +12,7 @@ from fileflow_api.imports.contracts import ImportCreate
 from fileflow_api.imports.downloader import (
     ImportDownloadError,
     ImportedMedia,
+    ImportOptions,
     YtDlpClient,
     _download_error_code,
     _single_video_url,
@@ -26,7 +27,7 @@ class FakeStorage:
         self.objects: dict[str, bytes] = {}
 
     def upload_file(self, key: str, source: Path, content_type: str) -> None:
-        assert content_type == "video/mp4"
+        assert content_type in {"video/mp4", "audio/mpeg"}
         self.objects[key] = source.read_bytes()
 
     def delete_object(self, key: str) -> None:
@@ -54,15 +55,27 @@ class FakeQueue:
 
 
 class FakeClient:
-    def download(self, url: str, workspace: Path, max_bytes: int) -> ImportedMedia:
+    def download(
+        self, url: str, workspace: Path, max_bytes: int, options: ImportOptions
+    ) -> ImportedMedia:
         assert url.startswith("https://www.youtube.com/")
+        assert options.media_type == "video"
         path = workspace / "source.mp4"
         path.write_bytes(b"\x00\x00\x00\x18ftypisom-public-video")
-        return ImportedMedia(path, "My video", "Creator", "https://i.ytimg.com/cover.jpg")
+        return ImportedMedia(
+            path,
+            "video/mp4",
+            "imported-video.mp4",
+            "My video",
+            "Creator",
+            "https://i.ytimg.com/cover.jpg",
+        )
 
 
 class FailingClient:
-    def download(self, url: str, workspace: Path, max_bytes: int) -> ImportedMedia:
+    def download(
+        self, url: str, workspace: Path, max_bytes: int, options: ImportOptions
+    ) -> ImportedMedia:
         raise ImportDownloadError("platform_auth_required")
 
 
@@ -143,7 +156,19 @@ def test_import_without_rights_attestation_enters_existing_safety_pipeline() -> 
 
 
 def test_import_contract_only_requires_a_platform_url() -> None:
-    assert str(ImportCreate(url="https://youtu.be/abc").url) == "https://youtu.be/abc"
+    request = ImportCreate(url="https://youtu.be/abc")
+    assert str(request.url) == "https://youtu.be/abc"
+    assert request.media_type == "video"
+    assert request.video_quality == "best"
+
+
+def test_import_contract_rejects_an_invalid_time_range() -> None:
+    with pytest.raises(ValueError, match="end_seconds"):
+        ImportCreate(
+            url="https://youtu.be/abc",
+            start_seconds=30,
+            end_seconds=10,
+        )
 
 
 def test_youtube_single_video_url_removes_playlist_radio_parameters() -> None:
@@ -162,6 +187,11 @@ def test_downloader_enables_node_and_format_fallbacks_for_public_youtube(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
     captured: dict[str, object] = {}
+    monkeypatch.setattr(
+        downloader_module.shutil,
+        "which",
+        lambda runtime: "/usr/local/bin/node" if runtime == "node" else None,
+    )
 
     class FakeYoutubeDL:
         def __init__(self, options: dict[str, object]) -> None:
@@ -191,13 +221,67 @@ def test_downloader_enables_node_and_format_fallbacks_for_public_youtube(
     assert captured["retries"] == 5
     assert captured["extractor_retries"] == 5
     assert "extractor_args" not in captured
-    assert captured["js_runtimes"] == {"node": {}}
+    assert captured["js_runtimes"] == {"node": {"path": "/usr/local/bin/node"}}
+    assert captured["remote_components"] == ["ejs:github"]
     assert captured["format"] == (
         "bestvideo[ext=mp4]+bestaudio[ext=m4a]/"
         "bestvideo[ext=webm]+bestaudio[ext=webm]/"
         "bestvideo+bestaudio/best[ext=mp4]/best"
     )
     assert captured["postprocessors"] == [{"key": "FFmpegVideoRemuxer", "preferedformat": "mp4"}]
+
+
+def test_downloader_applies_audio_quality_trim_and_playlist_item(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    captured: dict[str, object] = {}
+    monkeypatch.setattr(downloader_module.shutil, "which", lambda _: None)
+
+    class FakeYoutubeDL:
+        def __init__(self, options: dict[str, object]) -> None:
+            captured.update(options)
+
+        def __enter__(self) -> "FakeYoutubeDL":
+            return self
+
+        def __exit__(self, *args: object) -> None:
+            pass
+
+        def extract_info(self, url: str, download: bool) -> dict[str, str]:
+            assert url == "https://www.youtube.com/playlist?list=abc"
+            (tmp_path / "source.mp3").write_bytes(b"ID3safe-audio")
+            return {"title": "Track", "uploader": "Creator"}
+
+    monkeypatch.setattr(downloader_module, "YoutubeDL", FakeYoutubeDL)
+    result = YtDlpClient().download(
+        "https://www.youtube.com/playlist?list=abc",
+        tmp_path,
+        1024 * 1024,
+        ImportOptions(
+            media_type="audio",
+            audio_bitrate_kbps=320,
+            start_seconds=12.5,
+            end_seconds=34,
+            playlist_item=3,
+        ),
+    )
+
+    assert result.content_type == "audio/mpeg"
+    assert result.filename == "imported-audio.mp3"
+    assert captured["format"] == "bestaudio/best"
+    assert captured["noplaylist"] is False
+    assert captured["playlist_items"] == "3"
+    assert captured["force_keyframes_at_cuts"] is True
+    assert list(captured["download_ranges"]({}, None)) == [  # type: ignore[operator]
+        {"start_time": 12.5, "end_time": 34}
+    ]
+    assert captured["postprocessors"] == [
+        {
+            "key": "FFmpegExtractAudio",
+            "preferredcodec": "mp3",
+            "preferredquality": "320",
+        }
+    ]
 
 
 def test_non_youtube_import_does_not_force_youtube_runtime(

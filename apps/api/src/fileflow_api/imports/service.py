@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session, sessionmaker
 
 from fileflow_api.config import Settings
 from fileflow_api.imports.contracts import ImportCreate
-from fileflow_api.imports.downloader import ImportClient, ImportDownloadError
+from fileflow_api.imports.downloader import ImportClient, ImportDownloadError, ImportOptions
 from fileflow_api.imports.models import ImportStatus, SocialImport
 from fileflow_api.imports.url_policy import validate_social_url
 from fileflow_api.jobs.queue import TaskQueue
@@ -43,6 +43,12 @@ class SocialImportService:
             title=None,
             creator=None,
             thumbnail_url=None,
+            media_type=request.media_type,
+            video_quality=request.video_quality,
+            audio_bitrate_kbps=request.audio_bitrate_kbps,
+            start_seconds=request.start_seconds,
+            end_seconds=request.end_seconds,
+            playlist_item=request.playlist_item,
             error_code=None,
             created_at=datetime.now(UTC),
             finished_at=None,
@@ -80,18 +86,28 @@ class SocialImportService:
         try:
             with TemporaryDirectory(prefix=f"fileflow-import-{item.id}-") as directory:
                 media = self._client.download(
-                    item.source_url, Path(directory), self._settings.max_upload_bytes
+                    item.source_url,
+                    Path(directory),
+                    self._settings.max_upload_bytes,
+                    ImportOptions(
+                        media_type=item.media_type,
+                        video_quality=item.video_quality,
+                        audio_bitrate_kbps=item.audio_bitrate_kbps,
+                        start_seconds=item.start_seconds,
+                        end_seconds=item.end_seconds,
+                        playlist_item=item.playlist_item,
+                    ),
                 )
                 size = media.path.stat().st_size
-                self._storage.upload_file(key, media.path, "video/mp4")
+                self._storage.upload_file(key, media.path, media.content_type)
                 uploaded = True
             now = datetime.now(UTC)
             upload = Upload(
                 id=uuid4().hex,
                 object_key=key,
                 multipart_id=f"social-import:{item.id}",
-                filename="imported-video.mp4",
-                content_type="video/mp4",
+                filename=media.filename,
+                content_type=media.content_type,
                 size_bytes=size,
                 part_size_bytes=size,
                 part_count=1,

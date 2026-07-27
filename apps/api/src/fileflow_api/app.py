@@ -76,7 +76,16 @@ def create_app(
     app.state.safety_service = current_safety
     app.state.job_service = job_service or JobService(sessions, current_safety, queue, current)
     app.state.import_service = import_service or SocialImportService(
-        sessions, storage, queue, YtDlpClient(), current
+        sessions,
+        storage,
+        queue,
+        YtDlpClient(
+            current.social_import_cookies_file,
+            current.social_import_pot_provider_url,
+            current.social_import_proxy_url,
+            current.social_import_allow_remote_ejs,
+        ),
+        current,
     )
     app.state.account_service = account_service or AccountService(sessions, current)
     app.state.analytics_service = analytics_service or AnalyticsService(sessions)

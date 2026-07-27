@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useRef, useState } from 'react';
-import { Badge, Button, Select } from '@fileflow/ui';
+import { Badge, Button, Input, Select } from '@fileflow/ui';
 import Image from 'next/image';
 import {
   API_URL,
@@ -9,6 +9,7 @@ import {
   waitForCleanUpload,
   waitForSocialImport,
   type SocialImport,
+  type SocialImportOptions,
 } from '../cloud-api';
 import { CloudJobTool } from './cloud-job-tool';
 import type { FileFlowLanguage } from '../use-fileflow-language';
@@ -16,75 +17,104 @@ import type { FileFlowLanguage } from '../use-fileflow-language';
 const socialCopy = {
   en: {
     stages: ['Queueing import', 'Importing from'],
-    cancelled: 'Import cancelled locally. The server task may finish in the background.',
+    cancelled: 'Waiting was cancelled. The server task may finish in the background.',
     failed: 'Import failed.',
-    start: 'Start cloud import',
+    invalidRange: 'End time must be greater than start time.',
+    start: 'Import media',
     importing: 'IMPORTING',
     stop: 'Stop waiting',
     thumbnail: 'Imported media thumbnail',
     imported: 'IMPORTED',
-    video: 'Imported video',
+    fallbackTitle: ['Imported video', 'Imported audio'],
     next: 'What next?',
-    download: 'Download original video',
-    operations: ['Compress video', 'Convert to MP4', 'Resize video', 'Extract audio'],
+    download: ['Download video', 'Download MP3'],
+    mediaType: 'Import as',
+    mediaTypes: ['Video', 'Audio (MP3)'],
+    videoQuality: 'Video quality',
+    qualities: ['Best available', 'Up to 1080p', 'Up to 720p', 'Up to 480p'],
+    audioQuality: 'MP3 quality',
+    startTime: 'Start (seconds, optional)',
+    endTime: 'End (seconds, optional)',
+    playlistItem: 'Playlist item (optional)',
+    playlistHint: 'Imports one numbered item so every job still has one safe result.',
+    videoOperations: ['Compress video', 'Convert to MP4', 'Resize video', 'Extract audio'],
+    audioOperations: ['Optimize audio', 'Convert to MP3', 'Convert to WAV', 'Trim audio'],
     errors: {
       platform_auth_required:
-        'The platform requested verification. Upload the video file directly or try again later.',
+        'The platform requested verification. Upload the file directly or try again later.',
       platform_auth_unavailable: 'Platform authentication is not configured on this server.',
-      platform_ip_blocked:
-        'The platform blocked this server address. Please try again later.',
-      media_unavailable: 'This video is unavailable or private.',
-      supported_format_unavailable: 'No supported video format is available.',
+      platform_ip_blocked: 'The platform blocked this server address. Please try again later.',
+      media_unavailable: 'This media is unavailable or private.',
+      supported_format_unavailable: 'No supported media format is available.',
       import_failed: 'The platform could not import this link.',
     },
   },
   ru: {
-    stages: ['Постановка импорта в очередь', 'Импорт из'],
-    cancelled: 'Ожидание импорта отменено. Серверная задача может завершиться в фоне.',
+    stages: ['Добавляем импорт в очередь', 'Импортируем из'],
+    cancelled: 'Ожидание отменено. Серверная задача может завершиться в фоне.',
     failed: 'Не удалось импортировать медиа.',
-    start: 'Начать облачный импорт',
+    invalidRange: 'Конечное время должно быть больше начального.',
+    start: 'Импортировать медиа',
     importing: 'ИМПОРТ',
     stop: 'Прекратить ожидание',
     thumbnail: 'Превью импортированного медиа',
     imported: 'ИМПОРТИРОВАНО',
-    video: 'Импортированное видео',
+    fallbackTitle: ['Импортированное видео', 'Импортированное аудио'],
     next: 'Что сделать дальше?',
-    download: 'Скачать исходное видео',
-    operations: ['Сжать видео', 'Преобразовать в MP4', 'Изменить размер', 'Извлечь аудио'],
+    download: ['Скачать видео', 'Скачать MP3'],
+    mediaType: 'Импортировать как',
+    mediaTypes: ['Видео', 'Аудио (MP3)'],
+    videoQuality: 'Качество видео',
+    qualities: ['Лучшее доступное', 'До 1080p', 'До 720p', 'До 480p'],
+    audioQuality: 'Качество MP3',
+    startTime: 'Начало (секунды, необязательно)',
+    endTime: 'Конец (секунды, необязательно)',
+    playlistItem: 'Номер в плейлисте (необязательно)',
+    playlistHint: 'Импортируется один выбранный элемент — один безопасный результат на задачу.',
+    videoOperations: ['Сжать видео', 'Преобразовать в MP4', 'Изменить размер', 'Извлечь аудио'],
+    audioOperations: ['Оптимизировать аудио', 'Преобразовать в MP3', 'Преобразовать в WAV', 'Обрезать аудио'],
     errors: {
       platform_auth_required:
-        'Платформа запросила подтверждение. Загрузите видеофайл напрямую или повторите попытку позже.',
+        'Платформа запросила подтверждение. Загрузите файл напрямую или повторите позже.',
       platform_auth_unavailable: 'На сервере не настроена авторизация для этой платформы.',
-      platform_ip_blocked:
-        'Платформа заблокировала адрес этого сервера. Повторите попытку позже.',
-      media_unavailable: 'Это видео недоступно или является приватным.',
-      supported_format_unavailable: 'Не найден поддерживаемый формат видео.',
-      import_failed: 'Не удалось импортировать видео по этой ссылке.',
+      platform_ip_blocked: 'Платформа заблокировала адрес сервера. Повторите попытку позже.',
+      media_unavailable: 'Это медиа недоступно или является приватным.',
+      supported_format_unavailable: 'Поддерживаемый формат медиа не найден.',
+      import_failed: 'Не удалось импортировать медиа по этой ссылке.',
     },
   },
   es: {
     stages: ['Añadiendo la importación a la cola', 'Importando desde'],
-    cancelled: 'La espera se canceló. La tarea del servidor puede terminar en segundo plano.',
-    failed: 'La importación ha fallado.',
-    start: 'Iniciar importación en la nube',
+    cancelled: 'La espera se canceló. La tarea puede terminar en segundo plano.',
+    failed: 'La importación falló.',
+    invalidRange: 'El tiempo final debe ser mayor que el inicial.',
+    start: 'Importar contenido',
     importing: 'IMPORTANDO',
     stop: 'Dejar de esperar',
-    thumbnail: 'Miniatura del medio importado',
+    thumbnail: 'Miniatura del contenido importado',
     imported: 'IMPORTADO',
-    video: 'Vídeo importado',
+    fallbackTitle: ['Vídeo importado', 'Audio importado'],
     next: '¿Qué hacer después?',
-    download: 'Descargar vídeo original',
-    operations: ['Comprimir vídeo', 'Convertir a MP4', 'Redimensionar vídeo', 'Extraer audio'],
+    download: ['Descargar vídeo', 'Descargar MP3'],
+    mediaType: 'Importar como',
+    mediaTypes: ['Vídeo', 'Audio (MP3)'],
+    videoQuality: 'Calidad de vídeo',
+    qualities: ['Mejor disponible', 'Hasta 1080p', 'Hasta 720p', 'Hasta 480p'],
+    audioQuality: 'Calidad MP3',
+    startTime: 'Inicio (segundos, opcional)',
+    endTime: 'Fin (segundos, opcional)',
+    playlistItem: 'Elemento de playlist (opcional)',
+    playlistHint: 'Importa un elemento numerado para mantener un resultado seguro por tarea.',
+    videoOperations: ['Comprimir vídeo', 'Convertir a MP4', 'Redimensionar vídeo', 'Extraer audio'],
+    audioOperations: ['Optimizar audio', 'Convertir a MP3', 'Convertir a WAV', 'Recortar audio'],
     errors: {
       platform_auth_required:
-        'La plataforma solicitó una verificación. Sube el archivo de vídeo directamente o inténtalo más tarde.',
-      platform_auth_unavailable:
-        'La autenticación para esta plataforma no está configurada en el servidor.',
-      platform_ip_blocked:
-        'La plataforma bloqueó la dirección de este servidor. Inténtalo de nuevo más tarde.',
-      media_unavailable: 'Este vídeo no está disponible o es privado.',
-      supported_format_unavailable: 'No hay ningún formato de vídeo compatible disponible.',
-      import_failed: 'No se pudo importar el vídeo desde este enlace.',
+        'La plataforma solicitó verificación. Sube el archivo directamente o inténtalo más tarde.',
+      platform_auth_unavailable: 'La autenticación no está configurada en este servidor.',
+      platform_ip_blocked: 'La plataforma bloqueó la dirección del servidor. Inténtalo más tarde.',
+      media_unavailable: 'Este contenido no está disponible o es privado.',
+      supported_format_unavailable: 'No hay un formato compatible disponible.',
+      import_failed: 'No se pudo importar el contenido desde este enlace.',
     },
   },
 } as const;
@@ -97,6 +127,12 @@ export function SocialImportTool({
   language?: FileFlowLanguage;
 }) {
   const text = socialCopy[language];
+  const [mediaType, setMediaType] = useState<'video' | 'audio'>('video');
+  const [videoQuality, setVideoQuality] = useState<'best' | '1080' | '720' | '480'>('best');
+  const [audioBitrate, setAudioBitrate] = useState<128 | 192 | 320>(192);
+  const [startSeconds, setStartSeconds] = useState('');
+  const [endSeconds, setEndSeconds] = useState('');
+  const [playlistItem, setPlaylistItem] = useState('');
   const [operation, setOperation] = useState('compress-video');
   const [state, setState] = useState<
     | { status: 'idle' }
@@ -107,11 +143,26 @@ export function SocialImportTool({
   const aborter = useRef<AbortController | null>(null);
 
   async function start() {
+    const startValue = startSeconds === '' ? undefined : Number(startSeconds);
+    const endValue = endSeconds === '' ? undefined : Number(endSeconds);
+    if (startValue !== undefined && endValue !== undefined && endValue <= startValue) {
+      setState({ status: 'error', message: text.invalidRange });
+      return;
+    }
+    const options: SocialImportOptions = {
+      media_type: mediaType,
+      video_quality: videoQuality,
+      audio_bitrate_kbps: audioBitrate,
+      ...(startValue === undefined ? {} : { start_seconds: startValue }),
+      ...(endValue === undefined ? {} : { end_seconds: endValue }),
+      ...(playlistItem === '' ? {} : { playlist_item: Number(playlistItem) }),
+    };
+    setOperation(mediaType === 'audio' ? 'optimize-audio' : 'compress-video');
     const controller = new AbortController();
     aborter.current = controller;
     setState({ status: 'running', stage: text.stages[0] });
     try {
-      const created = await createSocialImport(url, controller.signal);
+      const created = await createSocialImport(url, options, controller.signal);
       setState({ status: 'running', stage: `${text.stages[1]} ${created.provider}` });
       const completed = await waitForSocialImport(created.id, controller.signal);
       if (completed.upload_id) {
@@ -125,7 +176,7 @@ export function SocialImportTool({
           error instanceof DOMException && error.name === 'AbortError'
             ? text.cancelled
             : error instanceof Error
-              ? (text.errors[error.message as keyof typeof text.errors] ?? text.failed)
+              ? (text.errors[error.message as keyof typeof text.errors] ?? error.message ?? text.failed)
               : text.failed,
       });
     } finally {
@@ -133,9 +184,97 @@ export function SocialImportTool({
     }
   }
 
+  const editable = state.status === 'idle' || state.status === 'error';
+  const completedType = state.status === 'completed' ? state.item.media_type : mediaType;
+  const operations =
+    completedType === 'audio'
+      ? [
+          ['optimize-audio', text.audioOperations[0]],
+          ['audio-to-mp3', text.audioOperations[1]],
+          ['audio-to-wav', text.audioOperations[2]],
+          ['trim-audio', text.audioOperations[3]],
+        ]
+      : [
+          ['compress-video', text.videoOperations[0]],
+          ['video-to-mp4', text.videoOperations[1]],
+          ['resize-video', text.videoOperations[2]],
+          ['extract-audio', text.videoOperations[3]],
+        ];
+
   return (
     <div className="social-import-tool">
-      {state.status === 'idle' || state.status === 'error' ? (
+      {editable ? (
+        <div className="cloud-controls">
+          <Select
+            id="social-media-type"
+            label={text.mediaType}
+            value={mediaType}
+            onChange={(event) => setMediaType(event.target.value as 'video' | 'audio')}
+          >
+            <option value="video">{text.mediaTypes[0]}</option>
+            <option value="audio">{text.mediaTypes[1]}</option>
+          </Select>
+          {mediaType === 'video' ? (
+            <Select
+              id="social-video-quality"
+              label={text.videoQuality}
+              value={videoQuality}
+              onChange={(event) =>
+                setVideoQuality(event.target.value as 'best' | '1080' | '720' | '480')
+              }
+            >
+              {(['best', '1080', '720', '480'] as const).map((value, index) => (
+                <option key={value} value={value}>
+                  {text.qualities[index]}
+                </option>
+              ))}
+            </Select>
+          ) : (
+            <Select
+              id="social-audio-quality"
+              label={text.audioQuality}
+              value={String(audioBitrate)}
+              onChange={(event) => setAudioBitrate(Number(event.target.value) as 128 | 192 | 320)}
+            >
+              <option value="320">320 kbps</option>
+              <option value="192">192 kbps</option>
+              <option value="128">128 kbps</option>
+            </Select>
+          )}
+          <Input
+            id="social-start"
+            label={text.startTime}
+            type="number"
+            min="0"
+            max="86400"
+            step="0.1"
+            value={startSeconds}
+            onChange={(event) => setStartSeconds(event.target.value)}
+          />
+          <Input
+            id="social-end"
+            label={text.endTime}
+            type="number"
+            min="0.1"
+            max="86400"
+            step="0.1"
+            value={endSeconds}
+            onChange={(event) => setEndSeconds(event.target.value)}
+          />
+          <Input
+            id="social-playlist-item"
+            label={text.playlistItem}
+            description={text.playlistHint}
+            type="number"
+            min="1"
+            max="500"
+            step="1"
+            value={playlistItem}
+            onChange={(event) => setPlaylistItem(event.target.value)}
+          />
+        </div>
+      ) : null}
+      {editable ? (
         <Button type="button" onClick={() => void start()}>
           {text.start}
         </Button>
@@ -168,7 +307,10 @@ export function SocialImportTool({
             ) : null}
             <div>
               <Badge variant="success">{text.imported}</Badge>
-              <strong>{state.item.title ?? text.video}</strong>
+              <strong>
+                {state.item.title ??
+                  text.fallbackTitle[state.item.media_type === 'audio' ? 1 : 0]}
+              </strong>
               <span>{state.item.creator ?? state.item.provider}</span>
             </div>
           </div>
@@ -178,13 +320,14 @@ export function SocialImportTool({
             value={operation}
             onChange={(event) => setOperation(event.target.value)}
           >
-            <option value="compress-video">{text.operations[0]}</option>
-            <option value="video-to-mp4">{text.operations[1]}</option>
-            <option value="resize-video">{text.operations[2]}</option>
-            <option value="extract-audio">{text.operations[3]}</option>
+            {operations.map(([value, label]) => (
+              <option key={value} value={value}>
+                {label}
+              </option>
+            ))}
           </Select>
           <a className="image-download" href={`${API_URL}/imports/${state.item.id}/result`}>
-            {text.download}
+            {text.download[state.item.media_type === 'audio' ? 1 : 0]}
           </a>
           <CloudJobTool
             operationId={operation}

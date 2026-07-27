@@ -65,6 +65,7 @@ imports = SocialImportService(
         settings.social_import_cookies_file,
         settings.social_import_pot_provider_url,
         settings.social_import_proxy_url,
+        settings.social_import_allow_remote_ejs,
     ),
     settings,
 )

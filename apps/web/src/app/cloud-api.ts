@@ -34,7 +34,22 @@ export type SocialImport = {
   title: string | null;
   creator: string | null;
   thumbnail_url: string | null;
+  media_type: 'video' | 'audio';
+  video_quality: 'best' | '1080' | '720' | '480';
+  audio_bitrate_kbps: 128 | 192 | 320;
+  start_seconds: number | null;
+  end_seconds: number | null;
+  playlist_item: number | null;
   error_code: string | null;
+};
+
+export type SocialImportOptions = {
+  media_type: 'video' | 'audio';
+  video_quality: 'best' | '1080' | '720' | '480';
+  audio_bitrate_kbps: 128 | 192 | 320;
+  start_seconds?: number;
+  end_seconds?: number;
+  playlist_item?: number;
 };
 
 function contentType(file: File) {
@@ -189,10 +204,14 @@ export async function downloadJobResult(jobId: string, token: string) {
   return { blob: await response.blob(), filename };
 }
 
-export function createSocialImport(url: string, signal?: AbortSignal) {
+export function createSocialImport(
+  url: string,
+  options: SocialImportOptions,
+  signal?: AbortSignal,
+) {
   return apiJson<SocialImport>('/imports', {
     method: 'POST',
-    body: JSON.stringify({ url }),
+    body: JSON.stringify({ url, ...options }),
     signal,
   });
 }

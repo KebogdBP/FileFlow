@@ -65,6 +65,7 @@ class Settings(BaseSettings):
     social_import_cookies_file: str | None = None
     social_import_pot_provider_url: str | None = None
     social_import_proxy_url: str | None = None
+    social_import_allow_remote_ejs: bool = True
     allowed_origins: list[AnyHttpUrl] = Field(
         default_factory=lambda: [AnyHttpUrl("http://localhost:3000")]
     )
