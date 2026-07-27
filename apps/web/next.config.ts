@@ -1,8 +1,14 @@
 import type { NextConfig } from 'next';
+
+const isStaticExport = process.env.FILEFLOW_STATIC_EXPORT === '1';
+
 const nextConfig: NextConfig = {
   reactStrictMode: true,
-  output: process.env.FILEFLOW_STATIC_EXPORT === '1' ? 'export' : undefined,
-  trailingSlash: process.env.FILEFLOW_STATIC_EXPORT === '1',
+  output: isStaticExport ? 'export' : undefined,
+  trailingSlash: isStaticExport,
+  images: {
+    unoptimized: isStaticExport,
+  },
   transpilePackages: [
     '@fileflow/ui',
     '@fileflow/contracts',
