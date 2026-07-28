@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 
 import pytest
@@ -441,6 +442,48 @@ def test_youtube_retries_with_public_tv_client(
 
     assert len(attempts) == 2
     assert attempts[1]["extractor_args"] == {"youtube": {"player_client": ["tv"]}}
+
+
+def test_cookie_secret_is_copied_to_a_private_writable_job_file(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    secret = tmp_path.parent / "read-only-cookies.txt"
+    secret.write_text("# Netscape HTTP Cookie File\n", encoding="utf-8")
+    secret.chmod(0o400)
+    attempts: list[dict[str, object]] = []
+
+    class FakeYoutubeDL:
+        def __init__(self, options: dict[str, object]) -> None:
+            attempts.append(options)
+
+        def __enter__(self) -> "FakeYoutubeDL":
+            return self
+
+        def __exit__(self, *args: object) -> None:
+            pass
+
+        def extract_info(self, url: str, download: bool) -> dict[str, str]:
+            if len(attempts) == 1:
+                (tmp_path / "source.part").write_bytes(b"partial")
+                raise downloader_module.DownloadError("primary client failed")
+            cookiefile = Path(str(attempts[-1]["cookiefile"]))
+            assert cookiefile.is_file()
+            assert cookiefile.name == downloader_module.WORKING_COOKIES_FILENAME
+            (tmp_path / "source.mp4").write_bytes(b"\x00\x00\x00\x18ftypisom-public-video")
+            return {"title": "Video"}
+
+    monkeypatch.setattr(downloader_module, "YoutubeDL", FakeYoutubeDL)
+    YtDlpClient(cookies_file=str(secret)).download(
+        "https://www.facebook.com/reel/123",
+        tmp_path,
+        1024 * 1024,
+    )
+
+    working = tmp_path / downloader_module.WORKING_COOKIES_FILENAME
+    assert working.read_text(encoding="utf-8") == secret.read_text(encoding="utf-8")
+    if os.name != "nt":
+        assert working.stat().st_mode & 0o777 == 0o600
+        assert secret.stat().st_mode & 0o777 == 0o400
 
 
 def test_downloader_passes_configured_egress_proxy(

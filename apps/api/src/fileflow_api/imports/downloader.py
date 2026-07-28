@@ -16,6 +16,8 @@ from yt_dlp import YoutubeDL
 from yt_dlp.networking.impersonate import ImpersonateTarget
 from yt_dlp.utils import DownloadError, download_range_func
 
+WORKING_COOKIES_FILENAME = ".platform-cookies.txt"
+
 
 @dataclass(frozen=True)
 class ImportOptions:
@@ -122,11 +124,7 @@ class YtDlpClient:
             "postprocessors": postprocessors,
             "outtmpl": str(
                 workspace
-                / (
-                    "source-%(playlist_index)03d.%(ext)s"
-                    if is_playlist
-                    else "source.%(ext)s"
-                )
+                / ("source-%(playlist_index)03d.%(ext)s" if is_playlist else "source.%(ext)s")
             ),
             "max_filesize": max_bytes,
             "socket_timeout": 20,
@@ -169,7 +167,13 @@ class YtDlpClient:
             cookie_path = Path(self._cookies_file)
             if not cookie_path.is_file():
                 raise ImportDownloadError("platform_auth_unavailable")
-            options["cookiefile"] = str(cookie_path)
+            # yt-dlp persists cookie updates when YoutubeDL closes. Production
+            # secrets stay read-only, so give each import a private disposable
+            # copy rather than allowing the mounted credential to be modified.
+            working_cookies = workspace / WORKING_COOKIES_FILENAME
+            shutil.copyfile(cookie_path, working_cookies)
+            working_cookies.chmod(0o600)
+            options["cookiefile"] = str(working_cookies)
         if self._proxy_url is not None:
             options["proxy"] = self._proxy_url
         attempts = [options]
@@ -293,7 +297,7 @@ def _metadata_text(raw: dict[str, Any], name: str, limit: int) -> str | None:
 
 def _clear_download_workspace(workspace: Path) -> None:
     for path in workspace.iterdir():
-        if path.is_file() and not path.is_symlink():
+        if path.name != WORKING_COOKIES_FILENAME and path.is_file() and not path.is_symlink():
             path.unlink()
 
 
