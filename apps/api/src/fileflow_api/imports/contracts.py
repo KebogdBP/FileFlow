@@ -14,9 +14,15 @@ class ImportCreate(BaseModel):
     start_seconds: float | None = Field(default=None, ge=0, le=86_400)
     end_seconds: float | None = Field(default=None, gt=0, le=86_400)
     playlist_item: int | None = Field(default=None, ge=1, le=500)
+    playlist_count: int | None = Field(default=None, ge=0, le=500)
+    generic_audio: bool = False
 
     @model_validator(mode="after")
     def validate_time_range(self) -> "ImportCreate":
+        if self.playlist_item is not None and self.playlist_count is not None:
+            raise ValueError("playlist_item and playlist_count cannot be combined")
+        if self.generic_audio and self.media_type != "audio":
+            raise ValueError("generic_audio requires audio media_type")
         if (
             self.start_seconds is not None
             and self.end_seconds is not None
@@ -40,6 +46,8 @@ class ImportResponse(BaseModel):
     start_seconds: float | None
     end_seconds: float | None
     playlist_item: int | None
+    playlist_count: int | None
+    generic_audio: bool
     error_code: str | None
     created_at: datetime
     finished_at: datetime | None

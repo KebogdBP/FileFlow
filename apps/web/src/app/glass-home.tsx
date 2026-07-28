@@ -39,6 +39,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { operations } from '@fileflow/operation-registry';
 import { useFileFlowLanguage, type FileFlowLanguage } from './use-fileflow-language';
 import { FileUrlInput } from './workspace/file-url-input';
+import { VideoDownloader } from './video-downloader';
 
 type Language = FileFlowLanguage;
 type OperationId = (typeof operations)[number]['id'];
@@ -844,13 +845,7 @@ export function GlassHome() {
                 {t.eyebrow}
               </span>
               <h1 className="ff-hero-brand" id="home-title">
-                <Image
-                  src="/brand/fileflow-mark.png"
-                  alt=""
-                  width={132}
-                  height={116}
-                  priority
-                />
+                <Image src="/brand/fileflow-mark.png" alt="" width={132} height={116} priority />
                 <span>FileFlow</span>
               </h1>
               <p>{t.lead}</p>
@@ -924,6 +919,8 @@ export function GlassHome() {
               ))}
             </div>
           </section>
+
+          <VideoDownloader language={language} />
 
           <section className="ff-status-grid" id="privacy">
             <div className="ff-privacy-card glass-panel">
@@ -1083,9 +1080,7 @@ function ToolCard({
         </div>
         <p>{translated[1]}</p>
         {!tool.planned && tool.executionMode === 'local' ? (
-          <small className="ff-tool-mode">
-            {localizedCopy[language].localMode}
-          </small>
+          <small className="ff-tool-mode">{localizedCopy[language].localMode}</small>
         ) : null}
       </div>
       {tool.planned ? null : (

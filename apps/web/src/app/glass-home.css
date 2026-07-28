@@ -604,13 +604,178 @@
 
 .ff-tools-section,
 .ff-advanced-section,
+.ff-downloader-section,
 .ff-status-grid {
   scroll-margin-top: 24px;
 }
 
 .ff-tools-section,
-.ff-advanced-section {
+.ff-advanced-section,
+.ff-downloader-section {
   padding: 42px 0 20px;
+}
+
+.ff-downloader-card {
+  position: relative;
+  padding: clamp(18px, 3vw, 32px);
+  border-radius: 24px;
+  overflow: visible;
+}
+
+.ff-link-window {
+  min-height: 104px;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  border: 1.5px dashed color-mix(in srgb, var(--home-blue) 36%, var(--glass-line));
+  border-radius: 19px;
+  background: color-mix(in srgb, var(--glass-bg-strong) 78%, transparent);
+  transition:
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    background 180ms ease;
+}
+
+.ff-link-window.is-ready {
+  border-style: solid;
+  border-color: color-mix(in srgb, var(--home-blue) 58%, var(--glass-line));
+  background: color-mix(in srgb, var(--home-blue) 6%, var(--glass-bg-strong));
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--home-blue) 8%, transparent);
+}
+
+.ff-link-window input {
+  width: min(720px, 100%);
+  min-height: 56px;
+  padding: 0 20px;
+  border: 1px solid var(--glass-line);
+  border-radius: 15px;
+  outline: 0;
+  color: var(--home-text);
+  background: color-mix(in srgb, var(--glass-bg-strong) 88%, transparent);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.65);
+  font: inherit;
+  font-size: 15px;
+}
+
+.ff-link-window input:focus {
+  border-color: var(--home-blue);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--home-blue) 12%, transparent);
+}
+
+.ff-downloader-actions {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 13px;
+  margin-top: 18px;
+}
+
+.ff-download-action {
+  position: relative;
+}
+
+.ff-download-action > button {
+  width: 100%;
+  aspect-ratio: 1;
+  min-height: 112px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 14px 8px;
+  border: 1px solid var(--glass-line);
+  border-radius: 18px;
+  color: var(--home-text);
+  background: color-mix(in srgb, var(--glass-bg-strong) 86%, transparent);
+  box-shadow: var(--glass-shadow);
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  transition:
+    transform 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.ff-download-action > button:hover,
+.ff-download-action > button.is-active {
+  transform: translateY(-3px);
+  border-color: color-mix(in srgb, var(--home-blue) 52%, var(--glass-line));
+  color: var(--home-blue);
+  box-shadow:
+    var(--glass-shadow),
+    0 0 0 4px color-mix(in srgb, var(--home-blue) 9%, transparent);
+}
+
+.ff-download-action > button:disabled {
+  cursor: wait;
+  opacity: 0.62;
+}
+
+.ff-download-options {
+  position: absolute;
+  z-index: 12;
+  top: calc(100% + 9px);
+  left: 50%;
+  width: max-content;
+  min-width: 178px;
+  padding: 12px;
+  border-radius: 15px;
+  transform: translateX(-50%);
+  box-shadow: 0 22px 48px rgba(37, 43, 67, 0.2);
+}
+
+.ff-download-options strong {
+  display: block;
+  margin-bottom: 9px;
+  color: var(--home-muted);
+  font-size: 11px;
+}
+
+.ff-download-options > div {
+  display: grid;
+  gap: 5px;
+}
+
+.ff-download-options button {
+  min-height: 34px;
+  border: 0;
+  border-radius: 9px;
+  color: var(--home-text);
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 760;
+  text-align: left;
+}
+
+.ff-download-options button:hover {
+  color: var(--home-blue);
+  background: color-mix(in srgb, var(--home-blue) 9%, transparent);
+}
+
+.ff-downloader-message {
+  margin: 15px 0 0;
+  color: var(--home-muted);
+  font-size: 12px;
+  font-weight: 720;
+  text-align: center;
+}
+
+.ff-downloader-message.is-error {
+  color: #df3f57;
+}
+
+.ff-spinner {
+  animation: ff-spin 0.8s linear infinite;
+}
+
+@keyframes ff-spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .ff-section-heading {
@@ -1191,6 +1356,10 @@
   .ff-status-grid {
     grid-template-columns: 1fr;
   }
+
+  .ff-downloader-actions {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
   .ff-link-card {
     min-height: auto;
   }
@@ -1238,6 +1407,19 @@
   }
   .ff-advanced-grid {
     grid-template-columns: 1fr;
+  }
+
+  .ff-downloader-actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .ff-download-action:last-child {
+    grid-column: 1 / -1;
+  }
+
+  .ff-download-action > button {
+    aspect-ratio: auto;
+    min-height: 96px;
   }
   .ff-tool-rail-actions {
     width: 100%;

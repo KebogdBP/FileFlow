@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Protocol
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
+from zipfile import ZIP_DEFLATED, ZipFile
 
 # The reference downloader needs this escape hatch when an installed third-party
 # plugin intercepts otherwise valid requests. It is opt-in because FileFlow's
@@ -23,6 +24,8 @@ class ImportOptions:
     start_seconds: float | None = None
     end_seconds: float | None = None
     playlist_item: int | None = None
+    playlist_count: int | None = None
+    generic_audio: bool = False
 
 
 @dataclass(frozen=True)
@@ -70,7 +73,12 @@ class YtDlpClient:
         import_options: ImportOptions | None = None,
     ) -> ImportedMedia:
         selected = import_options or ImportOptions()
-        source_url = url if selected.playlist_item is not None else _single_video_url(url)
+        is_playlist = selected.playlist_count is not None
+        source_url = (
+            url
+            if selected.playlist_item is not None or is_playlist or selected.generic_audio
+            else _single_video_url(url)
+        )
         hostname = (urlsplit(source_url).hostname or "").lower()
         is_youtube = (
             hostname == "youtu.be" or hostname == "youtube.com" or hostname.endswith(".youtube.com")
@@ -97,7 +105,14 @@ class YtDlpClient:
             "format": format_spec,
             "merge_output_format": "mp4",
             "postprocessors": postprocessors,
-            "outtmpl": str(workspace / "source.%(ext)s"),
+            "outtmpl": str(
+                workspace
+                / (
+                    "source-%(playlist_index)03d.%(ext)s"
+                    if is_playlist
+                    else "source.%(ext)s"
+                )
+            ),
             "max_filesize": max_bytes,
             "socket_timeout": 20,
             "retries": 5,
@@ -108,10 +123,12 @@ class YtDlpClient:
             "no_warnings": True,
             "restrictfilenames": True,
             "overwrites": False,
-            "noplaylist": selected.playlist_item is None,
+            "noplaylist": selected.playlist_item is None and not is_playlist,
         }
         if selected.playlist_item is not None:
             options["playlist_items"] = str(selected.playlist_item)
+        elif is_playlist and selected.playlist_count:
+            options["playlist_items"] = f"1:{selected.playlist_count}"
         if selected.start_seconds is not None or selected.end_seconds is not None:
             options["download_ranges"] = download_range_func(
                 None,
@@ -169,9 +186,29 @@ class YtDlpClient:
             raise ImportDownloadError(_download_error_code(str(last_error))) from last_error
         files = [path for path in workspace.iterdir() if path.is_file() and not path.is_symlink()]
         expected_suffix = ".mp3" if selected.media_type == "audio" else ".mp4"
-        if len(files) != 1 or files[0].suffix.lower() != expected_suffix:
+        media_files = sorted(path for path in files if path.suffix.lower() == expected_suffix)
+        if not media_files:
+            raise ValueError(f"import did not produce a {expected_suffix} artifact")
+        if is_playlist:
+            archive = workspace / "playlist.zip"
+            with ZipFile(archive, "w", ZIP_DEFLATED) as bundle:
+                for index, path in enumerate(media_files, 1):
+                    bundle.write(path, f"{index:03d}-{path.name}")
+            for path in media_files:
+                path.unlink()
+            if archive.stat().st_size <= 0 or archive.stat().st_size > max_bytes:
+                raise ValueError("imported playlist violates size limits")
+            return ImportedMedia(
+                archive,
+                "application/zip",
+                "imported-playlist.zip",
+                _metadata_text(raw, "title", 500),
+                _metadata_text(raw, "uploader", 255),
+                _metadata_text(raw, "thumbnail", 2048),
+            )
+        if len(media_files) != 1:
             raise ValueError(f"import did not produce one {expected_suffix} artifact")
-        media = files[0]
+        media = media_files[0]
         if media.stat().st_size <= 0 or media.stat().st_size > max_bytes:
             raise ValueError("imported media violates size limits")
         with media.open("rb") as downloaded:
@@ -187,17 +224,13 @@ class YtDlpClient:
             content_type = "video/mp4"
             filename = "imported-video.mp4"
 
-        def text(name: str, limit: int) -> str | None:
-            value = raw.get(name)
-            return str(value)[:limit] if value else None
-
         return ImportedMedia(
             media,
             content_type,
             filename,
-            text("title", 500),
-            text("uploader", 255),
-            text("thumbnail", 2048),
+            _metadata_text(raw, "title", 500),
+            _metadata_text(raw, "uploader", 255),
+            _metadata_text(raw, "thumbnail", 2048),
         )
 
 
@@ -229,6 +262,11 @@ def _video_format(quality: str) -> str:
 
 def _is_mp3_header(header: bytes) -> bool:
     return header.startswith(b"ID3") or header.startswith((b"\xff\xfb", b"\xff\xf3", b"\xff\xf2"))
+
+
+def _metadata_text(raw: dict[str, Any], name: str, limit: int) -> str | None:
+    value = raw.get(name)
+    return str(value)[:limit] if value else None
 
 
 def _clear_download_workspace(workspace: Path) -> None:

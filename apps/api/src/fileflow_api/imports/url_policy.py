@@ -1,3 +1,4 @@
+import ipaddress
 from urllib.parse import urlsplit, urlunsplit
 
 from fastapi import HTTPException
@@ -29,3 +30,26 @@ def validate_social_url(value: str) -> tuple[str, str]:
         raise HTTPException(status_code=422, detail="Social platform URL is not supported.")
     canonical = urlunsplit(("https", host, parsed.path, parsed.query, ""))
     return provider, canonical
+
+
+def validate_public_url(value: str) -> tuple[str, str]:
+    parsed = urlsplit(value)
+    host = (parsed.hostname or "").lower().rstrip(".")
+    if (
+        parsed.scheme != "https"
+        or not host
+        or parsed.username
+        or parsed.password
+        or parsed.port
+        or host == "localhost"
+        or host.endswith(".localhost")
+    ):
+        raise HTTPException(status_code=422, detail="Only safe public HTTPS URLs are allowed.")
+    try:
+        address = ipaddress.ip_address(host)
+    except ValueError:
+        address = None
+    if address is not None and not address.is_global:
+        raise HTTPException(status_code=422, detail="Only safe public HTTPS URLs are allowed.")
+    canonical = urlunsplit(("https", host, parsed.path, parsed.query, ""))
+    return "generic", canonical

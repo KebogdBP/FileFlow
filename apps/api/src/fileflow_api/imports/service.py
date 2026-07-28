@@ -10,7 +10,7 @@ from fileflow_api.config import Settings
 from fileflow_api.imports.contracts import ImportCreate
 from fileflow_api.imports.downloader import ImportClient, ImportDownloadError, ImportOptions
 from fileflow_api.imports.models import ImportStatus, SocialImport
-from fileflow_api.imports.url_policy import validate_social_url
+from fileflow_api.imports.url_policy import validate_public_url, validate_social_url
 from fileflow_api.jobs.queue import TaskQueue
 from fileflow_api.uploads.models import SafetyStatus, Upload, UploadStatus
 from fileflow_api.uploads.storage import ObjectStorage
@@ -32,7 +32,11 @@ class SocialImportService:
         self._settings = settings
 
     def create(self, request: ImportCreate) -> SocialImport:
-        provider, url = validate_social_url(str(request.url))
+        provider, url = (
+            validate_public_url(str(request.url))
+            if request.generic_audio
+            else validate_social_url(str(request.url))
+        )
         item = SocialImport(
             id=uuid4().hex,
             source_url=url,
@@ -49,6 +53,8 @@ class SocialImportService:
             start_seconds=request.start_seconds,
             end_seconds=request.end_seconds,
             playlist_item=request.playlist_item,
+            playlist_count=request.playlist_count,
+            generic_audio=request.generic_audio,
             error_code=None,
             created_at=datetime.now(UTC),
             finished_at=None,
@@ -96,6 +102,8 @@ class SocialImportService:
                         start_seconds=item.start_seconds,
                         end_seconds=item.end_seconds,
                         playlist_item=item.playlist_item,
+                        playlist_count=item.playlist_count,
+                        generic_audio=item.generic_audio,
                     ),
                 )
                 size = media.path.stat().st_size

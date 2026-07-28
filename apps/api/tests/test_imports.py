@@ -20,7 +20,7 @@ from fileflow_api.imports.downloader import (
 )
 from fileflow_api.imports.models import ImportStatus
 from fileflow_api.imports.service import SocialImportService
-from fileflow_api.imports.url_policy import validate_social_url
+from fileflow_api.imports.url_policy import validate_public_url, validate_social_url
 
 
 class FakeStorage:
@@ -28,7 +28,7 @@ class FakeStorage:
         self.objects: dict[str, bytes] = {}
 
     def upload_file(self, key: str, source: Path, content_type: str) -> None:
-        assert content_type in {"video/mp4", "audio/mpeg"}
+        assert content_type in {"video/mp4", "audio/mpeg", "application/zip"}
         self.objects[key] = source.read_bytes()
 
     def delete_object(self, key: str) -> None:
@@ -162,6 +162,21 @@ def test_import_contract_only_requires_a_platform_url() -> None:
     assert str(request.url) == "https://youtu.be/abc"
     assert request.media_type == "video"
     assert request.video_quality == "best"
+
+
+def test_generic_audio_accepts_public_https_and_rejects_private_hosts() -> None:
+    assert validate_public_url("https://audio.example/track")[0] == "generic"
+    with pytest.raises(HTTPException):
+        validate_public_url("https://127.0.0.1/track")
+
+
+def test_playlist_count_zero_means_all() -> None:
+    request = ImportCreate(
+        url="https://www.youtube.com/playlist?list=abc",
+        media_type="audio",
+        playlist_count=0,
+    )
+    assert request.playlist_count == 0
 
 
 def test_import_contract_rejects_an_invalid_time_range() -> None:

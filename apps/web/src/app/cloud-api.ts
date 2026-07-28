@@ -40,6 +40,8 @@ export type SocialImport = {
   start_seconds: number | null;
   end_seconds: number | null;
   playlist_item: number | null;
+  playlist_count: number | null;
+  generic_audio: boolean;
   error_code: string | null;
 };
 
@@ -50,6 +52,8 @@ export type SocialImportOptions = {
   start_seconds?: number;
   end_seconds?: number;
   playlist_item?: number;
+  playlist_count?: number;
+  generic_audio?: boolean;
 };
 
 function contentType(file: File) {
@@ -224,6 +228,21 @@ export async function waitForSocialImport(importId: string, signal?: AbortSignal
     if (item.status === 'failed') throw new Error(item.error_code ?? 'Import failed.');
     await delay(1000, signal);
   }
+}
+
+export async function downloadSocialImportResult(importId: string) {
+  const response = await fetch(`${API_URL}/imports/${importId}/result`);
+  if (!response.ok) throw new Error(await responseError(response));
+  const disposition = response.headers.get('Content-Disposition') ?? '';
+  const filename = /filename="([^"]+)"/.exec(disposition)?.[1] ?? `fileflow-${importId}`;
+  const objectUrl = URL.createObjectURL(await response.blob());
+  const anchor = document.createElement('a');
+  anchor.href = objectUrl;
+  anchor.download = filename;
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+  window.setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
 }
 
 function delay(milliseconds: number, signal?: AbortSignal) {

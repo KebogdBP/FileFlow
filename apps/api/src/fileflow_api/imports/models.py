@@ -1,7 +1,7 @@
 from datetime import datetime
 from enum import StrEnum
 
-from sqlalchemy import DateTime, Enum, Float, ForeignKey, Integer, String
+from sqlalchemy import Boolean, DateTime, Enum, Float, ForeignKey, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column
 
 from fileflow_api.database import Base
@@ -34,6 +34,8 @@ class SocialImport(Base):
     start_seconds: Mapped[float | None] = mapped_column(Float, nullable=True)
     end_seconds: Mapped[float | None] = mapped_column(Float, nullable=True)
     playlist_item: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    playlist_count: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    generic_audio: Mapped[bool] = mapped_column(Boolean, default=False)
     error_code: Mapped[str | None] = mapped_column(String(64), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)
     finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
