@@ -49,7 +49,7 @@ const workspaceCopy = {
     publicUrl: 'Public media URL',
     useLink: 'Use this link',
     chooseFileInstead: 'Choose a file instead',
-    linkHelp: 'Public YouTube, TikTok, Instagram, VK Video and Rutube links',
+    linkHelp: 'YouTube, Instagram, Dropbox, Google Drive or any public HTTPS link',
     local: 'LOCAL',
     linkBadge: 'LINK',
     noImport: 'No import has started',
@@ -819,6 +819,42 @@ function UrlIntentPanel({
 }) {
   const text = workspaceCopy[language];
   const [confirmed, setConfirmed] = useState(false);
+  const isImportableMedia = ['youtube', 'instagram', 'tiktok', 'vk', 'rutube'].includes(platform);
+
+  if (!isImportableMedia) {
+    return (
+      <section
+        className="intent-workspace url-intent direct-link-intent"
+        aria-labelledby="url-intent-title"
+      >
+        <div className="intent-heading">
+          <div>
+            <Badge variant="success">{text.linkBadge}</Badge>
+            <h3 id="url-intent-title">
+              {platform === 'google-drive'
+                ? 'Google Drive link ready'
+                : platform === 'dropbox'
+                  ? 'Dropbox link ready'
+                  : 'Public link ready'}
+            </h3>
+          </div>
+        </div>
+        <p>
+          Open the source, save the file to this device, then choose it here so FileFlow can inspect
+          the real format before showing safe actions.
+        </p>
+        <div className="intent-confirmation">
+          <a className="direct-link-open" href={url} target="_blank" rel="noreferrer">
+            Open source
+          </a>
+          <Button type="button" variant="secondary" onClick={onChooseFile}>
+            {text.chooseFileInstead}
+          </Button>
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section className="intent-workspace url-intent" aria-labelledby="url-intent-title">
       <div className="intent-heading">

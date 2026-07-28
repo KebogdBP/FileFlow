@@ -2,7 +2,8 @@ export const MAX_INPUT_BYTES = 2 * 1024 * 1024 * 1024;
 
 export const FILE_ACCEPT = ['image/*', 'video/*', 'audio/*', 'application/pdf', '.docx'] as const;
 
-export type InputPlatform = 'youtube' | 'instagram' | 'tiktok' | 'vk' | 'rutube';
+export type InputPlatform =
+  'youtube' | 'instagram' | 'tiktok' | 'vk' | 'rutube' | 'dropbox' | 'google-drive' | 'direct-link';
 
 export type InputValidationResult<T> = { ok: true; value: T } | { ok: false; error: string };
 
@@ -52,10 +53,27 @@ export function validateSourceUrl(
   }
 
   const hostname = url.hostname.toLowerCase().replace(/^www\./, '');
-  const platform = getPlatform(hostname);
-  if (!platform) {
-    return { ok: false, error: 'Use a public YouTube, Instagram or TikTok URL.' };
+  const protectedHosts = [
+    'youtube.com',
+    'youtu.be',
+    'instagram.com',
+    'tiktok.com',
+    'vk.com',
+    'vk.ru',
+    'vkvideo.ru',
+    'rutube.ru',
+    'dropbox.com',
+    'drive.google.com',
+    'docs.google.com',
+  ];
+  if (
+    protectedHosts.some(
+      (host) => hostname !== host && !hostname.endsWith(`.${host}`) && hostname.includes(host),
+    )
+  ) {
+    return { ok: false, error: 'This address looks like an unsafe copy of a known service.' };
   }
+  const platform = getPlatform(hostname) ?? 'direct-link';
 
   return { ok: true, value: { url: url.toString(), platform } };
 }
@@ -77,6 +95,14 @@ function getPlatform(hostname: string): InputPlatform | undefined {
     return 'vk';
   }
   if (hostname === 'rutube.ru' || hostname.endsWith('.rutube.ru')) return 'rutube';
+  if (hostname === 'dropbox.com' || hostname.endsWith('.dropbox.com')) return 'dropbox';
+  if (
+    hostname === 'drive.google.com' ||
+    hostname.endsWith('.drive.google.com') ||
+    hostname === 'docs.google.com'
+  ) {
+    return 'google-drive';
+  }
   return undefined;
 }
 

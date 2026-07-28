@@ -799,6 +799,10 @@ export function GlassHome() {
             >
               <Menu size={21} />
             </button>
+            <Link className="ff-mobile-brand" href="/" aria-label="FileFlow home">
+              <Image src="/brand/fileflow-mark.png" alt="" width={40} height={36} priority />
+              <strong>FileFlow</strong>
+            </Link>
             <div className="ff-top-actions">
               <Link className="ff-sign-in" href="/account">
                 {t.signIn}
@@ -850,6 +854,12 @@ export function GlassHome() {
               </h1>
               <p>{t.lead}</p>
             </motion.div>
+
+            <div className="ff-mobile-intro">
+              <span>Private mobile workspace</span>
+              <h2>Your files or link</h2>
+              <p>Choose from Photos or Files, or paste a link from the web.</p>
+            </div>
 
             <section
               className="ff-unified-workspace"

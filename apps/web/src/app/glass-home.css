@@ -1,4 +1,4 @@
-:root {
+﻿:root {
   --glass-bg: rgba(247, 251, 255, 0.6);
   --glass-bg-strong: rgba(255, 255, 255, 0.76);
   --glass-line: rgba(255, 255, 255, 0.86);
@@ -303,6 +303,11 @@
   display: none;
   width: 44px;
   padding: 0;
+}
+
+.ff-mobile-brand,
+.ff-mobile-intro {
+  display: none;
 }
 
 .ff-hero {
@@ -1468,6 +1473,317 @@
     transition-duration: 0.01ms !important;
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
+  }
+}
+
+/* Mobile app shell */
+@media (max-width: 560px) {
+  .ff-home {
+    min-height: 100dvh;
+    background:
+      radial-gradient(circle at 50% -6%, rgba(110, 166, 255, 0.34), transparent 19rem),
+      radial-gradient(circle at 104% 42%, rgba(153, 118, 255, 0.22), transparent 20rem),
+      linear-gradient(160deg, #f7fbff 0%, #eaf4ff 52%, #f1edff 100%);
+  }
+
+  :root[data-theme='dark'] .ff-home {
+    background:
+      radial-gradient(circle at 50% -8%, rgba(63, 126, 255, 0.26), transparent 19rem),
+      radial-gradient(circle at 105% 42%, rgba(99, 70, 205, 0.2), transparent 20rem),
+      linear-gradient(165deg, #081022 0%, #07101f 54%, #0c1028 100%);
+  }
+
+  .ff-home::before {
+    opacity: 0.17;
+    background-size: 32px 32px;
+  }
+
+  .ff-main {
+    width: 100%;
+    padding: 0 14px 30px;
+  }
+
+  .ff-topbar {
+    position: relative;
+    min-height: 92px;
+    justify-content: center;
+  }
+
+  .ff-mobile-menu {
+    position: absolute;
+    left: 0;
+    width: 42px;
+    min-height: 42px;
+    border-radius: 50%;
+  }
+
+  .ff-mobile-brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 20px;
+    letter-spacing: -0.04em;
+  }
+
+  .ff-mobile-brand img {
+    width: 37px;
+    height: auto;
+    object-fit: contain;
+  }
+
+  .ff-top-actions {
+    position: absolute;
+    right: 0;
+  }
+
+  .ff-top-actions > :not(.ff-theme-switch) {
+    display: none;
+  }
+
+  .ff-theme-switch {
+    position: relative;
+    width: 42px;
+    min-height: 42px;
+    justify-content: center;
+    padding: 0;
+    border-radius: 50%;
+  }
+
+  .ff-theme-switch > svg:first-child {
+    display: none;
+  }
+
+  .ff-theme-switch > button {
+    position: absolute;
+    z-index: 2;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+  }
+
+  .ff-theme-switch > svg:last-child {
+    width: 19px;
+    height: 19px;
+  }
+
+  :root[data-theme='dark'] .ff-theme-switch > svg:last-child {
+    color: #f5c85b;
+  }
+
+  .ff-hero {
+    padding: 5px 0 20px;
+  }
+
+  .ff-hero-copy {
+    display: none;
+  }
+
+  .ff-mobile-intro {
+    display: block;
+    padding: 9px 8px 18px;
+    text-align: center;
+  }
+
+  .ff-mobile-intro > span {
+    color: var(--home-blue);
+    font-size: 10px;
+    font-weight: 850;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  .ff-mobile-intro h2 {
+    margin: 8px 0 7px;
+    font-size: clamp(2.2rem, 11vw, 3rem);
+    line-height: 1;
+    letter-spacing: -0.06em;
+  }
+
+  .ff-mobile-intro p {
+    max-width: 330px;
+    margin: 0 auto;
+    color: var(--home-muted);
+    font-size: 13px;
+    line-height: 1.5;
+  }
+
+  .ff-unified-workspace {
+    margin-top: 0;
+  }
+
+  .ff-unified-workspace .input-card {
+    gap: 14px;
+    padding: 11px !important;
+    border-radius: 27px !important;
+    background: color-mix(in srgb, var(--glass-bg-strong) 90%, transparent) !important;
+    box-shadow:
+      0 28px 70px rgba(45, 74, 141, 0.19),
+      inset 0 1px 0 rgba(255, 255, 255, 0.82) !important;
+  }
+
+  .ff-unified-workspace .input-tabs {
+    padding: 4px;
+    border-radius: 16px;
+  }
+
+  .ff-unified-workspace .input-tabs button {
+    min-height: 44px;
+    border-radius: 12px;
+    font-size: 13px;
+  }
+
+  .ff-unified-workspace .file-drop-zone,
+  .ff-unified-workspace .url-input-form {
+    min-height: 274px;
+    border: 1px dashed color-mix(in srgb, var(--home-blue) 48%, var(--glass-line));
+    border-radius: 21px;
+    background:
+      radial-gradient(
+        circle at 50% 24%,
+        color-mix(in srgb, var(--home-blue) 12%, transparent),
+        transparent 7rem
+      ),
+      color-mix(in srgb, var(--glass-bg) 78%, transparent);
+  }
+
+  .ff-unified-workspace .file-drop-icon {
+    width: 70px;
+    height: 70px;
+    border-radius: 23px;
+    font-size: 31px;
+    box-shadow:
+      0 17px 35px color-mix(in srgb, var(--home-blue) 32%, transparent),
+      inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  }
+
+  .ff-unified-workspace .file-drop-zone > strong {
+    margin-top: 5px;
+    font-size: 20px;
+    letter-spacing: -0.035em;
+  }
+
+  .ff-unified-workspace .file-drop-zone > span:not(.file-drop-icon) {
+    max-width: 270px;
+    font-size: 12px;
+    line-height: 1.4;
+  }
+
+  .ff-unified-workspace .input-picker-button {
+    min-height: 44px;
+    padding-inline: 20px;
+    border-radius: 14px;
+  }
+
+  .ff-unified-workspace .url-input-form {
+    align-content: center;
+    padding: 22px 16px;
+  }
+
+  .ff-unified-workspace .url-input-row {
+    grid-template-columns: 1fr;
+  }
+
+  .ff-unified-workspace .url-input-row input {
+    min-height: 51px;
+    border-radius: 14px;
+    font-size: 16px;
+  }
+
+  .ff-unified-workspace .selected-source {
+    display: grid;
+    grid-template-columns: 56px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 10px;
+    padding: 10px;
+    border-radius: 17px;
+  }
+
+  .ff-unified-workspace .selected-source > div,
+  .ff-unified-workspace .selected-source > button {
+    width: auto;
+  }
+
+  .ff-unified-workspace .intent-workspace {
+    padding: 13px;
+    border-radius: 21px;
+  }
+
+  .ff-unified-workspace .intent-heading h3 {
+    margin: 2px 0 10px;
+    font-size: 21px;
+    letter-spacing: -0.035em;
+  }
+
+  .ff-unified-workspace .intent-options {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 9px;
+  }
+
+  .ff-unified-workspace .intent-options button {
+    min-height: 116px;
+    align-content: center;
+    justify-items: center;
+    gap: 9px;
+    padding: 13px 8px;
+    border-radius: 18px;
+    text-align: center;
+  }
+
+  .ff-unified-workspace .intent-options button > span {
+    width: 42px;
+    height: 42px;
+    display: grid;
+    place-items: center;
+    border-radius: 14px;
+    color: var(--home-blue);
+    background: color-mix(in srgb, var(--home-blue) 12%, transparent);
+    font-size: 20px;
+  }
+
+  .ff-unified-workspace .intent-options button strong {
+    font-size: 12px;
+    line-height: 1.25;
+  }
+
+  .ff-unified-workspace .recommendation-summary {
+    padding: 14px;
+    border-radius: 16px;
+  }
+
+  .ff-unified-workspace .intent-confirmation {
+    gap: 9px;
+  }
+
+  .ff-unified-workspace .intent-confirmation > button,
+  .ff-unified-workspace .direct-link-open {
+    width: 100%;
+    min-height: 48px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 14px;
+  }
+
+  .ff-unified-workspace .direct-link-open {
+    color: white;
+    background: linear-gradient(135deg, var(--home-blue), var(--home-blue-2));
+    font-size: 13px;
+    font-weight: 800;
+  }
+
+  .ff-unified-workspace .cloud-controls {
+    grid-template-columns: 1fr;
+  }
+
+  .ff-tools-section,
+  .ff-advanced-section,
+  .ff-video-downloader,
+  .ff-status-grid,
+  .ff-legal-grid,
+  .ff-saas-cta,
+  .ff-footer {
+    display: none;
   }
 }
 
