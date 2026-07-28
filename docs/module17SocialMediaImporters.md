@@ -1,6 +1,6 @@
 # M17 — Social Media Importers
 
-M17 adds YouTube, Instagram and TikTok media imports.
+M17 adds YouTube, Instagram, Facebook and TikTok media imports.
 
 ## Delivered
 
@@ -10,6 +10,7 @@ M17 adds YouTube, Instagram and TikTok media imports.
 - exact HTTPS host checks and rejection of credentials, custom ports and lookalike domains;
 - dedicated asynchronous import queue and persisted lifecycle;
 - maintained yt-dlp release with the upstream default security extras;
+- a curl-cffi browser-impersonation retry for public Meta and TikTok pages;
 - fixed MP4-only format selection, byte ceiling, timeouts and bounded retries;
 - generated output template with no client filename or command interpolation;
 - single regular-file and MP4 magic-byte validation;
@@ -34,6 +35,14 @@ Bun and QuickJS are detected in that order, and the official `ejs:github`
 component is enabled by default. Set
 `FILEFLOW_SOCIAL_IMPORT_ALLOW_REMOTE_EJS=false` in a restricted network and make
 the EJS solver available in the image instead.
+
+Instagram extraction changes frequently. Keep the pinned yt-dlp release current:
+the 2026.07.04 release contains the public-post extractor rewrite that replaced
+the broken 2026.06.09 implementation. Facebook, Instagram and TikTok first use
+yt-dlp's normal request profile and retry with a Chrome TLS fingerprint only
+after an extractor failure. `curl_cffi` is installed in the worker image for
+this retry. Do not force impersonation globally because upstream warns that it
+can reduce download speed and stability.
 
 Every import still produces exactly one quarantined artifact. For a playlist,
 the client may choose an item number (1-500); whole-playlist downloads are not

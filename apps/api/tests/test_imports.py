@@ -115,6 +115,9 @@ def import_service(
         ("https://youtu.be/abc", "youtube"),
         ("https://www.instagram.com/reel/abc/", "instagram"),
         ("https://www.tiktok.com/@creator/video/123", "tiktok"),
+        ("https://www.facebook.com/creator/videos/123", "facebook"),
+        ("https://www.facebook.com/reel/123", "facebook"),
+        ("https://fb.watch/abc/", "facebook"),
         ("https://vk.com/video-1_2", "vk"),
         ("https://vkvideo.ru/video-1_2", "vk"),
         ("https://rutube.ru/video/3eac3b4561676c17df9132a9a1e62e3e/", "rutube"),
@@ -335,6 +338,40 @@ def test_non_youtube_import_does_not_force_youtube_runtime(
     assert "js_runtimes" not in captured
 
 
+def test_meta_import_retries_with_browser_impersonation(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    attempts: list[dict[str, object]] = []
+
+    class FakeYoutubeDL:
+        def __init__(self, options: dict[str, object]) -> None:
+            attempts.append(options)
+
+        def __enter__(self) -> "FakeYoutubeDL":
+            return self
+
+        def __exit__(self, *args: object) -> None:
+            pass
+
+        def extract_info(self, url: str, download: bool) -> dict[str, str]:
+            if len(attempts) == 1:
+                (tmp_path / "source.part").write_bytes(b"partial")
+                raise downloader_module.DownloadError("Cannot parse data")
+            assert not (tmp_path / "source.part").exists()
+            (tmp_path / "source.mp4").write_bytes(b"\x00\x00\x00\x18ftypisom-public-video")
+            return {"title": "Video"}
+
+    monkeypatch.setattr(downloader_module, "YoutubeDL", FakeYoutubeDL)
+    YtDlpClient().download(
+        "https://www.facebook.com/reel/123",
+        tmp_path,
+        1024 * 1024,
+    )
+
+    assert len(attempts) == 2
+    assert attempts[1]["impersonate"] == downloader_module.ImpersonateTarget.from_str("chrome")
+
+
 def test_youtube_uses_internal_pot_provider_when_configured(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
@@ -450,6 +487,8 @@ def test_downloader_passes_configured_egress_proxy(
             "Instagram sent an empty media response. Use cookies for the authentication.",
             "platform_auth_required",
         ),
+        ("HTTP Error 429: Too Many Requests", "platform_rate_limited"),
+        ("Cannot parse data; please report this issue", "extractor_outdated"),
         ("Video unavailable", "media_unavailable"),
         ("Requested format is not available", "supported_format_unavailable"),
         ("Network failure", "import_failed"),

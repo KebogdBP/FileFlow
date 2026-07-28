@@ -45,6 +45,9 @@ const socialCopy = {
         'The platform requested verification. Upload the file directly or try again later.',
       platform_auth_unavailable: 'Platform authentication is not configured on this server.',
       platform_ip_blocked: 'The platform blocked this server address. Please try again later.',
+      platform_rate_limited: 'The platform rate-limited this server. Please try again later.',
+      extractor_outdated:
+        'The platform changed its page format. The server extractor needs an update.',
       media_unavailable: 'This media is unavailable or private.',
       supported_format_unavailable: 'No supported media format is available.',
       import_failed: 'The platform could not import this link.',
@@ -74,12 +77,21 @@ const socialCopy = {
     playlistItem: 'Номер в плейлисте (необязательно)',
     playlistHint: 'Импортируется один выбранный элемент — один безопасный результат на задачу.',
     videoOperations: ['Сжать видео', 'Преобразовать в MP4', 'Изменить размер', 'Извлечь аудио'],
-    audioOperations: ['Оптимизировать аудио', 'Преобразовать в MP3', 'Преобразовать в WAV', 'Обрезать аудио'],
+    audioOperations: [
+      'Оптимизировать аудио',
+      'Преобразовать в MP3',
+      'Преобразовать в WAV',
+      'Обрезать аудио',
+    ],
     errors: {
       platform_auth_required:
         'Платформа запросила подтверждение. Загрузите файл напрямую или повторите позже.',
       platform_auth_unavailable: 'На сервере не настроена авторизация для этой платформы.',
       platform_ip_blocked: 'Платформа заблокировала адрес сервера. Повторите попытку позже.',
+      platform_rate_limited:
+        'Платформа временно ограничила запросы сервера. Повторите попытку позже.',
+      extractor_outdated:
+        'Платформа изменила формат страницы. Нужно обновить серверный экстрактор.',
       media_unavailable: 'Это медиа недоступно или является приватным.',
       supported_format_unavailable: 'Поддерживаемый формат медиа не найден.',
       import_failed: 'Не удалось импортировать медиа по этой ссылке.',
@@ -115,6 +127,8 @@ const socialCopy = {
         'La plataforma solicitó verificación. Sube el archivo directamente o inténtalo más tarde.',
       platform_auth_unavailable: 'La autenticación no está configurada en este servidor.',
       platform_ip_blocked: 'La plataforma bloqueó la dirección del servidor. Inténtalo más tarde.',
+      platform_rate_limited: 'La plataforma limitó temporalmente el servidor. Inténtalo más tarde.',
+      extractor_outdated: 'La plataforma cambió su formato. Hay que actualizar el extractor.',
       media_unavailable: 'Este contenido no está disponible o es privado.',
       supported_format_unavailable: 'No hay un formato compatible disponible.',
       import_failed: 'No se pudo importar el contenido desde este enlace.',
@@ -181,7 +195,9 @@ export function SocialImportTool({
           error instanceof DOMException && error.name === 'AbortError'
             ? text.cancelled
             : error instanceof Error
-              ? (text.errors[error.message as keyof typeof text.errors] ?? error.message ?? text.failed)
+              ? (text.errors[error.message as keyof typeof text.errors] ??
+                error.message ??
+                text.failed)
               : text.failed,
       });
     } finally {
@@ -320,8 +336,7 @@ export function SocialImportTool({
             <div>
               <Badge variant="success">{text.imported}</Badge>
               <strong>
-                {state.item.title ??
-                  text.fallbackTitle[state.item.media_type === 'audio' ? 1 : 0]}
+                {state.item.title ?? text.fallbackTitle[state.item.media_type === 'audio' ? 1 : 0]}
               </strong>
               <span>{state.item.creator ?? state.item.provider}</span>
             </div>

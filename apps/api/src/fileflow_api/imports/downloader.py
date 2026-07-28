@@ -13,6 +13,7 @@ if os.getenv("FILEFLOW_SOCIAL_IMPORT_DISABLE_PLUGINS", "").lower() in {"1", "tru
     os.environ["YTDLP_NO_PLUGINS"] = "1"
 
 from yt_dlp import YoutubeDL
+from yt_dlp.networking.impersonate import ImpersonateTarget
 from yt_dlp.utils import DownloadError, download_range_func
 
 
@@ -83,6 +84,20 @@ class YtDlpClient:
         is_youtube = (
             hostname == "youtu.be" or hostname == "youtube.com" or hostname.endswith(".youtube.com")
         )
+        browser_impersonation_fallback = hostname in {
+            "facebook.com",
+            "www.facebook.com",
+            "m.facebook.com",
+            "web.facebook.com",
+            "fb.watch",
+            "instagram.com",
+            "www.instagram.com",
+            "tiktok.com",
+            "www.tiktok.com",
+            "m.tiktok.com",
+            "vm.tiktok.com",
+            "vt.tiktok.com",
+        }
         postprocessors: list[dict[str, Any]]
         if selected.media_type == "audio":
             postprocessors = [
@@ -166,6 +181,13 @@ class YtDlpClient:
             tv_options["extractor_args"] = {"youtube": {"player_client": ["tv"]}}
             tv_options.pop("cookiefile", None)
             attempts.append(tv_options)
+        elif browser_impersonation_fallback:
+            # Meta and TikTok periodically gate otherwise public pages using a
+            # browser TLS fingerprint. Keep the faster native request first,
+            # then retry through curl_cffi as a real browser profile.
+            impersonated_options = dict(options)
+            impersonated_options["impersonate"] = ImpersonateTarget.from_str("chrome")
+            attempts.append(impersonated_options)
 
         raw: dict[str, Any] | None = None
         last_error: DownloadError | None = None
@@ -292,8 +314,12 @@ def _single_video_url(url: str) -> str:
 
 def _download_error_code(message: str) -> str:
     normalized = message.lower()
+    if "http error 429" in normalized or "rate-limit reached" in normalized:
+        return "platform_rate_limited"
     if "ip address is blocked" in normalized or "blocked from accessing" in normalized:
         return "platform_ip_blocked"
+    if "cannot parse data" in normalized or "please report this issue" in normalized:
+        return "extractor_outdated"
     if (
         "sign in to confirm" in normalized
         or "cookies for the authentication" in normalized
