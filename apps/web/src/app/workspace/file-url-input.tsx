@@ -178,7 +178,7 @@ const workspaceCopy = {
       'docx-to-pdf': 'DOCX в PDF',
       'compress-video': 'Сжать',
       'video-to-mp4': 'MP4',
-      'remove-video-metadata': 'Удалить метаданные видео',
+      'remove-video-metadata': 'Удалить метаданные',
       'extract-audio': 'Извлечь аудио',
       'optimize-audio': 'Оптимизировать аудио',
       'audio-to-mp3': 'Аудио в MP3',
