@@ -45,3 +45,23 @@ class AnalyticsService:
                 )
             )
         return int(total or 0), int(today or 0)
+
+    def operation_count(self, increment: int = 0) -> int:
+        now = datetime.now(UTC)
+        with self._sessions.begin() as session:
+            if increment:
+                session.add_all(
+                    ProductEvent(
+                        name=EventName.COMPLETED_OPERATION,
+                        intent=None,
+                        occurred_at=now,
+                    )
+                    for _ in range(increment)
+                )
+                session.flush()
+            total = session.scalar(
+                select(func.count())
+                .select_from(ProductEvent)
+                .where(ProductEvent.name == EventName.COMPLETED_OPERATION)
+            )
+        return int(total or 0)

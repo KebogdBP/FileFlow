@@ -17,3 +17,11 @@ class EventAccepted(BaseModel):
 class VisitCounts(BaseModel):
     total: int
     today: int
+
+
+class OperationCountUpdate(BaseModel):
+    count: int = Field(ge=1, le=20)
+
+
+class OperationCounts(BaseModel):
+    total: int

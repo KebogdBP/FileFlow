@@ -62,3 +62,21 @@ def test_visit_counter_records_once_when_requested_and_reads_without_incrementin
     assert api.get("/api/v1/analytics/visits").json() == {"total": 0, "today": 0}
     assert api.post("/api/v1/analytics/visits").json() == {"total": 1, "today": 1}
     assert api.get("/api/v1/analytics/visits").json() == {"total": 1, "today": 1}
+
+
+def test_operation_counter_records_bounded_completed_operations() -> None:
+    engine = create_engine(
+        "sqlite+pysqlite:///:memory:",
+        connect_args={"check_same_thread": False},
+        poolclass=StaticPool,
+    )
+    Base.metadata.create_all(engine)
+    sessions = build_session_factory(engine)
+    api = TestClient(
+        create_app(Settings(environment="test"), analytics_service=AnalyticsService(sessions))
+    )
+
+    assert api.get("/api/v1/analytics/operations").json() == {"total": 0}
+    assert api.post("/api/v1/analytics/operations", json={"count": 3}).json() == {"total": 3}
+    assert api.get("/api/v1/analytics/operations").json() == {"total": 3}
+    assert api.post("/api/v1/analytics/operations", json={"count": 21}).status_code == 422

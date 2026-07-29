@@ -1,6 +1,12 @@
 from fastapi import APIRouter, Request, status
 
-from fileflow_api.analytics.contracts import EventAccepted, EventCreate, VisitCounts
+from fileflow_api.analytics.contracts import (
+    EventAccepted,
+    EventCreate,
+    OperationCounts,
+    OperationCountUpdate,
+    VisitCounts,
+)
 from fileflow_api.analytics.service import AnalyticsService
 
 router = APIRouter(prefix="/analytics", tags=["analytics"])
@@ -25,3 +31,15 @@ def record_visit(request: Request) -> VisitCounts:
     service: AnalyticsService = request.app.state.analytics_service
     total, today = service.visit_counts(record_visit=True)
     return VisitCounts(total=total, today=today)
+
+
+@router.get("/operations", response_model=OperationCounts)
+def get_operation_count(request: Request) -> OperationCounts:
+    service: AnalyticsService = request.app.state.analytics_service
+    return OperationCounts(total=service.operation_count())
+
+
+@router.post("/operations", response_model=OperationCounts)
+def record_operations(payload: OperationCountUpdate, request: Request) -> OperationCounts:
+    service: AnalyticsService = request.app.state.analytics_service
+    return OperationCounts(total=service.operation_count(increment=payload.count))

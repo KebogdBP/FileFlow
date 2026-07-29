@@ -23,7 +23,7 @@ const copy = {
 
 export async function recordCompletedOperations(count = 1) {
   if (!Number.isInteger(count) || count < 1 || count > 20) return;
-  await fetch('/api/operation-counter', {
+  await fetch(`${API_URL}/analytics/operations`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ count }),
@@ -37,7 +37,7 @@ export function OperationCounter({ language }: { language: FileFlowLanguage }) {
   useEffect(() => {
     const controller = new AbortController();
     const read = () =>
-      void fetch('/api/operation-counter', { signal: controller.signal })
+      void fetch(`${API_URL}/analytics/operations`, { signal: controller.signal })
         .then((response) => {
           if (!response.ok) throw new Error('Operation counter unavailable');
           return response.json() as Promise<OperationCounts>;
