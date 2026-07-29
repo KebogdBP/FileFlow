@@ -4,7 +4,7 @@ from fileflow_api.workers.contracts import OperationRegistry
 MEDIA_OPERATIONS = (
     "compress-video",
     "video-to-mp4",
-    "resize-video",
+    "remove-video-metadata",
     "extract-audio",
     "audio-to-mp3",
     "audio-to-wav",

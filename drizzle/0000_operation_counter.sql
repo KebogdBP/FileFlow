@@ -1,0 +1,8 @@
+CREATE TABLE IF NOT EXISTS operation_counters (
+  id INTEGER PRIMARY KEY CHECK (id = 1),
+  total INTEGER NOT NULL DEFAULT 0,
+  updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+INSERT OR IGNORE INTO operation_counters (id, total, updated_at)
+VALUES (1, 0, CURRENT_TIMESTAMP);

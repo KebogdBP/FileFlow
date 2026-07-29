@@ -14,6 +14,7 @@ import {
 } from '../cloud-api';
 import { formatFileSize } from './input-policy';
 import type { FileFlowLanguage } from '../use-fileflow-language';
+import { recordCompletedOperations } from '../visitor-counter';
 
 const cloudCopy = {
   en: {
@@ -228,10 +229,12 @@ export function CloudJobTool({
       const primary = uploadIds[0];
       if (!primary) throw new Error(text.messages[2]);
       setState({ status: 'running', progress: 88, stage: text.messages[3] });
+      const cloudOperationId =
+        operationId === 'remove-video-metadata' ? 'video-to-mp4' : operationId;
       const job = await createCloudJob(
         primary,
         uploadIds.slice(1),
-        operationId,
+        cloudOperationId,
         parameters,
         accessToken,
         controller.signal,
@@ -256,6 +259,7 @@ export function CloudJobTool({
       const url = URL.createObjectURL(result.blob);
       resultUrl.current = url;
       setState({ status: 'completed', job: completed, url, filename: result.filename });
+      void recordCompletedOperations();
     } catch (error) {
       setState({
         status: 'error',
@@ -368,7 +372,7 @@ function OperationControls({
   update: (name: string, value: string | number) => void;
 }) {
   const labels = cloudCopy[language].controls;
-  if (['compress-video', 'video-to-mp4', 'resize-video'].includes(operationId)) {
+  if (['compress-video', 'video-to-mp4'].includes(operationId)) {
     return (
       <div className="cloud-controls">
         <Slider
@@ -545,7 +549,7 @@ function OperationControls({
 }
 
 function defaultParameters(operationId: string): Record<string, string | number> {
-  if (['compress-video', 'video-to-mp4', 'resize-video'].includes(operationId))
+  if (['compress-video', 'video-to-mp4'].includes(operationId))
     return { quality: 23, preset: 'medium', max_height: 1080 };
   if (['extract-audio', 'audio-to-mp3', 'optimize-audio'].includes(operationId))
     return { bitrate_kbps: 192 };
@@ -560,7 +564,7 @@ const operationTitles: Record<Exclude<FileFlowLanguage, 'en'>, Record<string, st
   ru: {
     'compress-video': 'Сжать видео',
     'video-to-mp4': 'Видео в MP4',
-    'resize-video': 'Изменить размер видео',
+    'remove-video-metadata': 'Удалить метаданные видео',
     'extract-audio': 'Извлечь аудио',
     'optimize-audio': 'Оптимизировать аудио',
     'audio-to-mp3': 'Аудио в MP3',
@@ -577,7 +581,7 @@ const operationTitles: Record<Exclude<FileFlowLanguage, 'en'>, Record<string, st
   es: {
     'compress-video': 'Comprimir vídeo',
     'video-to-mp4': 'Vídeo a MP4',
-    'resize-video': 'Redimensionar vídeo',
+    'remove-video-metadata': 'Eliminar metadatos del vídeo',
     'extract-audio': 'Extraer audio',
     'optimize-audio': 'Optimizar audio',
     'audio-to-mp3': 'Audio a MP3',

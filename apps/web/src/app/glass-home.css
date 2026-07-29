@@ -1307,6 +1307,20 @@
   text-align: center;
 }
 
+@media (max-width: 560px) {
+  .ff-visitor-counter {
+    min-height: 58px;
+    display: grid;
+    place-items: center;
+    margin-top: 18px;
+    padding: 16px 12px 20px;
+    color: var(--home-muted);
+    font-size: 12px;
+    font-weight: 760;
+    line-height: 1.35;
+  }
+}
+
 .ff-mobile-overlay {
   position: fixed;
   z-index: 100;

@@ -45,7 +45,7 @@ class FfmpegHandler:
         if self._operation in {
             "compress-video",
             "video-to-mp4",
-            "resize-video",
+            "remove-video-metadata",
             "extract-audio",
         }:
             return content_type.startswith("video/")
@@ -74,7 +74,26 @@ class FfmpegHandler:
         ]
         output = str(request.output_path)
         parameters = request.parameters
-        if self._operation in {"compress-video", "video-to-mp4", "resize-video"}:
+        if self._operation == "remove-video-metadata":
+            reject_unknown(parameters, set())
+            return (
+                [
+                    *common,
+                    "-map",
+                    "0:v:0",
+                    "-map",
+                    "0:a?",
+                    "-c",
+                    "copy",
+                    "-movflags",
+                    "+faststart",
+                    "-f",
+                    "mp4",
+                    output,
+                ],
+                "video/mp4",
+            )
+        if self._operation in {"compress-video", "video-to-mp4"}:
             reject_unknown(parameters, {"quality", "preset", "max_height"})
             crf = integer_parameter(parameters, "quality", 23, range(18, 33))
             preset = choice_parameter(parameters, "preset", "medium", {"fast", "medium", "slow"})

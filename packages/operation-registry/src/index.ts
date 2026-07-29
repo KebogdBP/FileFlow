@@ -38,8 +38,8 @@ export const operations = [
     supportedOutputs: ['mp4'],
   },
   {
-    id: 'resize-video',
-    displayName: 'Resize this video',
+    id: 'remove-video-metadata',
+    displayName: 'Remove video metadata',
     executionMode: 'cloud',
     supportedInputs: ['video'],
     supportedOutputs: ['mp4'],

@@ -5,7 +5,7 @@ const descriptions: Record<string, string> = {
   'remove-image-metadata': 'Remove location, camera and other private metadata on your device.',
   'compress-video': 'Create a smaller, shareable MP4 with clear temporary cloud handling.',
   'video-to-mp4': 'Convert a video into a broadly compatible MP4 file.',
-  'resize-video': 'Resize video for sharing, publishing or a smaller display target.',
+  'remove-video-metadata': 'Remove embedded video metadata without changing its dimensions.',
   'extract-audio': 'Extract a video soundtrack as a lightweight MP3 file.',
   'optimize-audio': 'Reduce audio size with practical quality defaults.',
   'audio-to-mp3': 'Convert audio to an MP3 that works across common players.',
@@ -17,8 +17,7 @@ const descriptions: Record<string, string> = {
   'pdf-to-jpg': 'Turn a PDF page into a checked JPG image.',
   'pdf-to-docx':
     'Convert PDF text into an editable Microsoft Word DOCX document with best-effort layout.',
-  'pdf-to-pptx':
-    'Convert PDF pages into an editable Microsoft PowerPoint PPTX presentation.',
+  'pdf-to-pptx': 'Convert PDF pages into an editable Microsoft PowerPoint PPTX presentation.',
   'docx-to-pdf': 'Create a stable, shareable PDF from a DOCX document.',
 };
 

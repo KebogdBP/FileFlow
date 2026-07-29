@@ -12,6 +12,7 @@ import { batchOverallProgress, type BatchItemStatus } from './batch-model';
 import { validateWebPResult, webPFileName } from './image-result';
 import { formatFileSize } from './input-policy';
 import type { FileFlowLanguage } from '../use-fileflow-language';
+import { recordCompletedOperations } from '../visitor-counter';
 
 const batchCopy = {
   en: {
@@ -151,6 +152,7 @@ export function BatchImageTool({
           stage: 'Validated',
           result: { url, size: validation.size },
         });
+        void recordCompletedOperations();
       } catch (error) {
         update(index, {
           status: cancelled.current ? 'cancelled' : 'failed',

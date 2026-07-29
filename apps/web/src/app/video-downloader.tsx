@@ -11,6 +11,7 @@ import {
   type SocialImportOptions,
 } from './cloud-api';
 import type { FileFlowLanguage } from './use-fileflow-language';
+import { recordCompletedOperations } from './visitor-counter';
 
 type Mode = 'video' | 'video-playlist' | 'audio-playlist' | 'audio' | 'mp3';
 
@@ -142,6 +143,7 @@ export function VideoDownloader({ language }: { language: FileFlowLanguage }) {
       await downloadSocialImportResult(completed.id, setProgress);
       setStatus('ready');
       setMessage(text.ready);
+      void recordCompletedOperations();
     } catch (error) {
       setStatus('error');
       setProgress(null);
@@ -200,7 +202,6 @@ export function VideoDownloader({ language }: { language: FileFlowLanguage }) {
               {text.invalid}
             </motion.p>
           ) : null}
-
         </AnimatePresence>
 
         <div className="ff-downloader-actions">
@@ -240,8 +241,7 @@ export function VideoDownloader({ language }: { language: FileFlowLanguage }) {
                     ))}
                   </OptionWindow>
                 ) : null}
-                {activeMode === mode &&
-                (mode === 'video-playlist' || mode === 'audio-playlist') ? (
+                {activeMode === mode && (mode === 'video-playlist' || mode === 'audio-playlist') ? (
                   <OptionWindow label={text.count}>
                     {['1', '5', '10', '25', 'all'].map((count) => (
                       <button

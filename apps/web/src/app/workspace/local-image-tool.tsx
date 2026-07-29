@@ -17,6 +17,7 @@ import {
   webPFileName,
 } from './image-result';
 import type { FileFlowLanguage } from '../use-fileflow-language';
+import { recordCompletedOperations } from '../visitor-counter';
 
 const localImageCopy = {
   en: {
@@ -186,6 +187,7 @@ export function LocalImageTool({
       );
       resultUrl.current = url;
       setState({ status: 'completed', url, size: validation.size, width, height });
+      void recordCompletedOperations();
     } catch (error) {
       setState({
         status: 'error',

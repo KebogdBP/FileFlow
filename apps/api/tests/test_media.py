@@ -52,6 +52,19 @@ def test_video_compression_uses_bounded_server_owned_ffmpeg_arguments(tmp_path: 
     assert "-map_metadata" in command
 
 
+def test_video_metadata_removal_stream_copies_without_resizing(tmp_path: Path) -> None:
+    runner = RecordingRunner()
+    result = FfmpegHandler("/usr/bin/ffmpeg", runner, "remove-video-metadata").execute(
+        request(tmp_path)
+    )
+    command = runner.commands[0]
+    assert result.content_type == "video/mp4"
+    assert command[command.index("-map_metadata") + 1] == "-1"
+    assert command[command.index("-c") + 1] == "copy"
+    assert "-vf" not in command
+    assert "-crf" not in command
+
+
 @pytest.mark.parametrize(
     ("operation", "parameters", "content_type", "output_format"),
     [

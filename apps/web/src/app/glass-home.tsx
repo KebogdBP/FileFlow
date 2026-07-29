@@ -83,10 +83,10 @@ const operationPresentation: Record<
     icon: FileOutput,
     tone: 'blue',
   },
-  'resize-video': {
-    title: 'Resize video',
-    description: 'Set a practical resolution for any screen',
-    icon: Crop,
+  'remove-video-metadata': {
+    title: 'Remove video metadata',
+    description: 'Strip embedded details without resizing',
+    icon: ShieldCheck,
     tone: 'mint',
   },
   'extract-audio': {
@@ -172,7 +172,7 @@ const featuredOperationIds: readonly OperationId[] = [
   'pdf-to-pptx',
   'docx-to-pdf',
   'compress-video',
-  'resize-video',
+  'remove-video-metadata',
   'extract-audio',
 ];
 
@@ -414,7 +414,10 @@ const toolTranslations: Record<Exclude<Language, 'en'>, Record<string, [string, 
     'DOCX to PDF': ['DOCX в PDF', 'Создать стабильный документ для отправки'],
     'Compress video': ['Сжать видео', 'Компактный MP4 для быстрой отправки'],
     'Video to MP4': ['Видео в MP4', 'Преобразовать видео в совместимый формат'],
-    'Resize video': ['Изменить размер видео', 'Настроить разрешение для экрана'],
+    'Remove video metadata': [
+      'Удалить метаданные видео',
+      'Убрать встроенные данные без изменения размера',
+    ],
     'Extract audio': ['Извлечь аудио', 'Сохранить звуковую дорожку в MP3'],
     'Optimize image': ['Оптимизировать изображение', 'Создать лёгкий WebP прямо на устройстве'],
     'Remove image metadata': ['Удалить метаданные', 'Локально удалить геолокацию и данные камеры'],
@@ -439,7 +442,10 @@ const toolTranslations: Record<Exclude<Language, 'en'>, Record<string, [string, 
     'DOCX to PDF': ['DOCX a PDF', 'Crea un documento estable para compartir'],
     'Compress video': ['Comprimir vídeo', 'MP4 más pequeño para compartir'],
     'Video to MP4': ['Vídeo a MP4', 'Convierte el vídeo a un formato compatible'],
-    'Resize video': ['Redimensionar vídeo', 'Ajusta la resolución a cualquier pantalla'],
+    'Remove video metadata': [
+      'Eliminar metadatos del vídeo',
+      'Quita datos incrustados sin cambiar el tamaño',
+    ],
     'Extract audio': ['Extraer audio', 'Guarda la pista de sonido como MP3'],
     'Optimize image': ['Optimizar imagen', 'Crea un WebP más ligero en este dispositivo'],
     'Remove image metadata': [
@@ -487,7 +493,7 @@ const localizedCopy = {
     bestOptions: 'Best options for',
     outcomeLead: 'Start with what you need. FileFlow handles the format details.',
     viewAll: 'View all tools',
-    toolCount: '15 working tools',
+    toolCount: '17 working tools',
     moreTools: 'more',
     previousTools: 'Previous tools',
     localMode: 'On device',
@@ -579,7 +585,7 @@ const localizedCopy = {
       '\u0412\u044b\u0431\u0435\u0440\u0438\u0442\u0435 \u0440\u0435\u0437\u0443\u043b\u044c\u0442\u0430\u0442 — FileFlow \u0440\u0430\u0437\u0431\u0435\u0440\u0451\u0442\u0441\u044f \u0441 \u0444\u043e\u0440\u043c\u0430\u0442\u043e\u043c.',
     viewAll:
       '\u0412\u0441\u0435 \u0438\u043d\u0441\u0442\u0440\u0443\u043c\u0435\u043d\u0442\u044b',
-    toolCount: '15 рабочих инструментов',
+    toolCount: '17 рабочих инструментов',
     moreTools: 'ещё',
     previousTools: 'Предыдущие инструменты',
     localMode: 'На устройстве',
@@ -649,7 +655,7 @@ const localizedCopy = {
     bestOptions: 'Mejores opciones para',
     outcomeLead: 'Elige el resultado. FileFlow se ocupa de los formatos.',
     viewAll: 'Ver herramientas',
-    toolCount: '15 herramientas activas',
+    toolCount: '17 herramientas activas',
     moreTools: 'más',
     previousTools: 'Herramientas anteriores',
     localMode: 'En el dispositivo',
@@ -1069,7 +1075,7 @@ export function GlassHome() {
               <Link href="#tools">Tools</Link>
             </nav>
           </footer>
-          <VisitorCounter />
+          <VisitorCounter language={language} />
         </main>
 
         <AnimatePresence>

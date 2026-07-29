@@ -13,6 +13,7 @@ import {
 } from '../cloud-api';
 import { CloudJobTool } from './cloud-job-tool';
 import type { FileFlowLanguage } from '../use-fileflow-language';
+import { recordCompletedOperations } from '../visitor-counter';
 
 const socialCopy = {
   en: {
@@ -38,7 +39,7 @@ const socialCopy = {
     endTime: 'End (seconds, optional)',
     playlistItem: 'Playlist item (optional)',
     playlistHint: 'Imports one numbered item so every job still has one safe result.',
-    videoOperations: ['Compress video', 'Convert to MP4', 'Resize video', 'Extract audio'],
+    videoOperations: ['Compress video', 'Convert to MP4', 'Remove video metadata', 'Extract audio'],
     audioOperations: ['Optimize audio', 'Convert to MP3', 'Convert to WAV', 'Trim audio'],
     errors: {
       platform_auth_required:
@@ -76,7 +77,7 @@ const socialCopy = {
     endTime: 'Конец (секунды, необязательно)',
     playlistItem: 'Номер в плейлисте (необязательно)',
     playlistHint: 'Импортируется один выбранный элемент — один безопасный результат на задачу.',
-    videoOperations: ['Сжать видео', 'Преобразовать в MP4', 'Изменить размер', 'Извлечь аудио'],
+    videoOperations: ['Сжать', 'MP4', 'Удалить метаданные видео', 'Извлечь аудио'],
     audioOperations: [
       'Оптимизировать аудио',
       'Преобразовать в MP3',
@@ -120,7 +121,7 @@ const socialCopy = {
     endTime: 'Fin (segundos, opcional)',
     playlistItem: 'Elemento de playlist (opcional)',
     playlistHint: 'Importa un elemento numerado para mantener un resultado seguro por tarea.',
-    videoOperations: ['Comprimir vídeo', 'Convertir a MP4', 'Redimensionar vídeo', 'Extraer audio'],
+    videoOperations: ['Comprimir vídeo', 'Convertir a MP4', 'Eliminar metadatos', 'Extraer audio'],
     audioOperations: ['Optimizar audio', 'Convertir a MP3', 'Convertir a WAV', 'Recortar audio'],
     errors: {
       platform_auth_required:
@@ -188,6 +189,7 @@ export function SocialImportTool({
         await waitForCleanUpload(completed.upload_id, () => undefined, controller.signal);
       }
       setState({ status: 'completed', item: completed });
+      void recordCompletedOperations();
     } catch (error) {
       setState({
         status: 'error',
@@ -218,7 +220,7 @@ export function SocialImportTool({
       : [
           ['compress-video', text.videoOperations[0]],
           ['video-to-mp4', text.videoOperations[1]],
-          ['resize-video', text.videoOperations[2]],
+          ['remove-video-metadata', text.videoOperations[2]],
           ['extract-audio', text.videoOperations[3]],
         ];
 
