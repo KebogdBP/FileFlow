@@ -30,6 +30,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       if (savedLanguage === 'en' || savedLanguage === 'ru' || savedLanguage === 'es') {
         document.documentElement.lang = savedLanguage;
       }
+      if (new URLSearchParams(window.location.search).get('view') === 'desktop') {
+        const setDesktopViewport = () => {
+          const viewport = document.querySelector('meta[name="viewport"]');
+          if (viewport) viewport.setAttribute('content', 'width=1280');
+        };
+        setDesktopViewport();
+        document.addEventListener('DOMContentLoaded', setDesktopViewport, { once: true });
+      }
     } catch {}
   `;
   return (

@@ -19,6 +19,7 @@ import {
   Menu,
   Merge,
   Mic2,
+  Monitor,
   Moon,
   Music2,
   PanelLeftClose,
@@ -729,6 +730,17 @@ export function GlassHome() {
   }, [theme]);
 
   useEffect(() => {
+    if (new URLSearchParams(window.location.search).get('view') !== 'desktop') return;
+    const viewport = document.querySelector<HTMLMetaElement>('meta[name="viewport"]');
+    if (!viewport) return;
+    const previousContent = viewport.content;
+    viewport.content = 'width=1280';
+    return () => {
+      viewport.content = previousContent;
+    };
+  }, []);
+
+  useEffect(() => {
     const readProfile = () => {
       const requestId = ++avatarRequestRef.current;
       try {
@@ -891,9 +903,9 @@ export function GlassHome() {
                   onChange={(event) => setLanguage(event.target.value as Language)}
                   aria-label="Select language"
                 >
-                  <option value="ru">RU — Русский</option>
-                  <option value="en">EN — English</option>
-                  <option value="es">ES — Español</option>
+                  <option value="ru">RU</option>
+                  <option value="en">EN</option>
+                  <option value="es">ES</option>
                 </select>
               </label>
               <Link className="ff-mobile-account glass-panel" href="/account" aria-label={t.signIn}>
@@ -981,6 +993,8 @@ export function GlassHome() {
             </motion.div>
           </section>
 
+          <VideoDownloader language={language} />
+
           <section className="ff-advanced-section" aria-labelledby="advanced-title">
             <div className="ff-section-heading">
               <div>
@@ -997,8 +1011,6 @@ export function GlassHome() {
               ))}
             </div>
           </section>
-
-          <VideoDownloader language={language} />
 
           <section className="ff-status-grid" id="privacy">
             <div className="ff-privacy-card glass-panel">
@@ -1110,9 +1122,16 @@ export function GlassHome() {
                 </div>
                 <nav>
                   {navItems.map(({ label, icon: Icon, href }, index) => (
-                    <Link href={href} key={label} onClick={() => setMobileNav(false)}>
-                      <Icon size={20} /> {t.nav[index]}
-                    </Link>
+                    <React.Fragment key={label}>
+                      <Link href={href} onClick={() => setMobileNav(false)}>
+                        <Icon size={20} /> {t.nav[index]}
+                      </Link>
+                      {index === 3 ? (
+                        <a href="/?view=desktop">
+                          <Monitor size={20} /> Desktop version
+                        </a>
+                      ) : null}
+                    </React.Fragment>
                   ))}
                 </nav>
                 <div className="ff-mobile-account-links">
