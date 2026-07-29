@@ -1476,6 +1476,10 @@
   .ff-footer p {
     display: none;
   }
+
+  .ff-unified-workspace .mobile-word-break {
+    display: block;
+  }
 }
 
 @media (max-width: 560px) {

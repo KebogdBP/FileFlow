@@ -17,6 +17,7 @@
     "@fileflow/operation-registry": "workspace:*",
     "@fileflow/shared-types": "workspace:*",
     "@fileflow/ui": "workspace:*",
+    "@jsquash/webp": "1.5.0",
     "lucide-react": "^1.26.0",
     "motion": "^12.42.2",
     "next": "^15.4.2",

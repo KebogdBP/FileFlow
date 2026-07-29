@@ -184,7 +184,7 @@ const workspaceCopy = {
       'audio-to-mp3': 'Аудио в MP3',
       'audio-to-wav': 'Аудио в WAV',
       'trim-audio': 'Обрезать аудио',
-      'optimize-image': 'Оптимизировать изображение',
+      'optimize-image': 'Сжать',
       'remove-image-metadata': 'Удалить метаданные',
     },
     invalidFile: 'Этот файл нельзя использовать. Проверьте тип и размер.',
@@ -768,16 +768,25 @@ function RecommendationPanel({
       <div className="intent-options" role="group" aria-label={text.availableOps}>
         {options.map((option) => {
           const selected = result.plan.operationId === option.id;
+          const label =
+            (text.operationNames as Record<string, string>)[option.id] ?? option.displayName;
           return (
             <button
               type="button"
               key={option.id}
+              data-operation-id={option.id}
               aria-pressed={selected}
               onClick={() => setOperationId(option.id)}
             >
               <span aria-hidden="true">{selected ? '●' : '○'}</span>
               <strong>
-                {(text.operationNames as Record<string, string>)[option.id] ?? option.displayName}
+                {language === 'ru' && option.id === 'remove-image-metadata' ? (
+                  <>
+                    Удалить<span className="mobile-word-break"> метаданные</span>
+                  </>
+                ) : (
+                  label
+                )}
               </strong>
             </button>
           );

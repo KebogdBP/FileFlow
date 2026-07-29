@@ -4,6 +4,13 @@ import {
   type WorkerRuntimeScope,
 } from '@fileflow/local-processing';
 
+function isWebP(output: ArrayBuffer) {
+  const bytes = new Uint8Array(output);
+  const ascii = (offset: number, length: number) =>
+    String.fromCharCode(...bytes.slice(offset, offset + length));
+  return bytes.byteLength >= 12 && ascii(0, 4) === 'RIFF' && ascii(8, 4) === 'WEBP';
+}
+
 const processImage: LocalOperationHandler = async ({ input, options, signal, reportProgress }) => {
   const sourceMime = String(options.sourceMime ?? 'image/jpeg');
   if (options.removeMetadataOnly === true && sourceMime === 'image/jpeg') {
@@ -36,8 +43,25 @@ const processImage: LocalOperationHandler = async ({ input, options, signal, rep
     context.drawImage(bitmap, 0, 0, width, height);
     if (signal.aborted) throw new Error('Cancelled');
     reportProgress(75, 'Encoding WebP');
-    const blob = await canvas.convertToBlob({ type: 'image/webp', quality });
-    const output = await blob.arrayBuffer();
+    let output: ArrayBuffer;
+    let outputMime = 'image/webp';
+    try {
+      const blob = await canvas.convertToBlob({ type: 'image/webp', quality });
+      output = await blob.arrayBuffer();
+      outputMime = blob.type;
+    } catch {
+      output = new ArrayBuffer(0);
+    }
+    if (!isWebP(output)) {
+      if (signal.aborted) throw new Error('Cancelled');
+      reportProgress(84, 'Using compatible WebP encoder');
+      const { default: encodeWebP } = await import('@jsquash/webp/encode.js');
+      output = await encodeWebP(context.getImageData(0, 0, width, height), {
+        quality: Math.round(quality * 100),
+        method: 4,
+      });
+      outputMime = 'image/webp';
+    }
     reportProgress(100, 'Validating result');
     return {
       output,
@@ -46,7 +70,7 @@ const processImage: LocalOperationHandler = async ({ input, options, signal, rep
         height,
         sourceWidth: bitmap.width,
         sourceHeight: bitmap.height,
-        mime: blob.type,
+        mime: outputMime,
         metadataRemoved: true,
       },
     };
