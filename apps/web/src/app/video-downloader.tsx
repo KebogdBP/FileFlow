@@ -17,8 +17,8 @@ type Mode = 'video' | 'video-playlist' | 'audio-playlist' | 'audio' | 'mp3';
 const downloaderCopy = {
   en: {
     eyebrow: 'Video Downloader',
-    title: 'Download video and audio from a link.',
-    lead: 'Paste or drop a public media link, then choose what to save.',
+    title: 'Direct download',
+    lead: 'Download directly to your device',
     placeholder: 'Drop a video or audio link here',
     invalid: 'Paste a valid public HTTPS link.',
     actions: {
@@ -37,8 +37,8 @@ const downloaderCopy = {
   },
   ru: {
     eyebrow: 'Video Downloader',
-    title: 'Скачивайте видео и аудио по ссылке.',
-    lead: 'Вставьте или перетащите публичную ссылку, затем выберите, что скачать.',
+    title: 'скачивание в два клика',
+    lead: 'Скачивайте прямо на своё устройство',
     placeholder: 'Перетащите сюда ссылку на видео или аудио',
     invalid: 'Вставьте корректную публичную HTTPS-ссылку.',
     actions: {
@@ -57,8 +57,8 @@ const downloaderCopy = {
   },
   es: {
     eyebrow: 'Video Downloader',
-    title: 'Descarga vídeo y audio desde un enlace.',
-    lead: 'Pega o suelta un enlace público y elige qué guardar.',
+    title: 'Descarga directa',
+    lead: 'Descarga directamente en tu dispositivo',
     placeholder: 'Suelta aquí un enlace de vídeo o audio',
     invalid: 'Pega un enlace HTTPS público válido.',
     actions: {
@@ -193,69 +193,63 @@ export function VideoDownloader({ language }: { language: FileFlowLanguage }) {
             </motion.p>
           ) : null}
 
-          {valid ? (
-            <motion.div
-              className="ff-downloader-actions"
-              initial={{ opacity: 0, y: -8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-            >
-              {actionItems.map(({ mode, icon: Icon }) => (
-                <div className="ff-download-action" key={mode}>
-                  <button
-                    type="button"
-                    className={activeMode === mode ? 'is-active' : ''}
-                    aria-label={text.actions[mode]}
-                    aria-expanded={
-                      mode === 'video' || mode === 'video-playlist' || mode === 'audio-playlist'
-                        ? activeMode === mode
-                        : undefined
-                    }
-                    disabled={status === 'running'}
-                    onClick={() => chooseMode(mode)}
-                  >
-                    {status === 'running' && activeMode === mode ? (
-                      <LoaderCircle className="ff-spinner" size={27} />
-                    ) : (
-                      <Icon size={27} />
-                    )}
-                    <span>{text.actions[mode]}</span>
-                  </button>
-
-                  <AnimatePresence>
-                    {activeMode === mode && mode === 'video' ? (
-                      <OptionWindow label={text.quality}>
-                        {['best', '1080', '720', '480'].map((quality) => (
-                          <button
-                            key={quality}
-                            type="button"
-                            onClick={() => void startDownload(mode, quality)}
-                          >
-                            {quality === 'best' ? 'Best' : `${quality}p`}
-                          </button>
-                        ))}
-                      </OptionWindow>
-                    ) : null}
-                    {activeMode === mode &&
-                    (mode === 'video-playlist' || mode === 'audio-playlist') ? (
-                      <OptionWindow label={text.count}>
-                        {['1', '5', '10', '25', 'all'].map((count) => (
-                          <button
-                            key={count}
-                            type="button"
-                            onClick={() => void startDownload(mode, count)}
-                          >
-                            {count === 'all' ? text.all : count}
-                          </button>
-                        ))}
-                      </OptionWindow>
-                    ) : null}
-                  </AnimatePresence>
-                </div>
-              ))}
-            </motion.div>
-          ) : null}
         </AnimatePresence>
+
+        <div className="ff-downloader-actions">
+          {actionItems.map(({ mode, icon: Icon }) => (
+            <div className="ff-download-action" key={mode}>
+              <button
+                type="button"
+                className={activeMode === mode ? 'is-active' : ''}
+                aria-label={text.actions[mode]}
+                aria-expanded={
+                  mode === 'video' || mode === 'video-playlist' || mode === 'audio-playlist'
+                    ? activeMode === mode
+                    : undefined
+                }
+                disabled={!valid || status === 'running'}
+                onClick={() => chooseMode(mode)}
+              >
+                {status === 'running' && activeMode === mode ? (
+                  <LoaderCircle className="ff-spinner" size={27} />
+                ) : (
+                  <Icon size={27} />
+                )}
+                <span>{text.actions[mode]}</span>
+              </button>
+
+              <AnimatePresence>
+                {activeMode === mode && mode === 'video' ? (
+                  <OptionWindow label={text.quality}>
+                    {['best', '1080', '720', '480'].map((quality) => (
+                      <button
+                        key={quality}
+                        type="button"
+                        onClick={() => void startDownload(mode, quality)}
+                      >
+                        {quality === 'best' ? 'Best' : `${quality}p`}
+                      </button>
+                    ))}
+                  </OptionWindow>
+                ) : null}
+                {activeMode === mode &&
+                (mode === 'video-playlist' || mode === 'audio-playlist') ? (
+                  <OptionWindow label={text.count}>
+                    {['1', '5', '10', '25', 'all'].map((count) => (
+                      <button
+                        key={count}
+                        type="button"
+                        onClick={() => void startDownload(mode, count)}
+                      >
+                        {count === 'all' ? text.all : count}
+                      </button>
+                    ))}
+                  </OptionWindow>
+                ) : null}
+              </AnimatePresence>
+            </div>
+          ))}
+        </div>
 
         {message ? (
           <p

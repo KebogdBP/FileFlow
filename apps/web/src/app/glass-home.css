@@ -714,8 +714,15 @@
 }
 
 .ff-download-action > button:disabled {
-  cursor: wait;
-  opacity: 0.62;
+  cursor: default;
+  opacity: 0.55;
+}
+
+.ff-download-action > button:disabled:hover {
+  transform: none;
+  border-color: var(--glass-line);
+  color: var(--home-text);
+  box-shadow: var(--glass-shadow);
 }
 
 .ff-download-options {
@@ -1788,12 +1795,62 @@
 
   .ff-tools-section,
   .ff-advanced-section,
-  .ff-downloader-section,
   .ff-status-grid,
   .ff-legal-grid,
   .ff-saas-cta,
   .ff-footer {
     display: none;
+  }
+
+  .ff-downloader-section {
+    display: block;
+    padding: 24px 0 8px;
+  }
+
+  .ff-downloader-section .ff-section-heading {
+    display: block;
+    padding-inline: 4px;
+  }
+
+  .ff-downloader-section .ff-section-heading h2 {
+    margin-top: 12px;
+    font-size: clamp(2rem, 10vw, 2.65rem);
+    line-height: 1;
+  }
+
+  .ff-downloader-section .ff-section-heading p {
+    margin-top: 9px;
+    font-size: 13px;
+    line-height: 1.45;
+  }
+
+  .ff-downloader-card {
+    padding: 12px;
+    border-radius: 22px;
+  }
+
+  .ff-link-window {
+    min-height: 90px;
+    padding: 11px;
+    border-radius: 17px;
+  }
+
+  .ff-link-window input {
+    min-height: 50px;
+    padding-inline: 14px;
+    border-radius: 13px;
+    font-size: 14px;
+  }
+
+  .ff-downloader-actions {
+    gap: 9px;
+    margin-top: 12px;
+  }
+
+  .ff-download-action > button {
+    min-height: 84px;
+    gap: 7px;
+    border-radius: 15px;
   }
 }
 
