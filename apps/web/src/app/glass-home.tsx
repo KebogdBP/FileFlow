@@ -37,6 +37,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import React, { useEffect, useRef, useState } from 'react';
 import { operations } from '@fileflow/operation-registry';
+import { ACCOUNT_TOKEN_KEY, API_URL } from './cloud-api';
 import { useFileFlowLanguage, type FileFlowLanguage } from './use-fileflow-language';
 import { FileUrlInput } from './workspace/file-url-input';
 import { VideoDownloader } from './video-downloader';
@@ -706,6 +707,9 @@ export function GlassHome() {
   const [selectedIntent, setSelectedIntent] = useState<OperationId>();
   const { language, setLanguage } = useFileFlowLanguage();
   const [userProfile, setUserProfile] = useState<{ displayName: string } | null>(null);
+  const [userAvatarUrl, setUserAvatarUrl] = useState('');
+  const userAvatarUrlRef = useRef('');
+  const avatarRequestRef = useRef(0);
   const t = localizedCopy[language];
 
   useEffect(() => {
@@ -721,17 +725,44 @@ export function GlassHome() {
 
   useEffect(() => {
     const readProfile = () => {
+      const requestId = ++avatarRequestRef.current;
       try {
         const saved = window.localStorage.getItem('fileflow-user-profile');
-        setUserProfile(saved ? (JSON.parse(saved) as { displayName: string }) : null);
+        const profile = saved ? (JSON.parse(saved) as { displayName: string }) : null;
+        setUserProfile(profile);
+        const accessToken = window.localStorage.getItem(ACCOUNT_TOKEN_KEY);
+        if (!profile || !accessToken) {
+          if (userAvatarUrlRef.current) URL.revokeObjectURL(userAvatarUrlRef.current);
+          userAvatarUrlRef.current = '';
+          setUserAvatarUrl('');
+          return;
+        }
+        void fetch(`${API_URL}/account/avatar`, {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        })
+          .then(async (response) => {
+            if (!response.ok || requestId !== avatarRequestRef.current) return;
+            const url = URL.createObjectURL(await response.blob());
+            if (requestId !== avatarRequestRef.current) {
+              URL.revokeObjectURL(url);
+              return;
+            }
+            if (userAvatarUrlRef.current) URL.revokeObjectURL(userAvatarUrlRef.current);
+            userAvatarUrlRef.current = url;
+            setUserAvatarUrl(url);
+          })
+          .catch(() => undefined);
       } catch {
         setUserProfile(null);
+        setUserAvatarUrl('');
       }
     };
     readProfile();
     window.addEventListener('storage', readProfile);
     window.addEventListener('fileflow-profile-change', readProfile);
     return () => {
+      avatarRequestRef.current += 1;
+      if (userAvatarUrlRef.current) URL.revokeObjectURL(userAvatarUrlRef.current);
       window.removeEventListener('storage', readProfile);
       window.removeEventListener('fileflow-profile-change', readProfile);
     };
@@ -786,8 +817,19 @@ export function GlassHome() {
               href="/account"
               aria-label={userProfile?.displayName ?? t.signIn}
             >
-              {userProfile ? (
-                <span aria-hidden="true">{userProfile.displayName.slice(0, 2).toUpperCase()}</span>
+              {userProfile && userAvatarUrl ? (
+                <Image
+                  className="ff-user-avatar-visual"
+                  src={userAvatarUrl}
+                  alt=""
+                  width={60}
+                  height={60}
+                  unoptimized
+                />
+              ) : userProfile ? (
+                <span className="ff-user-avatar-visual" aria-hidden="true">
+                  {userProfile.displayName.slice(0, 2).toUpperCase()}
+                </span>
               ) : (
                 <UserRound size={19} />
               )}

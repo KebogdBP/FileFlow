@@ -36,6 +36,11 @@ class RecordingRunner:
                 with ZipFile(workspace / "document.pptx", "w") as archive:
                     archive.writestr("[Content_Types].xml", "types")
                     archive.writestr("ppt/presentation.xml", "presentation")
+                    archive.writestr("ppt/_rels/presentation.xml.rels", "relationships")
+                    archive.writestr("ppt/slides/slide1.xml", "slide")
+                    archive.writestr("ppt/slideMasters/slideMaster1.xml", "master")
+                    archive.writestr("ppt/slideLayouts/slideLayout1.xml", "layout")
+                    archive.writestr("ppt/theme/theme1.xml", "theme")
         elif command[0] == TOOLS["pdftotext"]:
             Path(command[-1]).write_text("Editable PDF text", encoding="utf-8")
         elif command[0] == TOOLS["pdftoppm"]:
@@ -115,6 +120,22 @@ def test_pdf_converts_to_editable_office_formats(
     assert result.content_type == content_type
     assert runner.commands[0][0] == tool
     assert all('"' not in argument for command in runner.commands for argument in command)
+    if operation == "pdf-to-pptx":
+        assert "--infilter=impress_pdf_import" in runner.commands[0]
+
+
+def test_pdf_to_pptx_rejects_empty_libreoffice_package(tmp_path: Path) -> None:
+    class EmptyPresentationRunner(RecordingRunner):
+        def run(self, argv: Sequence[str], workspace: Path) -> None:
+            self.commands.append(list(argv))
+            with ZipFile(workspace / "document.pptx", "w") as archive:
+                archive.writestr("[Content_Types].xml", "types")
+                archive.writestr("ppt/presentation.xml", "presentation")
+
+    with pytest.raises(ValueError, match="without readable slides"):
+        DocumentHandler(TOOLS, EmptyPresentationRunner(), "pdf-to-pptx").execute(
+            pdf_request(tmp_path)
+        )
 
 
 @pytest.mark.parametrize(

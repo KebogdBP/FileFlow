@@ -32,6 +32,7 @@ const downloaderCopy = {
     count: 'How many files',
     all: 'All',
     working: 'Preparing your download…',
+    downloading: 'Downloading directly to your device…',
     ready: 'The download has started.',
     failed: 'The file could not be downloaded.',
   },
@@ -52,6 +53,7 @@ const downloaderCopy = {
     count: 'Сколько файлов скачать',
     all: 'Все',
     working: 'Готовим скачивание…',
+    downloading: 'Скачиваем прямо на ваше устройство…',
     ready: 'Скачивание началось.',
     failed: 'Не удалось скачать файл.',
   },
@@ -72,6 +74,7 @@ const downloaderCopy = {
     count: 'Cuántos archivos',
     all: 'Todos',
     working: 'Preparando la descarga…',
+    downloading: 'Descargando directamente en tu dispositivo…',
     ready: 'La descarga ha comenzado.',
     failed: 'No se pudo descargar el archivo.',
   },
@@ -99,6 +102,7 @@ export function VideoDownloader({ language }: { language: FileFlowLanguage }) {
   const [activeMode, setActiveMode] = useState<Mode | null>(null);
   const [status, setStatus] = useState<'idle' | 'running' | 'ready' | 'error'>('idle');
   const [message, setMessage] = useState('');
+  const [progress, setProgress] = useState<number | null>(null);
   const valid = isPublicHttpsLink(url.trim());
 
   function chooseMode(mode: Mode) {
@@ -127,17 +131,20 @@ export function VideoDownloader({ language }: { language: FileFlowLanguage }) {
 
     setStatus('running');
     setMessage(text.working);
+    setProgress(null);
     try {
       const item = await createSocialImport(url.trim(), options);
       const completed = await waitForSocialImport(item.id);
       if (completed.upload_id) {
         await waitForCleanUpload(completed.upload_id, () => undefined);
       }
-      await downloadSocialImportResult(completed.id);
+      setMessage(text.downloading);
+      await downloadSocialImportResult(completed.id, setProgress);
       setStatus('ready');
       setMessage(text.ready);
     } catch (error) {
       setStatus('error');
+      setProgress(null);
       setMessage(error instanceof Error && error.message ? error.message : text.failed);
     }
   }
@@ -177,6 +184,7 @@ export function VideoDownloader({ language }: { language: FileFlowLanguage }) {
               setActiveMode(null);
               setStatus('idle');
               setMessage('');
+              setProgress(null);
             }}
           />
         </div>
@@ -250,6 +258,19 @@ export function VideoDownloader({ language }: { language: FileFlowLanguage }) {
             </div>
           ))}
         </div>
+
+        {status === 'running' ? (
+          <div
+            className={`ff-downloader-progress ${progress === null ? 'is-indeterminate' : ''}`}
+            role="progressbar"
+            aria-label={message}
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-valuenow={progress ?? undefined}
+          >
+            <span style={progress === null ? undefined : { width: `${progress}%` }} />
+          </div>
+        ) : null}
 
         {message ? (
           <p

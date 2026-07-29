@@ -56,8 +56,11 @@ def download_result(job_id: str, request: Request) -> StreamingResponse:
     extension = extensions.get(job.result_content_type, ".bin")
     filename = f"fileflow-{job.operation}{extension}"
     storage = request.app.state.object_storage
+    headers = {"Content-Disposition": f'attachment; filename="{filename}"'}
+    if job.result_size_bytes is not None:
+        headers["Content-Length"] = str(job.result_size_bytes)
     return StreamingResponse(
         storage.iter_object(job.result_object_key),
         media_type=job.result_content_type,
-        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+        headers=headers,
     )

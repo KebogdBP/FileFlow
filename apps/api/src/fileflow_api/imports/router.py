@@ -29,5 +29,8 @@ def download_import(import_id: str, request: Request) -> StreamingResponse:
     return StreamingResponse(
         storage.iter_object(upload.object_key),
         media_type=upload.content_type,
-        headers={"Content-Disposition": f'attachment; filename="fileflow-{upload.filename}"'},
+        headers={
+            "Content-Disposition": f'attachment; filename="fileflow-{upload.filename}"',
+            "Content-Length": str(upload.size_bytes),
+        },
     )

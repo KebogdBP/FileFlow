@@ -402,6 +402,7 @@ export function AccountDashboard() {
       }
       await loadAvatar(token);
       setAccount((current) => (current ? { ...current, has_avatar: true } : current));
+      window.dispatchEvent(new Event('fileflow-profile-change'));
       form.reset();
       setMessage(extra.avatarUpdated);
     } finally {

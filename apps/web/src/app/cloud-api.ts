@@ -230,12 +230,38 @@ export async function waitForSocialImport(importId: string, signal?: AbortSignal
   }
 }
 
-export async function downloadSocialImportResult(importId: string) {
+export async function downloadSocialImportResult(
+  importId: string,
+  onProgress?: (progress: number | null) => void,
+) {
   const response = await fetch(`${API_URL}/imports/${importId}/result`);
   if (!response.ok) throw new Error(await responseError(response));
   const disposition = response.headers.get('Content-Disposition') ?? '';
   const filename = /filename="([^"]+)"/.exec(disposition)?.[1] ?? `fileflow-${importId}`;
-  const objectUrl = URL.createObjectURL(await response.blob());
+  const total = Number(response.headers.get('Content-Length')) || 0;
+  let blob: Blob;
+  if (!response.body) {
+    onProgress?.(null);
+    blob = await response.blob();
+  } else {
+    const reader = response.body.getReader();
+    const chunks: Uint8Array<ArrayBuffer>[] = [];
+    let received = 0;
+    onProgress?.(total ? 0 : null);
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      const chunk = new Uint8Array(value);
+      chunks.push(chunk);
+      received += chunk.byteLength;
+      if (total) onProgress?.(Math.min(99, Math.round((received / total) * 100)));
+    }
+    blob = new Blob(chunks, {
+      type: response.headers.get('Content-Type') ?? 'application/octet-stream',
+    });
+  }
+  onProgress?.(100);
+  const objectUrl = URL.createObjectURL(blob);
   const anchor = document.createElement('a');
   anchor.href = objectUrl;
   anchor.download = filename;

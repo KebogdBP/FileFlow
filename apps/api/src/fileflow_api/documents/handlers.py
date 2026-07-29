@@ -220,6 +220,7 @@ class DocumentHandler:
                 "--nodefault",
                 "--nolockcheck",
                 "--nofirststartwizard",
+                "--infilter=impress_pdf_import",
                 "--convert-to",
                 "pptx:Impress MS PowerPoint 2007 XML",
                 "--outdir",
@@ -256,6 +257,7 @@ class DocumentHandler:
             DocumentHandler._validate_office_output(path, "word/document.xml", "DOCX")
         if content_type == PPTX_TYPE:
             DocumentHandler._validate_office_output(path, "ppt/presentation.xml", "PPTX")
+            DocumentHandler._validate_presentation_output(path)
 
     @staticmethod
     def _validate_office_output(path: Path, required_entry: str, label: str) -> None:
@@ -270,3 +272,21 @@ class DocumentHandler:
                     raise ValueError(f"expanded {label} exceeds safety limit")
         except BadZipFile as error:
             raise ValueError(f"document tool returned an invalid {label} package") from error
+
+    @staticmethod
+    def _validate_presentation_output(path: Path) -> None:
+        with ZipFile(path) as archive:
+            names = set(archive.namelist())
+            slides = {
+                name
+                for name in names
+                if re.fullmatch(r"ppt/slides/slide[1-9][0-9]*\.xml", name)
+            }
+            required = {
+                "ppt/_rels/presentation.xml.rels",
+                "ppt/slideMasters/slideMaster1.xml",
+                "ppt/slideLayouts/slideLayout1.xml",
+                "ppt/theme/theme1.xml",
+            }
+            if not slides or not required.issubset(names):
+                raise ValueError("document tool returned a PPTX without readable slides")
