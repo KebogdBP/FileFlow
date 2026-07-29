@@ -247,9 +247,9 @@
 }
 
 .ff-language-switch select {
-  width: 118px;
+  width: 70px;
   height: 44px;
-  padding: 0 30px 0 12px;
+  padding: 0 26px 0 12px;
   border: 1px solid var(--glass-border);
   border-radius: 13px;
   color: var(--home-text);
