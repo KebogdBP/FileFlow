@@ -10,6 +10,7 @@ from fileflow_api.database import Base
 class EventName(StrEnum):
     INTENT_VIEWED = "intent_viewed"
     WORKSPACE_OPENED = "workspace_opened"
+    SITE_VISIT = "site_visit"
 
 
 class ProductEvent(Base):

@@ -12,3 +12,8 @@ class EventCreate(BaseModel):
 
 class EventAccepted(BaseModel):
     accepted: bool = True
+
+
+class VisitCounts(BaseModel):
+    total: int
+    today: int

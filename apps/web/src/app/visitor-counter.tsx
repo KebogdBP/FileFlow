@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { API_URL } from './cloud-api';
 
 type VisitCounts = {
   total: number;
@@ -23,7 +24,7 @@ export function VisitorCounter() {
     }
 
     const controller = new AbortController();
-    void fetch('/api/visits', { method, signal: controller.signal })
+    void fetch(`${API_URL}/analytics/visits`, { method, signal: controller.signal })
       .then((response) => {
         if (!response.ok) throw new Error('Visit counter unavailable');
         return response.json() as Promise<VisitCounts>;

@@ -1,4 +1,4 @@
-import { cpSync, existsSync, mkdirSync, rmSync } from 'node:fs';
+import { cpSync, mkdirSync, rmSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
@@ -14,7 +14,6 @@ const serverDist = fileURLToPath(new URL('../dist/server', import.meta.url));
 const hostingDist = fileURLToPath(new URL('../dist/.openai', import.meta.url));
 const hostingConfig = fileURLToPath(new URL('../.openai/hosting.json', import.meta.url));
 const workerSource = fileURLToPath(new URL('../sites-worker/index.js', import.meta.url));
-const migrations = fileURLToPath(new URL('../drizzle', import.meta.url));
 
 const build = spawnSync(process.execPath, [nextBin, 'build'], {
   cwd: webRoot,
@@ -35,8 +34,5 @@ mkdirSync(hostingDist, { recursive: true });
 cpSync(output, clientDist, { recursive: true });
 cpSync(hostingConfig, `${hostingDist}/hosting.json`);
 cpSync(workerSource, `${serverDist}/index.js`);
-if (existsSync(migrations)) {
-  cpSync(migrations, `${hostingDist}/drizzle`, { recursive: true });
-}
 
 console.log(`Static site copied to ${dist.replace(`${projectRoot}\\`, '')}`);

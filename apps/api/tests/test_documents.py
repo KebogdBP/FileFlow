@@ -114,6 +114,7 @@ def test_pdf_converts_to_editable_office_formats(
     result = DocumentHandler(TOOLS, runner, operation).execute(pdf_request(tmp_path))
     assert result.content_type == content_type
     assert runner.commands[0][0] == tool
+    assert all('"' not in argument for command in runner.commands for argument in command)
 
 
 @pytest.mark.parametrize(
