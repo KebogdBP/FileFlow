@@ -40,6 +40,7 @@ import { operations } from '@fileflow/operation-registry';
 import { useFileFlowLanguage, type FileFlowLanguage } from './use-fileflow-language';
 import { FileUrlInput } from './workspace/file-url-input';
 import { VideoDownloader } from './video-downloader';
+import { VisitorCounter } from './visitor-counter';
 
 type Language = FileFlowLanguage;
 type OperationId = (typeof operations)[number]['id'];
@@ -1021,6 +1022,7 @@ export function GlassHome() {
               <Link href="#tools">Tools</Link>
             </nav>
           </footer>
+          <VisitorCounter />
         </main>
 
         <AnimatePresence>

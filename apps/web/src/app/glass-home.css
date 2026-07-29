@@ -1253,6 +1253,16 @@
   color: var(--home-blue);
 }
 
+.ff-visitor-counter {
+  min-height: 16px;
+  padding: 0 0 10px;
+  color: color-mix(in srgb, var(--home-muted) 68%, transparent);
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  text-align: center;
+}
+
 .ff-mobile-overlay {
   position: fixed;
   z-index: 100;
