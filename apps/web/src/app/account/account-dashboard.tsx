@@ -1,6 +1,7 @@
 'use client';
 
 import Image from 'next/image';
+import { Camera } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { FormEvent } from 'react';
 import { Badge, Button, Card, Input } from '@fileflow/ui';
@@ -99,6 +100,7 @@ const accountExtraCopy = {
     profile: 'Profile settings',
     avatar: 'Avatar (JPEG, PNG or WebP, up to 5 MB)',
     uploadAvatar: 'Upload avatar',
+    changeAvatar: 'Change avatar',
     avatarUpdated: 'Avatar updated.',
     invalidAvatar: 'Choose a JPEG, PNG or WebP image up to 5 MB.',
   },
@@ -114,6 +116,7 @@ const accountExtraCopy = {
     profile: 'Настройки профиля',
     avatar: 'Аватар (JPEG, PNG или WebP, до 5 МБ)',
     uploadAvatar: 'Загрузить аватар',
+    changeAvatar: 'Сменить аватар',
     avatarUpdated: 'Аватар обновлён.',
     invalidAvatar: 'Выберите JPEG, PNG или WebP до 5 МБ.',
   },
@@ -129,6 +132,7 @@ const accountExtraCopy = {
     profile: 'Ajustes del perfil',
     avatar: 'Avatar (JPEG, PNG o WebP, hasta 5 MB)',
     uploadAvatar: 'Subir avatar',
+    changeAvatar: 'Cambiar avatar',
     avatarUpdated: 'Avatar actualizado.',
     invalidAvatar: 'Elige una imagen JPEG, PNG o WebP de hasta 5 MB.',
   },
@@ -187,6 +191,7 @@ export function AccountDashboard() {
   const [busy, setBusy] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState('');
   const avatarUrlRef = useRef('');
+  const avatarInputRef = useRef<HTMLInputElement>(null);
 
   const loadAvatar = useCallback(async (accessToken: string) => {
     const response = await fetch(`${API_URL}/account/avatar`, {
@@ -372,13 +377,9 @@ export function AccountDashboard() {
     }
   }
 
-  async function uploadAvatar(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  async function saveAvatar(file: File, form?: HTMLFormElement) {
     if (!token) return;
-    const form = event.currentTarget;
-    const file = new FormData(form).get('avatar');
     if (
-      !(file instanceof File) ||
       !['image/jpeg', 'image/png', 'image/webp'].includes(file.type) ||
       file.size === 0 ||
       file.size > 5 * 1024 * 1024
@@ -403,11 +404,23 @@ export function AccountDashboard() {
       await loadAvatar(token);
       setAccount((current) => (current ? { ...current, has_avatar: true } : current));
       window.dispatchEvent(new Event('fileflow-profile-change'));
-      form.reset();
+      form?.reset();
+      if (avatarInputRef.current) avatarInputRef.current.value = '';
       setMessage(extra.avatarUpdated);
     } finally {
       setBusy(false);
     }
+  }
+
+  async function uploadAvatar(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const file = new FormData(form).get('avatar');
+    if (!(file instanceof File)) {
+      setMessage(extra.invalidAvatar);
+      return;
+    }
+    await saveAvatar(file, form);
   }
 
   async function changePassword(event: FormEvent<HTMLFormElement>) {
@@ -543,20 +556,43 @@ export function AccountDashboard() {
       <Card>
         <div className="account-card-heading">
           <div className="account-identity">
-            {avatarUrl ? (
-              <Image
-                className="account-avatar"
-                src={avatarUrl}
-                alt=""
-                width={72}
-                height={72}
-                unoptimized
-              />
-            ) : (
-              <span className="account-avatar account-avatar-fallback" aria-hidden="true">
-                {account.display_name.slice(0, 1).toUpperCase()}
+            <button
+              className="account-avatar-button"
+              type="button"
+              aria-label={extra.changeAvatar}
+              title={extra.changeAvatar}
+              disabled={busy}
+              onClick={() => avatarInputRef.current?.click()}
+            >
+              {avatarUrl ? (
+                <Image
+                  className="account-avatar"
+                  src={avatarUrl}
+                  alt=""
+                  width={72}
+                  height={72}
+                  unoptimized
+                />
+              ) : (
+                <span className="account-avatar account-avatar-fallback" aria-hidden="true">
+                  {account.display_name.slice(0, 1).toUpperCase()}
+                </span>
+              )}
+              <span className="account-avatar-edit" aria-hidden="true">
+                <Camera size={16} />
               </span>
-            )}
+            </button>
+            <input
+              ref={avatarInputRef}
+              className="account-avatar-input"
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              aria-label={extra.changeAvatar}
+              onChange={(event) => {
+                const file = event.currentTarget.files?.[0];
+                if (file) void saveAvatar(file);
+              }}
+            />
             <div>
               <Badge variant="private">{account.plan}</Badge>
               <h2>{account.display_name}</h2>

@@ -223,6 +223,53 @@
   font-weight: 800;
   background: linear-gradient(135deg, var(--account-blue), #8a5cff);
 }
+.account-avatar-button {
+  position: relative;
+  width: 4.5rem;
+  height: 4.5rem;
+  flex: 0 0 4.5rem;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  overflow: visible;
+  color: inherit;
+  background: transparent;
+  cursor: pointer;
+}
+.account-avatar-button:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--account-blue) 40%, transparent);
+  outline-offset: 4px;
+}
+.account-avatar-button:disabled {
+  cursor: progress;
+  opacity: 0.72;
+}
+.account-avatar-edit {
+  position: absolute;
+  right: -0.2rem;
+  bottom: -0.15rem;
+  width: 1.75rem;
+  height: 1.75rem;
+  display: grid;
+  place-items: center;
+  border: 2px solid white;
+  border-radius: 50%;
+  color: white;
+  background: linear-gradient(135deg, var(--account-blue), #6a61ff);
+  box-shadow: 0 5px 14px rgba(36, 116, 255, 0.28);
+}
+:root[data-theme='dark'] .account-avatar-edit {
+  border-color: #17243a;
+}
+.account-avatar-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
 .account-profile-settings {
   display: grid;
   gap: 1.25rem;

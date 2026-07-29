@@ -911,6 +911,10 @@ export function GlassHome() {
               <Link className="ff-mobile-account glass-panel" href="/account" aria-label={t.signIn}>
                 {userProfile && userAvatarUrl ? (
                   <Image src={userAvatarUrl} alt="" width={40} height={40} unoptimized />
+                ) : userProfile ? (
+                  <span className="ff-mobile-account-fallback" aria-hidden="true">
+                    {userProfile.displayName.slice(0, 1).toUpperCase()}
+                  </span>
                 ) : (
                   <UserRound size={19} aria-hidden="true" />
                 )}
