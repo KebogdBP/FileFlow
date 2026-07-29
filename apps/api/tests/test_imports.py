@@ -294,7 +294,7 @@ def test_downloader_applies_audio_quality_trim_and_playlist_item(
     )
 
     assert result.content_type == "audio/mpeg"
-    assert result.filename == "imported-audio.mp3"
+    assert result.filename == "Track Converted.mp3"
     assert captured["format"] == "bestaudio/best"
     assert captured["noplaylist"] is False
     assert captured["playlist_items"] == "3"

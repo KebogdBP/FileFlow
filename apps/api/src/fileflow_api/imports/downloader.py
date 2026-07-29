@@ -16,6 +16,8 @@ from yt_dlp import YoutubeDL
 from yt_dlp.networking.impersonate import ImpersonateTarget
 from yt_dlp.utils import DownloadError, download_range_func
 
+from fileflow_api.downloads import converted_filename
+
 WORKING_COOKIES_FILENAME = ".platform-cookies.txt"
 
 
@@ -210,6 +212,9 @@ class YtDlpClient:
         if raw is None:
             assert last_error is not None
             raise ImportDownloadError(_download_error_code(str(last_error))) from last_error
+        title = _metadata_text(raw, "title", 500)
+        creator = _metadata_text(raw, "uploader", 255)
+        thumbnail = _metadata_text(raw, "thumbnail", 2048)
         files = [path for path in workspace.iterdir() if path.is_file() and not path.is_symlink()]
         expected_suffix = ".mp3" if selected.media_type == "audio" else ".mp4"
         media_files = sorted(path for path in files if path.suffix.lower() == expected_suffix)
@@ -227,10 +232,10 @@ class YtDlpClient:
             return ImportedMedia(
                 archive,
                 "application/zip",
-                "imported-playlist.zip",
-                _metadata_text(raw, "title", 500),
-                _metadata_text(raw, "uploader", 255),
-                _metadata_text(raw, "thumbnail", 2048),
+                converted_filename(title or "Playlist", ".zip", source_is_filename=False),
+                title,
+                creator,
+                thumbnail,
             )
         if len(media_files) != 1:
             raise ValueError(f"import did not produce one {expected_suffix} artifact")
@@ -243,20 +248,24 @@ class YtDlpClient:
             if not _is_mp3_header(header):
                 raise ValueError("imported media is not an MP3 file")
             content_type = "audio/mpeg"
-            filename = "imported-audio.mp3"
+            filename = converted_filename(
+                title or "Audio", ".mp3", source_is_filename=False
+            )
         else:
             if len(header) < 8 or header[4:8] != b"ftyp":
                 raise ValueError("imported media is not an MP4 container")
             content_type = "video/mp4"
-            filename = "imported-video.mp4"
+            filename = converted_filename(
+                title or "Video", ".mp4", source_is_filename=False
+            )
 
         return ImportedMedia(
             media,
             content_type,
             filename,
-            _metadata_text(raw, "title", 500),
-            _metadata_text(raw, "uploader", 255),
-            _metadata_text(raw, "thumbnail", 2048),
+            title,
+            creator,
+            thumbnail,
         )
 
 

@@ -198,13 +198,25 @@ export async function waitForCloudJob(
   }
 }
 
+export function responseFilename(disposition: string, fallback: string) {
+  const encoded = /filename\*=UTF-8''([^;]+)/i.exec(disposition)?.[1];
+  if (encoded) {
+    try {
+      return decodeURIComponent(encoded);
+    } catch {
+      // Fall back to the ASCII filename when a server sends invalid encoding.
+    }
+  }
+  return /filename="([^"]+)"/i.exec(disposition)?.[1] ?? fallback;
+}
+
 export async function downloadJobResult(jobId: string, token: string) {
   const response = await fetch(`${API_URL}/jobs/${jobId}/result`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   if (!response.ok) throw new Error(await responseError(response));
   const disposition = response.headers.get('Content-Disposition') ?? '';
-  const filename = /filename="([^"]+)"/.exec(disposition)?.[1] ?? `fileflow-${jobId}`;
+  const filename = responseFilename(disposition, `fileflow-${jobId}`);
   return { blob: await response.blob(), filename };
 }
 
@@ -237,7 +249,7 @@ export async function downloadSocialImportResult(
   const response = await fetch(`${API_URL}/imports/${importId}/result`);
   if (!response.ok) throw new Error(await responseError(response));
   const disposition = response.headers.get('Content-Disposition') ?? '';
-  const filename = /filename="([^"]+)"/.exec(disposition)?.[1] ?? `fileflow-${importId}`;
+  const filename = responseFilename(disposition, `fileflow-${importId}`);
   const total = Number(response.headers.get('Content-Length')) || 0;
   let blob: Blob;
   if (!response.body) {

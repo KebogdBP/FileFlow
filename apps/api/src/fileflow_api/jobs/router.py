@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException, Request, status
 from fastapi.responses import StreamingResponse
 
 from fileflow_api.accounts.router import current_account
+from fileflow_api.downloads import attachment_disposition, converted_filename
 from fileflow_api.jobs.contracts import JobCreate, JobResponse
 from fileflow_api.jobs.service import JobService
 
@@ -54,9 +55,10 @@ def download_result(job_id: str, request: Request) -> StreamingResponse:
         "application/vnd.openxmlformats-officedocument.presentationml.presentation": ".pptx",
     }
     extension = extensions.get(job.result_content_type, ".bin")
-    filename = f"fileflow-{job.operation}{extension}"
+    source_upload = request.app.state.upload_service.get(job.upload_id)
+    filename = converted_filename(source_upload.filename, extension)
     storage = request.app.state.object_storage
-    headers = {"Content-Disposition": f'attachment; filename="{filename}"'}
+    headers = {"Content-Disposition": attachment_disposition(filename)}
     if job.result_size_bytes is not None:
         headers["Content-Length"] = str(job.result_size_bytes)
     return StreamingResponse(

@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Request, status
 from fastapi.responses import StreamingResponse
 
+from fileflow_api.downloads import attachment_disposition
 from fileflow_api.imports.contracts import ImportCreate, ImportResponse
 from fileflow_api.imports.service import SocialImportService
 
@@ -30,7 +31,7 @@ def download_import(import_id: str, request: Request) -> StreamingResponse:
         storage.iter_object(upload.object_key),
         media_type=upload.content_type,
         headers={
-            "Content-Disposition": f'attachment; filename="fileflow-{upload.filename}"',
+            "Content-Disposition": attachment_disposition(upload.filename),
             "Content-Length": str(upload.size_bytes),
         },
     )
