@@ -628,7 +628,7 @@
 }
 
 .ff-link-window {
-  min-height: 104px;
+  min-height: 128px;
   display: grid;
   place-items: center;
   padding: 18px;
@@ -650,7 +650,7 @@
 
 .ff-link-window input {
   width: min(720px, 100%);
-  min-height: 56px;
+  min-height: 62px;
   padding: 0 20px;
   border: 1px solid var(--glass-line);
   border-radius: 15px;
@@ -681,7 +681,7 @@
 .ff-download-action > button {
   width: 100%;
   aspect-ratio: 1;
-  min-height: 112px;
+  min-height: 128px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1477,7 +1477,7 @@
 
   .ff-download-action > button {
     aspect-ratio: auto;
-    min-height: 96px;
+    min-height: 108px;
   }
   .ff-tool-rail-actions {
     width: 100%;
@@ -1866,13 +1866,13 @@
   }
 
   .ff-link-window {
-    min-height: 90px;
-    padding: 11px;
+    min-height: 116px;
+    padding: 14px;
     border-radius: 17px;
   }
 
   .ff-link-window input {
-    min-height: 50px;
+    min-height: 58px;
     padding-inline: 14px;
     border-radius: 13px;
     font-size: 14px;
@@ -1884,9 +1884,9 @@
   }
 
   .ff-download-action > button {
-    min-height: 84px;
-    gap: 7px;
-    border-radius: 15px;
+    min-height: 108px;
+    gap: 9px;
+    border-radius: 17px;
   }
 }
 

@@ -940,6 +940,48 @@
   font: inherit;
 }
 
+.social-import-controls {
+  gap: 18px;
+  padding: 20px;
+  border: 1px solid color-mix(in srgb, var(--ff-color-primary) 18%, var(--ff-color-border));
+  border-radius: 20px;
+  background:
+    linear-gradient(
+      145deg,
+      color-mix(in srgb, var(--ff-color-primary-soft) 28%, var(--ff-color-surface)),
+      var(--ff-color-surface)
+    );
+  box-shadow:
+    0 16px 36px color-mix(in srgb, var(--ff-color-primary) 8%, transparent),
+    inset 0 1px 0 color-mix(in srgb, white 72%, transparent);
+}
+
+.social-import-controls [data-ff-select].social-import-select {
+  min-height: 60px !important;
+  padding: 0 48px 0 17px !important;
+  border: 1.5px solid color-mix(in srgb, var(--ff-color-primary) 32%, var(--ff-color-border)) !important;
+  border-radius: 16px !important;
+  background-color: color-mix(in srgb, var(--ff-color-surface) 92%, var(--ff-color-primary-soft)) !important;
+  box-shadow:
+    0 10px 24px color-mix(in srgb, var(--ff-color-primary) 9%, transparent),
+    inset 0 1px 0 color-mix(in srgb, white 78%, transparent);
+  font-size: 16px !important;
+  font-weight: 760 !important;
+  cursor: pointer;
+  transition:
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    transform 180ms ease;
+}
+
+.social-import-controls [data-ff-select].social-import-select:hover,
+.social-import-controls [data-ff-select].social-import-select:focus {
+  border-color: var(--ff-color-primary) !important;
+  box-shadow:
+    0 13px 28px color-mix(in srgb, var(--ff-color-primary) 14%, transparent),
+    0 0 0 4px color-mix(in srgb, var(--ff-color-primary) 10%, transparent);
+}
+
 .cloud-auth-note {
   margin: 0;
   padding: var(--ff-space-3);
@@ -1199,6 +1241,16 @@
   }
   .intent-confirmation > button {
     width: 100%;
+  }
+  .social-import-controls {
+    gap: var(--ff-space-4);
+    padding: var(--ff-space-4);
+    border-radius: 18px;
+  }
+  .social-import-controls [data-ff-select].social-import-select {
+    min-height: 64px !important;
+    border-radius: 17px !important;
+    font-size: 17px !important;
   }
   .recommendation-explanation {
     grid-template-columns: 1fr;

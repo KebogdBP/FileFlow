@@ -225,9 +225,10 @@ export function SocialImportTool({
   return (
     <div className="social-import-tool">
       {editable ? (
-        <div className="cloud-controls">
+        <div className="cloud-controls social-import-controls">
           <Select
             id="social-media-type"
+            className="social-import-select"
             label={text.mediaType}
             value={mediaType}
             onChange={(event) => setMediaType(event.target.value as 'video' | 'audio')}
@@ -238,6 +239,7 @@ export function SocialImportTool({
           {mediaType === 'video' ? (
             <Select
               id="social-video-quality"
+              className="social-import-select"
               label={text.videoQuality}
               value={videoQuality}
               onChange={(event) =>
@@ -253,6 +255,7 @@ export function SocialImportTool({
           ) : (
             <Select
               id="social-audio-quality"
+              className="social-import-select"
               label={text.audioQuality}
               value={String(audioBitrate)}
               onChange={(event) => setAudioBitrate(Number(event.target.value) as 128 | 192 | 320)}

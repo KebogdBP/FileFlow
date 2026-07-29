@@ -740,7 +740,6 @@ function RecommendationPanel({
 }) {
   const text = workspaceCopy[language];
   const [operationId, setOperationId] = useState<string>();
-  const [confirmed, setConfirmed] = useState(false);
   const options = availableOperations(context);
   const selectedOperation = options.some((option) => option.id === operationId)
     ? operationId
@@ -774,10 +773,7 @@ function RecommendationPanel({
               type="button"
               key={option.id}
               aria-pressed={selected}
-              onClick={() => {
-                setOperationId(option.id);
-                setConfirmed(false);
-              }}
+              onClick={() => setOperationId(option.id)}
             >
               <span aria-hidden="true">{selected ? '●' : '○'}</span>
               <strong>
@@ -788,16 +784,10 @@ function RecommendationPanel({
         })}
       </div>
       <RecommendationPlanView plan={result.plan} language={language} />
-      <div className="intent-confirmation" data-confirmed={confirmed || undefined}>
-        <Button type="button" onClick={() => setConfirmed(true)} disabled={confirmed}>
-          {confirmed ? text.confirmedButton : text.confirm}
-        </Button>
-      </div>
-      {confirmed && result.plan.mode === 'cloud' ? (
+      {result.plan.mode === 'cloud' ? (
         <CloudJobTool operationId={result.plan.operationId} files={[file]} language={language} />
       ) : null}
-      {confirmed &&
-      result.plan.mode === 'local' &&
+      {result.plan.mode === 'local' &&
       (sourceMime === 'image/jpeg' || sourceMime === 'image/png') ? (
         <LocalImageTool
           file={file}

@@ -235,12 +235,8 @@ describe('M05 file and URL input UI', () => {
     expect(container.textContent).toContain('Make this image lighter');
     expect(container.textContent).toContain('What would you like to do?');
     expect(container.textContent).toContain('Remove private metadata');
-    expect(container.textContent).toContain('Confirm intent');
+    expect(container.textContent).not.toContain('Confirm intent');
     expect(container.textContent).not.toContain('Plan only');
-    const confirm = [...container.querySelectorAll('button')].find(
-      (button) => button.textContent === 'Confirm intent',
-    );
-    await act(async () => confirm?.dispatchEvent(new MouseEvent('click', { bubbles: true })));
     expect(container.textContent).toContain('Create a lighter WebP');
     expect(container.textContent).toContain('Create WebP locally');
     await act(async () => root.unmount());
@@ -293,7 +289,7 @@ describe('M05 file and URL input UI', () => {
     await act(async () => root.unmount());
   });
 
-  it('reveals the connected cloud controls after confirming a video intent', async () => {
+  it('reveals the connected cloud controls immediately for a video intent', async () => {
     const container = document.createElement('div');
     const root = createRoot(container);
     await act(async () => root.render(<FileUrlInput initialIntent="compress-video" />));
@@ -307,10 +303,7 @@ describe('M05 file and URL input UI', () => {
       await Promise.resolve();
       await Promise.resolve();
     });
-    const confirm = [...container.querySelectorAll('button')].find(
-      (button) => button.textContent === 'Confirm intent',
-    );
-    await act(async () => confirm?.dispatchEvent(new MouseEvent('click', { bubbles: true })));
+    expect(container.textContent).not.toContain('Confirm intent');
     expect(container.textContent).toContain('Upload and process');
     expect(container.textContent).toContain('Encoding speed');
     expect(container.textContent).toContain('Sign in or create one');
