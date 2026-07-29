@@ -108,6 +108,20 @@ export const operations = [
     supportedOutputs: ['jpg'],
   },
   {
+    id: 'pdf-to-docx',
+    displayName: 'Convert PDF to editable Word',
+    executionMode: 'cloud',
+    supportedInputs: ['pdf'],
+    supportedOutputs: ['docx'],
+  },
+  {
+    id: 'pdf-to-pptx',
+    displayName: 'Convert PDF to editable PowerPoint',
+    executionMode: 'cloud',
+    supportedInputs: ['pdf'],
+    supportedOutputs: ['pptx'],
+  },
+  {
     id: 'docx-to-pdf',
     displayName: 'Create a shareable PDF',
     executionMode: 'cloud',

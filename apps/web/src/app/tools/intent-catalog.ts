@@ -15,6 +15,10 @@ const descriptions: Record<string, string> = {
   'compress-pdf': 'Make a PDF smaller while protecting text readability and page order.',
   'split-pdf': 'Extract selected PDF pages into a focused new document.',
   'pdf-to-jpg': 'Turn a PDF page into a checked JPG image.',
+  'pdf-to-docx':
+    'Convert PDF text into an editable Microsoft Word DOCX document with best-effort layout.',
+  'pdf-to-pptx':
+    'Convert PDF pages into an editable Microsoft PowerPoint PPTX presentation.',
   'docx-to-pdf': 'Create a stable, shareable PDF from a DOCX document.',
 };
 

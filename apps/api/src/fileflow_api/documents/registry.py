@@ -8,6 +8,8 @@ DOCUMENT_OPERATIONS = (
     "split-pdf",
     "compress-pdf",
     "pdf-to-jpg",
+    "pdf-to-docx",
+    "pdf-to-pptx",
 )
 
 

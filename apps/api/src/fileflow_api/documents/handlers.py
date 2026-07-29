@@ -9,6 +9,7 @@ from fileflow_api.media.handlers import CommandRunner, integer_parameter, reject
 from fileflow_api.workers.contracts import WorkRequest, WorkResult
 
 DOCX_TYPE = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+PPTX_TYPE = "application/vnd.openxmlformats-officedocument.presentationml.presentation"
 PDF_TYPE = "application/pdf"
 
 
@@ -45,6 +46,12 @@ class DocumentHandler:
         elif self._operation == "pdf-to-jpg":
             self._pdf_to_jpg(request)
             content_type = "image/jpeg"
+        elif self._operation == "pdf-to-docx":
+            self._pdf_to_docx(request)
+            content_type = DOCX_TYPE
+        elif self._operation == "pdf-to-pptx":
+            self._pdf_to_pptx(request)
+            content_type = PPTX_TYPE
         else:
             raise ValueError(f"unsupported document operation: {self._operation}")
         self._validate_output(request.output_path, content_type)
@@ -170,6 +177,59 @@ class DocumentHandler:
         )
         os.replace(request.output_path.with_suffix(".jpg"), request.output_path)
 
+    def _pdf_to_docx(self, request: WorkRequest) -> None:
+        reject_unknown(request.parameters, set())
+        text_path = request.output_path.parent / "document.txt"
+        self._runner.run(
+            [
+                self._tools["pdftotext"],
+                "-layout",
+                "-nopgbrk",
+                str(request.input_path),
+                str(text_path),
+            ],
+            request.output_path.parent,
+        )
+        self._runner.run(
+            [
+                self._tools["libreoffice"],
+                "--headless",
+                "--nologo",
+                "--nodefault",
+                "--nolockcheck",
+                "--nofirststartwizard",
+                "--convert-to",
+                'docx:"Office Open XML Text"',
+                "--outdir",
+                str(request.output_path.parent),
+                str(text_path),
+            ],
+            request.output_path.parent,
+        )
+        os.replace(text_path.with_suffix(".docx"), request.output_path)
+
+    def _pdf_to_pptx(self, request: WorkRequest) -> None:
+        reject_unknown(request.parameters, set())
+        source = request.output_path.parent / "document.pdf"
+        shutil.copyfile(request.input_path, source)
+        self._runner.run(
+            [
+                self._tools["libreoffice"],
+                "--headless",
+                "--nologo",
+                "--nodefault",
+                "--nolockcheck",
+                "--nofirststartwizard",
+                "--convert-to",
+                'pptx:"Impress MS PowerPoint 2007 XML"',
+                "--outdir",
+                str(request.output_path.parent),
+                str(source),
+            ],
+            request.output_path.parent,
+        )
+        os.replace(source.with_suffix(".pptx"), request.output_path)
+
     @staticmethod
     def _validate_docx(path: Path) -> None:
         try:
@@ -192,3 +252,21 @@ class DocumentHandler:
             raise ValueError("document tool returned an unexpected PDF signature")
         if content_type == "image/jpeg" and not header.startswith(b"\xff\xd8\xff"):
             raise ValueError("document tool returned an unexpected JPEG signature")
+        if content_type == DOCX_TYPE:
+            DocumentHandler._validate_office_output(path, "word/document.xml", "DOCX")
+        if content_type == PPTX_TYPE:
+            DocumentHandler._validate_office_output(path, "ppt/presentation.xml", "PPTX")
+
+    @staticmethod
+    def _validate_office_output(path: Path, required_entry: str, label: str) -> None:
+        try:
+            with ZipFile(path) as archive:
+                names = set(archive.namelist())
+                if "[Content_Types].xml" not in names or required_entry not in names:
+                    raise ValueError(f"document tool returned an invalid {label} package")
+                if len(names) > 10_000:
+                    raise ValueError(f"document tool returned an oversized {label} package")
+                if sum(item.file_size for item in archive.infolist()) > 512 * 1024 * 1024:
+                    raise ValueError(f"expanded {label} exceeds safety limit")
+        except BadZipFile as error:
+            raise ValueError(f"document tool returned an invalid {label} package") from error

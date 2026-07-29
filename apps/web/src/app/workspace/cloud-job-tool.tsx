@@ -570,6 +570,8 @@ const operationTitles: Record<Exclude<FileFlowLanguage, 'en'>, Record<string, st
     'compress-pdf': 'Сжать PDF',
     'split-pdf': 'Разделить PDF',
     'pdf-to-jpg': 'PDF в JPEG',
+    'pdf-to-docx': 'PDF в Word (DOCX)',
+    'pdf-to-pptx': 'PDF в PowerPoint (PPTX)',
     'docx-to-pdf': 'DOCX в PDF',
   },
   es: {
@@ -585,6 +587,8 @@ const operationTitles: Record<Exclude<FileFlowLanguage, 'en'>, Record<string, st
     'compress-pdf': 'Comprimir PDF',
     'split-pdf': 'Dividir PDF',
     'pdf-to-jpg': 'PDF a JPEG',
+    'pdf-to-docx': 'PDF a Word (DOCX)',
+    'pdf-to-pptx': 'PDF a PowerPoint (PPTX)',
     'docx-to-pdf': 'DOCX a PDF',
   },
 };

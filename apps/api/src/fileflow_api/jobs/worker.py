@@ -50,6 +50,7 @@ register_document_operations(
     operations,
     {
         "libreoffice": settings.libreoffice_path,
+        "pdftotext": settings.pdftotext_path,
         "qpdf": settings.qpdf_path,
         "ghostscript": settings.ghostscript_path,
         "pdftoppm": settings.pdftoppm_path,

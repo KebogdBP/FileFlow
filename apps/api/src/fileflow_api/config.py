@@ -59,6 +59,7 @@ class Settings(BaseSettings):
     ffmpeg_path: str = "/usr/bin/ffmpeg"
     ffprobe_path: str = "/usr/bin/ffprobe"
     libreoffice_path: str = "/usr/bin/libreoffice"
+    pdftotext_path: str = "/usr/bin/pdftotext"
     qpdf_path: str = "/usr/bin/qpdf"
     ghostscript_path: str = "/usr/bin/gs"
     pdftoppm_path: str = "/usr/bin/pdftoppm"

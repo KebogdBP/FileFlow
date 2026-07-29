@@ -96,6 +96,8 @@ describe('M07 recommendation and explainability engine', () => {
       'compress-pdf',
       'split-pdf',
       'pdf-to-jpg',
+      'pdf-to-docx',
+      'pdf-to-pptx',
     ]);
     expect(recommendOperation(context, 'pdf-to-jpg')).toMatchObject({
       status: 'ready',

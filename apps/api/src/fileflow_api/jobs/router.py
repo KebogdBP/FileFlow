@@ -50,6 +50,8 @@ def download_result(job_id: str, request: Request) -> StreamingResponse:
         "audio/wav": ".wav",
         "application/pdf": ".pdf",
         "image/jpeg": ".jpg",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document": ".docx",
+        "application/vnd.openxmlformats-officedocument.presentationml.presentation": ".pptx",
     }
     extension = extensions.get(job.result_content_type, ".bin")
     filename = f"fileflow-{job.operation}{extension}"

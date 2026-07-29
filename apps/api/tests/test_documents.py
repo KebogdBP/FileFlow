@@ -10,6 +10,7 @@ from fileflow_api.workers.contracts import OperationRegistry, WorkRequest
 
 TOOLS = {
     "libreoffice": "/usr/bin/libreoffice",
+    "pdftotext": "/usr/bin/pdftotext",
     "qpdf": "/usr/bin/qpdf",
     "ghostscript": "/usr/bin/gs",
     "pdftoppm": "/usr/bin/pdftoppm",
@@ -24,7 +25,19 @@ class RecordingRunner:
         command = list(argv)
         self.commands.append(command)
         if command[0] == TOOLS["libreoffice"]:
-            (workspace / "document.pdf").write_bytes(b"%PDF-1.7\nresult")
+            source_suffix = Path(command[-1]).suffix
+            if source_suffix == ".docx":
+                (workspace / "document.pdf").write_bytes(b"%PDF-1.7\nresult")
+            elif source_suffix == ".txt":
+                with ZipFile(workspace / "document.docx", "w") as archive:
+                    archive.writestr("[Content_Types].xml", "types")
+                    archive.writestr("word/document.xml", "document")
+            elif source_suffix == ".pdf":
+                with ZipFile(workspace / "document.pptx", "w") as archive:
+                    archive.writestr("[Content_Types].xml", "types")
+                    archive.writestr("ppt/presentation.xml", "presentation")
+        elif command[0] == TOOLS["pdftotext"]:
+            Path(command[-1]).write_text("Editable PDF text", encoding="utf-8")
         elif command[0] == TOOLS["pdftoppm"]:
             Path(f"{command[-1]}.jpg").write_bytes(b"\xff\xd8\xffresult")
         else:
@@ -81,6 +94,26 @@ def test_merge_requires_multiple_clean_materialized_sources(tmp_path: Path) -> N
     assert runner.commands[0][1:3] == ["--empty", "--pages"]
     with pytest.raises(ValueError, match="between 2 and 20"):
         DocumentHandler(TOOLS, runner, "merge-pdf").execute(pdf_request(tmp_path))
+
+
+@pytest.mark.parametrize(
+    ("operation", "content_type", "tool"),
+    [
+        ("pdf-to-docx", DOCX_TYPE, "/usr/bin/pdftotext"),
+        (
+            "pdf-to-pptx",
+            "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+            "/usr/bin/libreoffice",
+        ),
+    ],
+)
+def test_pdf_converts_to_editable_office_formats(
+    tmp_path: Path, operation: str, content_type: str, tool: str
+) -> None:
+    runner = RecordingRunner()
+    result = DocumentHandler(TOOLS, runner, operation).execute(pdf_request(tmp_path))
+    assert result.content_type == content_type
+    assert runner.commands[0][0] == tool
 
 
 @pytest.mark.parametrize(

@@ -142,6 +142,18 @@ const operationPresentation: Record<
     icon: FileImage,
     tone: 'mint',
   },
+  'pdf-to-docx': {
+    title: 'PDF to Word',
+    description: 'Create an editable Microsoft Word document',
+    icon: BookOpen,
+    tone: 'blue',
+  },
+  'pdf-to-pptx': {
+    title: 'PDF to PowerPoint',
+    description: 'Turn PDF pages into an editable presentation',
+    icon: FileOutput,
+    tone: 'coral',
+  },
   'docx-to-pdf': {
     title: 'DOCX to PDF',
     description: 'Create a stable, shareable document',
@@ -155,6 +167,8 @@ const featuredOperationIds: readonly OperationId[] = [
   'split-pdf',
   'merge-pdf',
   'pdf-to-jpg',
+  'pdf-to-docx',
+  'pdf-to-pptx',
   'docx-to-pdf',
   'compress-video',
   'resize-video',
