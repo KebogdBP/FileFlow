@@ -243,32 +243,23 @@
 }
 
 .ff-language-switch {
-  min-height: 40px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 4px 8px 4px 10px;
-  border-radius: 12px;
-  color: var(--home-muted);
-}
-
-.ff-language-switch > svg {
-  flex: 0 0 auto;
+  display: block;
 }
 
 .ff-language-switch select {
-  width: 54px;
-  height: 30px;
-  padding: 0 20px 0 7px;
-  border: 0;
-  border-radius: 8px;
-  color: white;
-  background: linear-gradient(135deg, var(--home-blue), var(--home-blue-2));
+  width: 118px;
+  height: 44px;
+  padding: 0 30px 0 12px;
+  border: 1px solid var(--glass-border);
+  border-radius: 13px;
+  color: var(--home-text);
+  background: var(--glass-bg-strong);
   font: inherit;
-  font-size: 11px;
-  font-weight: 850;
+  font-size: 12px;
+  font-weight: 780;
   cursor: pointer;
-  box-shadow: 0 6px 14px color-mix(in srgb, var(--home-blue) 28%, transparent);
+  box-shadow: var(--glass-shadow);
+  backdrop-filter: blur(18px) saturate(145%);
 }
 
 .ff-language-switch option {
@@ -303,6 +294,10 @@
   display: none;
   width: 44px;
   padding: 0;
+}
+
+.ff-mobile-account {
+  display: none;
 }
 
 .ff-mobile-brand,
@@ -620,8 +615,14 @@
   padding: 42px 0 20px;
 }
 
+.ff-downloader-section {
+  position: relative;
+  z-index: 20;
+}
+
 .ff-downloader-card {
   position: relative;
+  z-index: 1;
   padding: clamp(18px, 3vw, 32px);
   border-radius: 24px;
   overflow: visible;
@@ -1316,9 +1317,14 @@
 }
 
 .ff-mobile-overlay aside {
-  width: min(86vw, 320px);
-  height: 100%;
-  padding: 20px;
+  width: clamp(188px, 56vw, 220px);
+  height: 100dvh;
+  max-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 16px 12px max(16px, env(safe-area-inset-bottom));
   color: var(--home-text);
   background: var(--glass-bg-strong);
   box-shadow: 30px 0 70px rgba(0, 0, 0, 0.24);
@@ -1339,7 +1345,32 @@
 
 .ff-mobile-overlay nav {
   display: grid;
-  margin-top: 34px;
+  gap: 2px;
+  margin-top: 20px;
+}
+
+.ff-mobile-overlay nav a,
+.ff-mobile-account-links a {
+  min-height: 44px;
+  padding-inline: 10px;
+  border-radius: 12px;
+  font-size: 12px;
+}
+
+.ff-mobile-account-links {
+  display: grid;
+  gap: 2px;
+  margin-top: auto;
+  padding-top: 16px;
+  border-top: 1px solid var(--glass-border);
+}
+
+.ff-mobile-account-links a {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--home-muted);
+  font-weight: 760;
 }
 
 .sr-only {
@@ -1407,9 +1438,6 @@
   .ff-sign-in {
     display: none;
   }
-  .ff-language-switch > svg {
-    display: none;
-  }
   .ff-intake-grid,
   .ff-status-grid {
     grid-template-columns: 1fr;
@@ -1434,11 +1462,7 @@
     display: none;
   }
   .ff-language-switch {
-    min-height: 42px;
-    padding: 4px;
-  }
-  .ff-language-switch button {
-    min-width: 31px;
+    min-height: auto;
   }
   .ff-hero {
     padding-top: 10px;
@@ -1559,7 +1583,7 @@
   .ff-topbar {
     position: relative;
     min-height: 92px;
-    justify-content: center;
+    justify-content: flex-start;
   }
 
   .ff-mobile-menu {
@@ -1576,6 +1600,7 @@
     gap: 8px;
     font-size: 20px;
     letter-spacing: -0.04em;
+    margin-left: 54px;
   }
 
   .ff-mobile-brand img {
@@ -1587,9 +1612,10 @@
   .ff-top-actions {
     position: absolute;
     right: 0;
+    gap: 7px;
   }
 
-  .ff-top-actions > :not(.ff-theme-switch) {
+  .ff-top-actions > :not(.ff-theme-switch, .ff-language-switch, .ff-mobile-account) {
     display: none;
   }
 
@@ -1622,6 +1648,35 @@
 
   :root[data-theme='dark'] .ff-theme-switch > svg:last-child {
     color: #f5c85b;
+  }
+
+  .ff-language-switch {
+    display: block;
+    margin: 0;
+  }
+
+  .ff-language-switch select {
+    width: 56px;
+    height: 42px;
+    padding: 0 18px 0 7px;
+    border-radius: 50%;
+    font-size: 11px;
+  }
+
+  .ff-mobile-account {
+    width: 42px;
+    height: 42px;
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+    border-radius: 50%;
+    color: var(--home-text);
+  }
+
+  .ff-mobile-account img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
   }
 
   .ff-hero {
@@ -1700,19 +1755,26 @@
       color-mix(in srgb, var(--glass-bg) 78%, transparent);
   }
 
+  .ff-unified-workspace .file-drop-zone {
+    min-height: 148px;
+    gap: 3px;
+    padding: 10px;
+  }
+
   .ff-unified-workspace .file-drop-icon {
-    width: 70px;
-    height: 70px;
-    border-radius: 23px;
-    font-size: 31px;
+    width: 46px;
+    height: 46px;
+    margin-bottom: 2px;
+    border-radius: 15px;
+    font-size: 23px;
     box-shadow:
       0 17px 35px color-mix(in srgb, var(--home-blue) 32%, transparent),
       inset 0 1px 0 rgba(255, 255, 255, 0.5);
   }
 
   .ff-unified-workspace .file-drop-zone > strong {
-    margin-top: 5px;
-    font-size: 20px;
+    margin-top: 1px;
+    font-size: 16px;
     letter-spacing: -0.035em;
   }
 
@@ -1723,9 +1785,10 @@
   }
 
   .ff-unified-workspace .input-picker-button {
-    min-height: 44px;
-    padding-inline: 20px;
-    border-radius: 14px;
+    min-height: 36px;
+    margin-top: 5px;
+    padding-inline: 16px;
+    border-radius: 12px;
   }
 
   .ff-unified-workspace .url-input-form {
@@ -2044,6 +2107,25 @@
   font-weight: 900;
 }
 
+.ff-unified-workspace .file-drop-zone {
+  min-height: 155px;
+  gap: 4px;
+  padding: 12px;
+}
+
+.ff-unified-workspace .file-drop-zone .file-drop-icon {
+  width: 48px;
+  height: 48px;
+  margin-bottom: 2px;
+  border-radius: 15px;
+  font-size: 23px;
+}
+
+.ff-unified-workspace .file-drop-zone .input-picker-button {
+  min-height: 38px;
+  margin-top: 6px;
+}
+
 @media (max-width: 900px) {
   .ff-legal-grid {
     grid-template-columns: 1fr;
@@ -2060,8 +2142,11 @@
     border-radius: 1.3rem !important;
   }
 
-  .ff-unified-workspace .file-drop-zone,
   .ff-unified-workspace .url-input-form {
     min-height: 245px;
+  }
+
+  .ff-unified-workspace .file-drop-zone {
+    min-height: 155px;
   }
 }

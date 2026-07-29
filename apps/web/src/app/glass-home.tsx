@@ -15,7 +15,6 @@ import {
   History,
   Home,
   Image as ImageIcon,
-  Languages,
   LockKeyhole,
   Menu,
   Merge,
@@ -880,18 +879,24 @@ export function GlassHome() {
                 </button>
                 <Moon size={18} aria-hidden="true" />
               </div>
-              <label className="ff-language-switch glass-panel" aria-label="Language">
-                <Languages size={17} aria-hidden="true" />
+              <label className="ff-language-switch" aria-label="Language">
                 <select
                   value={language}
                   onChange={(event) => setLanguage(event.target.value as Language)}
                   aria-label="Select language"
                 >
-                  <option value="ru">RU</option>
-                  <option value="en">EN</option>
-                  <option value="es">ES</option>
+                  <option value="ru">RU — Русский</option>
+                  <option value="en">EN — English</option>
+                  <option value="es">ES — Español</option>
                 </select>
               </label>
+              <Link className="ff-mobile-account glass-panel" href="/account" aria-label={t.signIn}>
+                {userProfile && userAvatarUrl ? (
+                  <Image src={userAvatarUrl} alt="" width={40} height={40} unoptimized />
+                ) : (
+                  <UserRound size={19} aria-hidden="true" />
+                )}
+              </Link>
             </div>
           </header>
 
@@ -1104,6 +1109,20 @@ export function GlassHome() {
                     </Link>
                   ))}
                 </nav>
+                <div className="ff-mobile-account-links">
+                  <Link href="/account" onClick={() => setMobileNav(false)}>
+                    <UserRound size={19} />
+                    <span>{userProfile?.displayName ?? t.signIn}</span>
+                  </Link>
+                  <Link href="#security" onClick={() => setMobileNav(false)}>
+                    <LockKeyhole size={19} />
+                    <span>{t.security}</span>
+                  </Link>
+                  <Link href="#privacy" onClick={() => setMobileNav(false)}>
+                    <BookOpen size={19} />
+                    <span>{t.privacy}</span>
+                  </Link>
+                </div>
               </motion.aside>
             </motion.div>
           ) : null}
