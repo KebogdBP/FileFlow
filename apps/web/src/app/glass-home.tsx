@@ -41,7 +41,7 @@ import { ACCOUNT_TOKEN_KEY, API_URL } from './cloud-api';
 import { useFileFlowLanguage, type FileFlowLanguage } from './use-fileflow-language';
 import { FileUrlInput } from './workspace/file-url-input';
 import { VideoDownloader } from './video-downloader';
-import { VisitorCounter } from './visitor-counter';
+import { OperationCounter, VisitorCounter } from './visitor-counter';
 
 type Language = FileFlowLanguage;
 type OperationId = (typeof operations)[number]['id'];
@@ -1087,7 +1087,8 @@ export function GlassHome() {
               <Link href="#tools">Tools</Link>
             </nav>
           </footer>
-          <VisitorCounter language={language} />
+          <OperationCounter language={language} />
+          <VisitorCounter />
         </main>
 
         <AnimatePresence>

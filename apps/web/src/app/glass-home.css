@@ -1319,6 +1319,13 @@
     font-weight: 760;
     line-height: 1.35;
   }
+
+  .ff-visitor-counter--visits {
+    min-height: 24px;
+    margin-top: 0;
+    padding: 0 12px 20px;
+    font-size: 11px;
+  }
 }
 
 .ff-mobile-overlay {
