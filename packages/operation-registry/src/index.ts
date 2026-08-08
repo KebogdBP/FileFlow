@@ -389,7 +389,11 @@ function quickEditPdfPlan(): RecommendationPlan {
     expectation: 'Edit pages visually, undo changes, then download a new PDF.',
     privacy: 'Runs on this device. The source PDF is not uploaded.',
     defaults: [
-      { label: 'Editing', value: 'Non-destructive', reason: 'The original file is never overwritten.' },
+      {
+        label: 'Editing',
+        value: 'Non-destructive',
+        reason: 'The original file is never overwritten.',
+      },
       { label: 'Privacy', value: 'On device', reason: 'The document stays in this browser.' },
     ],
     tradeoffs: [

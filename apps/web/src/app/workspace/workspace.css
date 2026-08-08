@@ -1159,7 +1159,11 @@
   border: 1px solid color-mix(in srgb, var(--ff-color-primary) 28%, var(--ff-color-border));
   border-radius: 24px;
   background:
-    radial-gradient(circle at 100% 0%, color-mix(in srgb, var(--ff-color-primary) 12%, transparent), transparent 38%),
+    radial-gradient(
+      circle at 100% 0%,
+      color-mix(in srgb, var(--ff-color-primary) 12%, transparent),
+      transparent 38%
+    ),
     var(--ff-color-surface);
   box-shadow: 0 18px 50px color-mix(in srgb, #172033 9%, transparent);
 }
@@ -1172,7 +1176,9 @@
   font-weight: 750;
 }
 
-.quick-pdf-error { color: var(--ff-color-danger, #c73445); }
+.quick-pdf-error {
+  color: var(--ff-color-danger, #c73445);
+}
 
 .quick-pdf-heading,
 .quick-pdf-page-actions,
@@ -1182,12 +1188,25 @@
   justify-content: space-between;
   gap: 16px;
 }
-.quick-pdf-heading { position: relative; }
+.quick-pdf-heading {
+  position: relative;
+}
 
-.quick-pdf-heading > div:first-child { display: grid; gap: 3px; }
-.quick-pdf-heading h3 { margin: 0; font-size: clamp(1.35rem, 4vw, 2rem); letter-spacing: -0.045em; }
+.quick-pdf-heading > div:first-child {
+  display: grid;
+  gap: 3px;
+}
+.quick-pdf-heading h3 {
+  margin: 0;
+  font-size: clamp(1.35rem, 4vw, 2rem);
+  letter-spacing: -0.045em;
+}
 .quick-pdf-heading p,
-.quick-pdf-footer p { margin: 0; color: var(--ff-color-text-muted); font-size: 0.84rem; }
+.quick-pdf-footer p {
+  margin: 0;
+  color: var(--ff-color-text-muted);
+  font-size: 0.84rem;
+}
 
 .quick-pdf-badge {
   width: max-content;
@@ -1200,7 +1219,10 @@
   letter-spacing: 0.08em;
 }
 
-.quick-pdf-history { display: flex; gap: 8px; }
+.quick-pdf-history {
+  display: flex;
+  gap: 8px;
+}
 .quick-pdf-history button,
 .quick-pdf-page-actions button {
   min-width: 44px;
@@ -1213,8 +1235,13 @@
   font-weight: 800;
   cursor: pointer;
 }
-.quick-pdf-history button { font-size: 1.3rem; }
-.quick-pdf-editor button:disabled { opacity: 0.38; cursor: not-allowed; }
+.quick-pdf-history button {
+  font-size: 1.3rem;
+}
+.quick-pdf-editor button:disabled {
+  opacity: 0.38;
+  cursor: not-allowed;
+}
 
 .quick-pdf-page-strip {
   display: flex;
@@ -1245,8 +1272,14 @@
   background: var(--ff-color-primary-soft);
   box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--ff-color-primary) 15%, transparent);
 }
-.quick-pdf-page-strip span { font-size: 1.15rem; font-weight: 900; }
-.quick-pdf-page-strip small { font-size: 0.62rem; font-weight: 800; }
+.quick-pdf-page-strip span {
+  font-size: 1.15rem;
+  font-weight: 900;
+}
+.quick-pdf-page-strip small {
+  font-size: 0.62rem;
+  font-weight: 800;
+}
 
 .quick-pdf-toolbar {
   display: grid;
@@ -1273,14 +1306,20 @@
   font-weight: 800;
   cursor: pointer;
 }
-.quick-pdf-toolbar button span { font-size: 1.25rem; line-height: 1; }
+.quick-pdf-toolbar button span {
+  font-size: 1.25rem;
+  line-height: 1;
+}
 .quick-pdf-toolbar button[aria-pressed='true'] {
   color: var(--ff-color-primary);
   background: var(--ff-color-surface);
   box-shadow: 0 4px 14px color-mix(in srgb, #172033 8%, transparent);
 }
 
-.quick-pdf-entry { display: grid; gap: 6px; }
+.quick-pdf-entry {
+  display: grid;
+  gap: 6px;
+}
 .quick-pdf-entry input {
   width: 100%;
   min-height: 48px;
@@ -1294,7 +1333,11 @@
   font-size: 16px;
 }
 .quick-pdf-entry span,
-.quick-pdf-instruction { margin: 0; color: var(--ff-color-text-muted); font-size: 0.76rem; }
+.quick-pdf-instruction {
+  margin: 0;
+  color: var(--ff-color-text-muted);
+  font-size: 0.76rem;
+}
 
 .quick-pdf-stage-shell {
   width: 100%;
@@ -1312,12 +1355,27 @@
   background: #fff;
   box-shadow: 0 14px 36px rgb(23 32 51 / 18%);
 }
-.quick-pdf-stage canvas { width: 100%; height: auto; display: block; }
-.quick-pdf-overlay { position: absolute; inset: 0; touch-action: none; line-height: normal; }
+.quick-pdf-stage canvas {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+.quick-pdf-overlay {
+  position: absolute;
+  inset: 0;
+  touch-action: none;
+  line-height: normal;
+}
 .quick-pdf-overlay.tool-text,
-.quick-pdf-overlay.tool-signature { cursor: text; }
-.quick-pdf-overlay.tool-highlight { cursor: crosshair; }
-.quick-pdf-overlay.tool-draw { cursor: crosshair; }
+.quick-pdf-overlay.tool-signature {
+  cursor: text;
+}
+.quick-pdf-overlay.tool-highlight {
+  cursor: crosshair;
+}
+.quick-pdf-overlay.tool-draw {
+  cursor: crosshair;
+}
 
 .quick-pdf-highlight {
   position: absolute;
@@ -1327,9 +1385,20 @@
   mix-blend-mode: multiply;
 }
 .quick-pdf-highlight[data-selected='true'],
-.quick-pdf-text[data-selected='true'] { outline: 2px solid #2f7ef7; outline-offset: 2px; }
-.quick-pdf-highlight.draft { pointer-events: none; }
-.quick-pdf-drawing { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.quick-pdf-text[data-selected='true'] {
+  outline: 2px solid #2f7ef7;
+  outline-offset: 2px;
+}
+.quick-pdf-highlight.draft {
+  pointer-events: none;
+}
+.quick-pdf-drawing {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
 
 .quick-pdf-text {
   position: absolute;
@@ -1343,13 +1412,29 @@
   line-height: 1.15;
   white-space: nowrap;
 }
-.quick-pdf-text.signature { font-family: cursive; font-style: italic; font-weight: 500; }
+.quick-pdf-text.signature {
+  font-family: cursive;
+  font-style: italic;
+  font-weight: 500;
+}
 .quick-pdf-overlay:not(.tool-select) .quick-pdf-text,
-.quick-pdf-overlay:not(.tool-select) .quick-pdf-highlight { pointer-events: none; }
+.quick-pdf-overlay:not(.tool-select) .quick-pdf-highlight {
+  pointer-events: none;
+}
 
-.quick-pdf-page-actions strong { font-size: 0.84rem; }
-.quick-pdf-page-actions > div { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
-.quick-pdf-page-actions button { padding: 0 12px; font-size: 0.75rem; }
+.quick-pdf-page-actions strong {
+  font-size: 0.84rem;
+}
+.quick-pdf-page-actions > div {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+.quick-pdf-page-actions button {
+  padding: 0 12px;
+  font-size: 0.75rem;
+}
 .quick-pdf-delete-mark {
   width: max-content;
   min-height: 42px;
@@ -1362,16 +1447,30 @@
   font-weight: 800;
   cursor: pointer;
 }
-.quick-pdf-notice { margin: 0; color: #c73445; font-size: 0.82rem; font-weight: 750; }
-.quick-pdf-footer { padding-top: 4px; }
-.quick-pdf-footer p { max-width: 470px; line-height: 1.45; }
+.quick-pdf-notice {
+  margin: 0;
+  color: #c73445;
+  font-size: 0.82rem;
+  font-weight: 750;
+}
+.quick-pdf-footer {
+  padding-top: 4px;
+}
+.quick-pdf-footer p {
+  max-width: 470px;
+  line-height: 1.45;
+}
 .quick-pdf-footer button {
   min-height: 50px;
   padding: 0 20px;
   border: 0;
   border-radius: 13px;
   color: #fff;
-  background: linear-gradient(135deg, var(--ff-color-primary), color-mix(in srgb, var(--ff-color-primary) 72%, #854dff));
+  background: linear-gradient(
+    135deg,
+    var(--ff-color-primary),
+    color-mix(in srgb, var(--ff-color-primary) 72%, #854dff)
+  );
   box-shadow: 0 10px 24px color-mix(in srgb, var(--ff-color-primary) 24%, transparent);
   font: inherit;
   font-weight: 850;
@@ -1525,9 +1624,17 @@
     border-radius: 20px;
   }
   .quick-pdf-heading,
-  .quick-pdf-footer { align-items: flex-start; flex-direction: column; }
-  .quick-pdf-history { position: absolute; right: 28px; }
-  .quick-pdf-heading { padding-right: 102px; }
+  .quick-pdf-footer {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .quick-pdf-history {
+    position: absolute;
+    right: 28px;
+  }
+  .quick-pdf-heading {
+    padding-right: 102px;
+  }
   .quick-pdf-toolbar {
     position: sticky;
     bottom: 10px;
@@ -1538,13 +1645,29 @@
     background: color-mix(in srgb, var(--ff-color-surface) 84%, transparent);
     box-shadow: 0 12px 34px rgb(23 32 51 / 18%);
   }
-  .quick-pdf-toolbar button { min-height: 60px; font-size: 0.62rem; }
-  .quick-pdf-stage-shell { max-height: 62vh; border-radius: 14px; }
-  .quick-pdf-page-actions { align-items: flex-start; flex-direction: column; }
-  .quick-pdf-page-actions > div { width: 100%; justify-content: flex-start; }
-  .quick-pdf-page-actions button { flex: 1 1 auto; }
+  .quick-pdf-toolbar button {
+    min-height: 60px;
+    font-size: 0.62rem;
+  }
+  .quick-pdf-stage-shell {
+    max-height: 62vh;
+    border-radius: 14px;
+  }
+  .quick-pdf-page-actions {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .quick-pdf-page-actions > div {
+    width: 100%;
+    justify-content: flex-start;
+  }
+  .quick-pdf-page-actions button {
+    flex: 1 1 auto;
+  }
   .quick-pdf-delete-mark,
-  .quick-pdf-footer button { width: 100%; }
+  .quick-pdf-footer button {
+    width: 100%;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
