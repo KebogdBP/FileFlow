@@ -22,83 +22,44 @@ type Tool = 'select' | 'text' | 'highlight' | 'draw' | 'signature';
 type Draft =
   { kind: 'highlight'; start: PdfPoint; end: PdfPoint } | { kind: 'draw'; points: PdfPoint[] };
 
-const copy = {
-  en: {
-    title: 'Quick PDF Editor',
-    private: 'Private · edits stay on this device',
-    loading: 'Opening PDF…',
-    loadError: 'This PDF could not be opened. It may be damaged or password-protected.',
-    tools: ['Select', 'Text', 'Highlight', 'Draw', 'Signature'],
-    placeholder: 'Text to place on the page',
-    signature: 'Type your signature',
-    tap: 'Tap the page to place it',
-    drag: 'Drag across the area to highlight',
-    draw: 'Draw directly on the page',
-    page: 'Page',
-    rotate: 'Rotate',
-    remove: 'Delete page',
-    left: 'Move left',
-    right: 'Move right',
-    undo: 'Undo',
-    redo: 'Redo',
-    deleteMark: 'Delete selected mark',
-    download: 'Download edited PDF',
-    exporting: 'Creating PDF…',
-    exportError: 'Could not create the edited PDF.',
-    hint: 'The original is never overwritten. Added content is flattened into the downloaded copy.',
-    emptyText: 'Enter text first.',
-  },
-  ru: {
-    title: 'Быстрый редактор PDF',
-    private: 'Приватно · документ остаётся на устройстве',
-    loading: 'Открываем PDF…',
-    loadError: 'Не удалось открыть PDF. Возможно, он повреждён или защищён паролем.',
-    tools: ['Выбор', 'Текст', 'Маркер', 'Рисовать', 'Подпись'],
-    placeholder: 'Текст для добавления на страницу',
-    signature: 'Введите подпись',
-    tap: 'Нажмите на страницу, чтобы разместить',
-    drag: 'Проведите по области, которую нужно выделить',
-    draw: 'Рисуйте прямо на странице',
-    page: 'Страница',
-    rotate: 'Повернуть',
-    remove: 'Удалить страницу',
-    left: 'Сдвинуть влево',
-    right: 'Сдвинуть вправо',
-    undo: 'Отменить',
-    redo: 'Повторить',
-    deleteMark: 'Удалить выбранную правку',
-    download: 'Скачать исправленный PDF',
-    exporting: 'Создаём PDF…',
-    exportError: 'Не удалось создать исправленный PDF.',
-    hint: 'Оригинал не изменяется. Правки закрепляются в скачиваемой копии.',
-    emptyText: 'Сначала введите текст.',
-  },
-  es: {
-    title: 'Editor rápido de PDF',
-    private: 'Privado · el documento permanece en este dispositivo',
-    loading: 'Abriendo PDF…',
-    loadError: 'No se pudo abrir el PDF. Puede estar dañado o protegido con contraseña.',
-    tools: ['Seleccionar', 'Texto', 'Resaltar', 'Dibujar', 'Firma'],
-    placeholder: 'Texto para añadir a la página',
-    signature: 'Escribe tu firma',
-    tap: 'Toca la página para colocarlo',
-    drag: 'Arrastra sobre el área que quieres resaltar',
-    draw: 'Dibuja directamente en la página',
-    page: 'Página',
-    rotate: 'Girar',
-    remove: 'Eliminar página',
-    left: 'Mover a la izquierda',
-    right: 'Mover a la derecha',
-    undo: 'Deshacer',
-    redo: 'Rehacer',
-    deleteMark: 'Eliminar marca seleccionada',
-    download: 'Descargar PDF editado',
-    exporting: 'Creando PDF…',
-    exportError: 'No se pudo crear el PDF editado.',
-    hint: 'El original no se sobrescribe. Los cambios se fijan en la copia descargada.',
-    emptyText: 'Introduce texto primero.',
-  },
-} as const;
+const copyKeys = [
+  'title',
+  'private',
+  'loading',
+  'loadError',
+  'placeholder',
+  'signature',
+  'tap',
+  'drag',
+  'draw',
+  'page',
+  'rotate',
+  'remove',
+  'left',
+  'right',
+  'undo',
+  'redo',
+  'deleteMark',
+  'download',
+  'exporting',
+  'exportError',
+  'hint',
+  'emptyText',
+] as const;
+
+const copyRows: Record<FileFlowLanguage, string> = {
+  en: `Select|Text|Highlight|Draw|Signature\u001fQuick PDF Editor\u001fPrivate · edits stay on this device\u001fOpening PDF…\u001fThis PDF could not be opened. It may be damaged or password-protected.\u001fText to place on the page\u001fType your signature\u001fTap the page to place it\u001fDrag across the area to highlight\u001fDraw directly on the page\u001fPage\u001fRotate\u001fDelete page\u001fMove left\u001fMove right\u001fUndo\u001fRedo\u001fDelete selected mark\u001fDownload edited PDF\u001fCreating PDF…\u001fCould not create the edited PDF.\u001fThe original is never overwritten. Added content is flattened into the downloaded copy.\u001fEnter text first.`,
+  ru: `Выбор|Текст|Маркер|Рисовать|Подпись\u001fБыстрый редактор PDF\u001fПриватно · документ остаётся на устройстве\u001fОткрываем PDF…\u001fНе удалось открыть PDF. Возможно, он повреждён или защищён паролем.\u001fТекст для добавления на страницу\u001fВведите подпись\u001fНажмите на страницу, чтобы разместить\u001fПроведите по области, которую нужно выделить\u001fРисуйте прямо на странице\u001fСтраница\u001fПовернуть\u001fУдалить страницу\u001fСдвинуть влево\u001fСдвинуть вправо\u001fОтменить\u001fПовторить\u001fУдалить выбранную правку\u001fСкачать исправленный PDF\u001fСоздаём PDF…\u001fНе удалось создать исправленный PDF.\u001fОригинал не изменяется. Правки закрепляются в скачиваемой копии.\u001fСначала введите текст.`,
+  es: `Seleccionar|Texto|Resaltar|Dibujar|Firma\u001fEditor rápido de PDF\u001fPrivado · el documento permanece en este dispositivo\u001fAbriendo PDF…\u001fNo se pudo abrir el PDF. Puede estar dañado o protegido con contraseña.\u001fTexto para añadir a la página\u001fEscribe tu firma\u001fToca la página para colocarlo\u001fArrastra sobre el área que quieres resaltar\u001fDibuja directamente en la página\u001fPágina\u001fGirar\u001fEliminar página\u001fMover a la izquierda\u001fMover a la derecha\u001fDeshacer\u001fRehacer\u001fEliminar marca seleccionada\u001fDescargar PDF editado\u001fCreando PDF…\u001fNo se pudo crear el PDF editado.\u001fEl original no se sobrescribe. Los cambios se fijan en la copia descargada.\u001fIntroduce texto primero.`,
+};
+
+function editorCopy(language: FileFlowLanguage) {
+  const [tools = '', ...values] = copyRows[language].split('\u001f');
+  const labels = Object.fromEntries(
+    copyKeys.map((key, index) => [key, values[index] ?? '']),
+  ) as Record<(typeof copyKeys)[number], string>;
+  return { ...labels, tools: tools.split('|') };
+}
 
 const toolIds: Tool[] = ['select', 'text', 'highlight', 'draw', 'signature'];
 const toolIcons = ['↖', 'T', '▰', '✎', '〽'];
@@ -140,7 +101,7 @@ function textPng(text: string, signature: boolean): { bytes: string; aspect: num
 }
 
 export function QuickPdfEditor({ file, language }: { file: File; language: FileFlowLanguage }) {
-  const text = copy[language];
+  const text = editorCopy(language);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const pdfRef = useRef<PDFDocumentProxy | null>(null);
   const bytesRef = useRef<Uint8Array | null>(null);
