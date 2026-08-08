@@ -169,6 +169,7 @@ def test_invalid_pdf_gets_a_stable_client_safe_error(tmp_path: Path) -> None:
         ("split-pdf", {"pages": "2,4-6"}, "/usr/bin/qpdf"),
         ("compress-pdf", {"quality": "balanced"}, "/usr/bin/gs"),
         ("pdf-to-jpg", {"page": 2, "dpi": 150, "quality": 80}, "/usr/bin/pdftoppm"),
+        ("pdf-to-docx", {"quality": "balanced"}, "/usr/bin/pdftotext"),
     ],
 )
 def test_pdf_operations_have_bounded_parameters(

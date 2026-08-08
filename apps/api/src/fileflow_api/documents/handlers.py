@@ -186,7 +186,10 @@ class DocumentHandler:
         os.replace(request.output_path.with_suffix(".jpg"), request.output_path)
 
     def _pdf_to_docx(self, request: WorkRequest) -> None:
-        reject_unknown(request.parameters, set())
+        # Older web builds submitted the shared PDF quality control for this
+        # operation. It does not affect text extraction, but accepting it keeps
+        # queued and cached-client jobs compatible during rolling deployments.
+        reject_unknown(request.parameters, {"quality"})
         text_path = request.output_path.parent / "document.txt"
         self._runner.run(
             [
