@@ -1,6 +1,7 @@
 import os
 from collections.abc import Callable
 from pathlib import Path
+from unittest.mock import MagicMock
 
 import pytest
 from fastapi import HTTPException
@@ -16,6 +17,7 @@ from fileflow_api.imports.downloader import (
     ImportedMedia,
     ImportOptions,
     YtDlpClient,
+    _best_download_error_code,
     _download_error_code,
     _single_video_url,
     _video_format,
@@ -425,7 +427,7 @@ def test_youtube_uses_internal_pot_provider_when_configured(
     }
 
 
-def test_youtube_retries_with_public_tv_client(
+def test_youtube_retries_with_safari_hls_client(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
     attempts: list[dict[str, object]] = []
@@ -456,7 +458,40 @@ def test_youtube_retries_with_public_tv_client(
     )
 
     assert len(attempts) == 2
-    assert attempts[1]["extractor_args"] == {"youtube": {"player_client": ["tv"]}}
+    assert attempts[1]["extractor_args"] == {"youtube": {"player_client": ["web_safari"]}}
+    assert attempts[1]["impersonate"] == downloader_module.ImpersonateTarget.from_str("safari")
+
+
+def test_youtube_tries_embedded_client_after_safari_failure(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    attempts: list[dict[str, object]] = []
+
+    def fake_youtube_dl(options: dict[str, object]) -> MagicMock:
+        attempts.append(options)
+        instance = MagicMock()
+        instance.__enter__.return_value = instance
+
+        def extract_info(url: str, download: bool) -> dict[str, str]:
+            if len(attempts) < 3:
+                (tmp_path / "source.part").write_bytes(b"partial")
+                raise downloader_module.DownloadError("client failed")
+            assert not (tmp_path / "source.part").exists()
+            (tmp_path / "source.mp4").write_bytes(b"\x00\x00\x00\x18ftypisom-public-video")
+            return {"title": "Video"}
+
+        instance.extract_info.side_effect = extract_info
+        return instance
+
+    monkeypatch.setattr(downloader_module, "YoutubeDL", fake_youtube_dl)
+    YtDlpClient(pot_provider_url="http://pot-provider:4416").download(
+        "https://www.youtube.com/watch?v=abc",
+        tmp_path,
+        1024 * 1024,
+    )
+
+    assert len(attempts) == 3
+    assert attempts[2]["extractor_args"] == {"youtube": {"player_client": ["web_embedded"]}}
 
 
 def test_cookie_secret_is_copied_to_a_private_writable_job_file(
@@ -555,6 +590,19 @@ def test_downloader_passes_configured_egress_proxy(
 )
 def test_download_failures_are_classified(message: str, code: str) -> None:
     assert _download_error_code(message) == code
+
+
+def test_youtube_preserves_verification_error_across_fallback_attempts() -> None:
+    assert (
+        _best_download_error_code(
+            [
+                "Sign in to confirm you're not a bot",
+                "Requested format is not available",
+                "Network failure",
+            ]
+        )
+        == "platform_auth_required"
+    )
 
 
 def test_platform_auth_failure_is_preserved_for_the_frontend() -> None:

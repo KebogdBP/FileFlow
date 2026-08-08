@@ -189,13 +189,17 @@ class YtDlpClient:
             options["proxy"] = self._proxy_url
         attempts = [options]
         if is_youtube:
-            # The reference downloader uses the public YouTube TV client
-            # without cookies or a PO token. Retain the POT-backed mweb path
-            # as the primary datacenter profile and use TV as a fallback.
-            tv_options = dict(options)
-            tv_options["extractor_args"] = {"youtube": {"player_client": ["tv"]}}
-            tv_options.pop("cookiefile", None)
-            attempts.append(tv_options)
+            # Current public TV responses are frequently DRM-only. Prefer the
+            # Safari HLS path (which does not currently require a GVS token),
+            # then try embedded playback for videos that allow it.
+            safari_options = dict(options)
+            safari_options["extractor_args"] = {"youtube": {"player_client": ["web_safari"]}}
+            safari_options["impersonate"] = ImpersonateTarget.from_str("safari")
+            attempts.append(safari_options)
+
+            embedded_options = dict(options)
+            embedded_options["extractor_args"] = {"youtube": {"player_client": ["web_embedded"]}}
+            attempts.append(embedded_options)
         elif browser_impersonation_fallback:
             # Meta and TikTok periodically gate otherwise public pages using a
             # browser TLS fingerprint. Keep the faster native request first,
@@ -205,7 +209,7 @@ class YtDlpClient:
             attempts.append(impersonated_options)
 
         raw: dict[str, Any] | None = None
-        last_error: DownloadError | None = None
+        download_errors: list[str] = []
         for attempt, attempt_options in enumerate(attempts):
             if attempt:
                 _clear_download_workspace(workspace)
@@ -217,10 +221,10 @@ class YtDlpClient:
                 raw = extracted
                 break
             except DownloadError as error:
-                last_error = error
+                download_errors.append(str(error))
         if raw is None:
-            assert last_error is not None
-            raise ImportDownloadError(_download_error_code(str(last_error))) from last_error
+            assert download_errors
+            raise ImportDownloadError(_best_download_error_code(download_errors))
         title = _metadata_text(raw, "title", 500)
         creator = _metadata_text(raw, "uploader", 255)
         thumbnail = _metadata_text(raw, "thumbnail", 2048)
@@ -385,4 +389,20 @@ def _download_error_code(message: str) -> str:
         return "media_unavailable"
     if "requested format is not available" in normalized:
         return "supported_format_unavailable"
+    return "import_failed"
+
+
+def _best_download_error_code(messages: list[str]) -> str:
+    codes = {_download_error_code(message) for message in messages}
+    for code in (
+        "media_too_large",
+        "media_unavailable",
+        "platform_rate_limited",
+        "platform_ip_blocked",
+        "platform_auth_required",
+        "extractor_outdated",
+        "supported_format_unavailable",
+    ):
+        if code in codes:
+            return code
     return "import_failed"
