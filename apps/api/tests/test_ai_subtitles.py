@@ -1,11 +1,14 @@
+import json
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import Any
 from zipfile import ZipFile
 
 from sqlalchemy import create_engine
 from sqlalchemy.pool import StaticPool
 
 from fileflow_api.accounts.models import Account, AccountPlan
+from fileflow_api.ai.client import OpenAiCompatibleClient
 from fileflow_api.ai.contracts import SubtitleAssistRequest
 from fileflow_api.ai.documents import subtitle_docx
 from fileflow_api.ai.service import SubtitleAiService
@@ -22,6 +25,64 @@ class FakeAiClient:
     def complete(self, messages: list[dict[str, str]]) -> str:
         self.messages = messages
         return "The speaker discussed safe automation."
+
+
+class FakeProviderResponse:
+    def __enter__(self) -> "FakeProviderResponse":
+        return self
+
+    def __exit__(self, *_args: object) -> None:
+        return None
+
+    def read(self) -> bytes:
+        return json.dumps({"choices": [{"message": {"content": "Provider OK"}}]}).encode()
+
+
+def _provider_stub(captured: dict[str, Any]):
+    def urlopen(request: Any, timeout: float) -> FakeProviderResponse:
+        captured["url"] = request.full_url
+        captured["payload"] = json.loads(request.data)
+        captured["authorization"] = request.headers["Authorization"]
+        captured["timeout"] = timeout
+        return FakeProviderResponse()
+
+    return urlopen
+
+
+def test_gemini_uses_openai_compatible_endpoint_without_deepseek_thinking(
+    monkeypatch: Any,
+) -> None:
+    captured: dict[str, Any] = {}
+    monkeypatch.setattr("fileflow_api.ai.client.urlopen", _provider_stub(captured))
+    client = OpenAiCompatibleClient(
+        Settings(
+            environment="test",
+            ai_provider="gemini",
+            gemini_api_key="gemini-test-key",
+        )
+    )
+
+    assert client.complete([{"role": "user", "content": "Hello"}]) == "Provider OK"
+    assert captured["url"].endswith("/v1beta/openai/chat/completions")
+    assert captured["payload"]["model"] == "gemini-3.6-flash"
+    assert "thinking" not in captured["payload"]
+    assert captured["payload"]["reasoning_effort"] == "low"
+    assert captured["authorization"] == "Bearer gemini-test-key"
+
+
+def test_deepseek_keeps_thinking_disabled(monkeypatch: Any) -> None:
+    captured: dict[str, Any] = {}
+    monkeypatch.setattr("fileflow_api.ai.client.urlopen", _provider_stub(captured))
+    client = OpenAiCompatibleClient(
+        Settings(
+            environment="test",
+            ai_provider="deepseek",
+            deepseek_api_key="deepseek-test-key",
+        )
+    )
+
+    assert client.complete([{"role": "user", "content": "Hello"}]) == "Provider OK"
+    assert captured["payload"]["thinking"] == {"type": "disabled"}
 
 
 def test_ai_assistant_grounds_the_question_in_subtitle_text() -> None:

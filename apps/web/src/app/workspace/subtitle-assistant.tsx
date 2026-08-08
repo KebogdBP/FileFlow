@@ -18,7 +18,7 @@ const copy = {
     editor: 'Extracted subtitles',
     assistant: 'AI assistant',
     placeholder: 'Ask what the speaker said about a topic…',
-    ask: 'Ask DeepSeek',
+    ask: 'Ask AI',
     working: 'Analyzing…',
     signin: 'Sign in to use the AI assistant and DOCX export.',
     exports: ['Download VTT', 'Download TXT', 'Download DOCX'],
@@ -31,7 +31,8 @@ const copy = {
     empty: 'No readable subtitle text was returned.',
     loading: 'Opening extracted subtitles…',
     chars: 'characters',
-    privacy: 'Only this text and your question are sent to DeepSeek after you press Ask.',
+    privacy:
+      'Only this text and your question are sent to the configured AI provider after you press Ask.',
   },
   ru: {
     title: 'Рабочая область субтитров',
@@ -39,7 +40,7 @@ const copy = {
     editor: 'Извлечённые субтитры',
     assistant: 'AI-помощник',
     placeholder: 'Например: что спикер говорил об инвестициях?',
-    ask: 'Спросить DeepSeek',
+    ask: 'Спросить AI',
     working: 'Анализируем…',
     signin: 'Войдите в аккаунт, чтобы использовать AI и экспорт DOCX.',
     exports: ['Скачать VTT', 'Скачать TXT', 'Скачать DOCX'],
@@ -52,7 +53,8 @@ const copy = {
     empty: 'В результате нет читаемого текста субтитров.',
     loading: 'Открываем извлечённые субтитры…',
     chars: 'символов',
-    privacy: 'Только этот текст и ваш вопрос отправляются DeepSeek после нажатия кнопки.',
+    privacy:
+      'Только этот текст и ваш вопрос отправляются выбранному AI-провайдеру после нажатия кнопки.',
   },
   es: {
     title: 'Espacio de subtítulos',
@@ -60,7 +62,7 @@ const copy = {
     editor: 'Subtítulos extraídos',
     assistant: 'Asistente de IA',
     placeholder: 'Pregunta qué dijo el ponente sobre un tema…',
-    ask: 'Preguntar a DeepSeek',
+    ask: 'Preguntar a la IA',
     working: 'Analizando…',
     signin: 'Inicia sesión para usar la IA y exportar a DOCX.',
     exports: ['Descargar VTT', 'Descargar TXT', 'Descargar DOCX'],
@@ -73,28 +75,29 @@ const copy = {
     empty: 'No se obtuvo texto de subtítulos legible.',
     loading: 'Abriendo los subtítulos…',
     chars: 'caracteres',
-    privacy: 'Solo este texto y tu pregunta se envían a DeepSeek al pulsar el botón.',
+    privacy:
+      'Solo este texto y tu pregunta se envían al proveedor de IA configurado al pulsar el botón.',
   },
 } as const;
 
 const aiErrors: Record<FileFlowLanguage, Record<string, string>> = {
   en: {
     ai_not_configured: 'The AI assistant is not configured on this server yet.',
-    ai_rate_limited: 'DeepSeek is temporarily rate-limited. Please try again later.',
-    ai_provider_unavailable: 'DeepSeek is temporarily unavailable. Please try again later.',
-    ai_provider_failed: 'DeepSeek could not complete this request.',
+    ai_rate_limited: 'The AI provider is temporarily rate-limited. Please try again later.',
+    ai_provider_unavailable: 'The AI provider is temporarily unavailable. Please try again later.',
+    ai_provider_failed: 'The AI provider could not complete this request.',
   },
   ru: {
     ai_not_configured: 'AI-помощник пока не настроен на сервере.',
-    ai_rate_limited: 'DeepSeek временно ограничил запросы. Попробуйте позже.',
-    ai_provider_unavailable: 'DeepSeek временно недоступен. Попробуйте позже.',
-    ai_provider_failed: 'DeepSeek не смог обработать этот запрос.',
+    ai_rate_limited: 'AI-провайдер временно ограничил запросы. Попробуйте позже.',
+    ai_provider_unavailable: 'AI-провайдер временно недоступен. Попробуйте позже.',
+    ai_provider_failed: 'AI-провайдер не смог обработать этот запрос.',
   },
   es: {
     ai_not_configured: 'El asistente de IA aún no está configurado en el servidor.',
-    ai_rate_limited: 'DeepSeek ha limitado temporalmente las solicitudes.',
-    ai_provider_unavailable: 'DeepSeek no está disponible temporalmente.',
-    ai_provider_failed: 'DeepSeek no pudo completar esta solicitud.',
+    ai_rate_limited: 'El proveedor de IA ha limitado temporalmente las solicitudes.',
+    ai_provider_unavailable: 'El proveedor de IA no está disponible temporalmente.',
+    ai_provider_failed: 'El proveedor de IA no pudo completar esta solicitud.',
   },
 };
 
@@ -257,7 +260,7 @@ export function SubtitleWorkspace({
             <div className="subtitle-chat" aria-live="polite">
               {history.map((message, index) => (
                 <div className={message.role} key={`${message.role}-${index}`}>
-                  <strong>{message.role === 'user' ? 'You' : 'DeepSeek'}</strong>
+                  <strong>{message.role === 'user' ? 'You' : 'AI'}</strong>
                   <p>{message.content}</p>
                 </div>
               ))}

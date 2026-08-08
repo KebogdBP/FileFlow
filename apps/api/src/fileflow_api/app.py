@@ -11,7 +11,7 @@ from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 from fileflow_api.accounts.router import router as account_router
 from fileflow_api.accounts.service import AccountService
-from fileflow_api.ai.client import DeepSeekClient
+from fileflow_api.ai.client import OpenAiCompatibleClient
 from fileflow_api.ai.router import router as subtitle_router
 from fileflow_api.ai.service import SubtitleAiService
 from fileflow_api.analytics.router import router as analytics_router
@@ -94,7 +94,7 @@ def create_app(
     app.state.account_service = account_service or AccountService(sessions, current)
     app.state.analytics_service = analytics_service or AnalyticsService(sessions)
     app.state.subtitle_ai_service = subtitle_ai_service or SubtitleAiService(
-        sessions, DeepSeekClient(current), current
+        sessions, OpenAiCompatibleClient(current), current
     )
     app.add_middleware(TrustedHostMiddleware, allowed_hosts=current.trusted_hosts)
     app.add_middleware(

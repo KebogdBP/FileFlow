@@ -17,14 +17,23 @@ class AiClient(Protocol):
     def complete(self, messages: list[dict[str, str]]) -> str: ...
 
 
-class DeepSeekClient:
+class OpenAiCompatibleClient:
     def __init__(self, settings: Settings) -> None:
-        self._api_key = (
-            settings.deepseek_api_key.get_secret_value() if settings.deepseek_api_key else None
-        )
-        self._base_url = str(settings.deepseek_base_url).rstrip("/")
-        self._model = settings.deepseek_model
-        self._timeout = settings.deepseek_timeout_seconds
+        self._provider = settings.ai_provider
+        if self._provider == "gemini":
+            self._api_key = (
+                settings.gemini_api_key.get_secret_value() if settings.gemini_api_key else None
+            )
+            self._base_url = str(settings.gemini_base_url).rstrip("/")
+            self._model = settings.gemini_model
+            self._timeout = settings.gemini_timeout_seconds
+        else:
+            self._api_key = (
+                settings.deepseek_api_key.get_secret_value() if settings.deepseek_api_key else None
+            )
+            self._base_url = str(settings.deepseek_base_url).rstrip("/")
+            self._model = settings.deepseek_model
+            self._timeout = settings.deepseek_timeout_seconds
 
     @property
     def model(self) -> str:
@@ -33,14 +42,16 @@ class DeepSeekClient:
     def complete(self, messages: list[dict[str, str]]) -> str:
         if not self._api_key:
             raise AiProviderError("ai_not_configured")
-        body = json.dumps(
-            {
-                "model": self._model,
-                "messages": messages,
-                "thinking": {"type": "disabled"},
-                "max_tokens": 4_000,
-            }
-        ).encode()
+        request_payload: dict[str, object] = {
+            "model": self._model,
+            "messages": messages,
+            "max_tokens": 4_000,
+        }
+        if self._provider == "deepseek":
+            request_payload["thinking"] = {"type": "disabled"}
+        else:
+            request_payload["reasoning_effort"] = "low"
+        body = json.dumps(request_payload).encode()
         request = Request(
             f"{self._base_url}/chat/completions",
             data=body,
@@ -53,7 +64,7 @@ class DeepSeekClient:
         )
         try:
             with urlopen(request, timeout=self._timeout) as response:
-                payload = json.loads(response.read())
+                response_payload = json.loads(response.read())
         except HTTPError as error:
             if error.code == 429:
                 raise AiProviderError("ai_rate_limited") from error
@@ -61,7 +72,7 @@ class DeepSeekClient:
         except (URLError, TimeoutError, json.JSONDecodeError) as error:
             raise AiProviderError("ai_provider_unavailable") from error
         try:
-            answer = payload["choices"][0]["message"]["content"].strip()
+            answer = response_payload["choices"][0]["message"]["content"].strip()
         except (KeyError, IndexError, TypeError, AttributeError) as error:
             raise AiProviderError("ai_invalid_response") from error
         if not answer:
