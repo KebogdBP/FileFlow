@@ -160,7 +160,7 @@ class YtDlpClient:
                     "skip_download": True,
                     "writesubtitles": True,
                     "writeautomaticsub": True,
-                    "subtitleslangs": [f"{selected.subtitle_language}.*"],
+                    "subtitleslangs": [selected.subtitle_language],
                     "subtitlesformat": "vtt",
                 }
             )

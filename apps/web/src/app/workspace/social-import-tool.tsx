@@ -176,7 +176,12 @@ export function SocialImportTool({
   async function start() {
     const startValue = startSeconds === '' ? undefined : Number(startSeconds);
     const endValue = endSeconds === '' ? undefined : Number(endSeconds);
-    if (startValue !== undefined && endValue !== undefined && endValue <= startValue) {
+    if (
+      mediaType !== 'subtitles' &&
+      startValue !== undefined &&
+      endValue !== undefined &&
+      endValue <= startValue
+    ) {
       setState({ status: 'error', message: text.invalidRange });
       return;
     }
