@@ -136,6 +136,33 @@ const cloudCopy = {
   },
 } as const;
 
+const cloudErrorCopy: Record<FileFlowLanguage, Record<string, string>> = {
+  en: {
+    invalid_or_protected_pdf: 'This PDF is damaged or password-protected.',
+    pdf_has_no_extractable_text:
+      'This PDF contains no extractable text. It may be a scanned document.',
+    document_conversion_failed:
+      'The document converter could not process this file. Try resaving it and upload again.',
+    worker_execution_failed: 'The processing worker stopped unexpectedly. Please try again.',
+  },
+  ru: {
+    invalid_or_protected_pdf: 'PDF повреждён или защищён паролем.',
+    pdf_has_no_extractable_text:
+      'В PDF нет извлекаемого текста. Возможно, это отсканированный документ.',
+    document_conversion_failed:
+      'Конвертер не смог обработать документ. Пересохраните файл и загрузите его снова.',
+    worker_execution_failed: 'Воркер обработки неожиданно остановился. Попробуйте ещё раз.',
+  },
+  es: {
+    invalid_or_protected_pdf: 'El PDF está dañado o protegido con contraseña.',
+    pdf_has_no_extractable_text:
+      'El PDF no contiene texto extraíble. Puede ser un documento escaneado.',
+    document_conversion_failed:
+      'El conversor no pudo procesar el documento. Guarda el archivo de nuevo y reinténtalo.',
+    worker_execution_failed: 'El proceso se detuvo de forma inesperada. Inténtalo de nuevo.',
+  },
+};
+
 const pageSelectionCopy = {
   en: { mode: 'Pages to extract', all: 'All pages', selected: 'Selected pages', pages: 'Pages' },
   ru: {
@@ -267,7 +294,7 @@ export function CloudJobTool({
           error instanceof DOMException && error.name === 'AbortError'
             ? text.messages[6]
             : error instanceof Error
-              ? error.message
+              ? (cloudErrorCopy[language][error.message] ?? error.message)
               : text.messages[7],
       });
     } finally {

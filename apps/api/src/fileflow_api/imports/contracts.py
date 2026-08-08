@@ -36,6 +36,7 @@ class ImportResponse(BaseModel):
     id: str
     provider: str
     status: ImportStatus
+    progress: int = Field(ge=0, le=100)
     upload_id: str | None
     title: str | None
     creator: str | None

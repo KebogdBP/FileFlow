@@ -2,21 +2,12 @@ from fileflow_api.downloads import attachment_disposition, converted_filename
 
 
 def test_converted_filename_preserves_source_name_and_changes_extension() -> None:
-    assert (
-        converted_filename("Quarterly report.pdf", ".pptx")
-        == "Quarterly report Converted.pptx"
-    )
-    assert (
-        converted_filename(r"C:\uploads\Видео: обзор.mp4", "mp3")
-        == "Видео обзор Converted.mp3"
-    )
+    assert converted_filename("Quarterly report.pdf", ".pptx") == "Quarterly report Converted.pptx"
+    assert converted_filename(r"C:\uploads\Видео: обзор.mp4", "mp3") == "Видео обзор Converted.mp3"
 
 
 def test_converted_filename_does_not_duplicate_suffix() -> None:
-    assert (
-        converted_filename("Document Converted.pdf", ".docx")
-        == "Document Converted.docx"
-    )
+    assert converted_filename("Document Converted.pdf", ".docx") == "Document Converted.docx"
 
 
 def test_converted_filename_preserves_dots_in_link_title() -> None:

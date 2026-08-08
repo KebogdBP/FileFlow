@@ -1132,9 +1132,9 @@ export function GlassHome() {
                         <Icon size={20} /> {t.nav[index]}
                       </Link>
                       {index === 3 ? (
-                        <a href="/?view=desktop">
+                        <Link href="/?view=desktop" onClick={() => setMobileNav(false)}>
                           <Monitor size={20} /> Desktop version
-                        </a>
+                        </Link>
                       ) : null}
                     </React.Fragment>
                   ))}

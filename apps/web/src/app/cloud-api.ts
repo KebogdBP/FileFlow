@@ -30,6 +30,7 @@ export type SocialImport = {
   id: string;
   provider: string;
   status: 'queued' | 'running' | 'completed' | 'failed';
+  progress: number;
   upload_id: string | null;
   title: string | null;
   creator: string | null;
@@ -232,10 +233,15 @@ export function createSocialImport(
   });
 }
 
-export async function waitForSocialImport(importId: string, signal?: AbortSignal) {
+export async function waitForSocialImport(
+  importId: string,
+  onProgress?: (item: SocialImport) => void,
+  signal?: AbortSignal,
+) {
   for (;;) {
     if (signal?.aborted) throw new DOMException('Cancelled', 'AbortError');
     const item = await apiJson<SocialImport>(`/imports/${importId}`, { signal });
+    onProgress?.(item);
     if (item.status === 'completed') return item;
     if (item.status === 'failed') throw new Error(item.error_code ?? 'Import failed.');
     await delay(1000, signal);

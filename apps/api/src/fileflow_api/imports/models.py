@@ -21,6 +21,7 @@ class SocialImport(Base):
     source_url: Mapped[str] = mapped_column(String(2048))
     provider: Mapped[str] = mapped_column(String(32), index=True)
     status: Mapped[ImportStatus] = mapped_column(Enum(ImportStatus), index=True)
+    progress: Mapped[int] = mapped_column(Integer, default=0)
     task_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
     upload_id: Mapped[str | None] = mapped_column(
         ForeignKey("uploads.id", ondelete="SET NULL"), nullable=True

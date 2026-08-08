@@ -1,4 +1,5 @@
 import os
+from collections.abc import Callable
 from pathlib import Path
 
 import pytest
@@ -58,11 +59,18 @@ class FakeQueue:
 
 class FakeClient:
     def download(
-        self, url: str, workspace: Path, max_bytes: int, options: ImportOptions
+        self,
+        url: str,
+        workspace: Path,
+        max_bytes: int,
+        options: ImportOptions,
+        on_progress: Callable[[int], None] | None = None,
     ) -> ImportedMedia:
         assert url.startswith("https://www.youtube.com/")
         assert options.media_type == "video"
         path = workspace / "source.mp4"
+        if on_progress:
+            on_progress(54)
         path.write_bytes(b"\x00\x00\x00\x18ftypisom-public-video")
         return ImportedMedia(
             path,
@@ -76,7 +84,12 @@ class FakeClient:
 
 class FailingClient:
     def download(
-        self, url: str, workspace: Path, max_bytes: int, options: ImportOptions
+        self,
+        url: str,
+        workspace: Path,
+        max_bytes: int,
+        options: ImportOptions,
+        on_progress: Callable[[int], None] | None = None,
     ) -> ImportedMedia:
         raise ImportDownloadError("platform_auth_required")
 
@@ -151,9 +164,11 @@ def test_import_without_rights_attestation_enters_existing_safety_pipeline() -> 
     service, storage, queue = import_service()
     item = service.create(ImportCreate(url="https://www.youtube.com/watch?v=abc"))
     assert item.status == ImportStatus.QUEUED
+    assert item.progress == 0
     assert queue.imports == [item.id]
     completed = service.execute(item.id)
     assert completed.status == ImportStatus.COMPLETED
+    assert completed.progress == 100
     assert completed.upload_id is not None
     assert completed.title == "My video"
     assert completed.creator == "Creator"
@@ -534,6 +549,7 @@ def test_downloader_passes_configured_egress_proxy(
         ("Cannot parse data; please report this issue", "extractor_outdated"),
         ("Video unavailable", "media_unavailable"),
         ("Requested format is not available", "supported_format_unavailable"),
+        ("File is larger than max-filesize", "media_too_large"),
         ("Network failure", "import_failed"),
     ],
 )
