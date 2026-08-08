@@ -126,6 +126,12 @@ const operationPresentation: Record<
     icon: Combine,
     tone: 'blue',
   },
+  'quick-edit-pdf': {
+    title: 'Quick edit PDF',
+    description: 'Add text, highlights, drawings, signatures, and arrange pages locally',
+    icon: BookOpen,
+    tone: 'mint',
+  },
   'compress-pdf': {
     title: 'Compress PDF',
     description: 'Reduce size while preserving readability',
@@ -165,6 +171,7 @@ const operationPresentation: Record<
 };
 
 const featuredOperationIds: readonly OperationId[] = [
+  'quick-edit-pdf',
   'compress-pdf',
   'split-pdf',
   'merge-pdf',
@@ -494,7 +501,7 @@ const localizedCopy = {
     bestOptions: 'Best options for',
     outcomeLead: 'Start with what you need. FileFlow handles the format details.',
     viewAll: 'View all tools',
-    toolCount: '17 working tools',
+    toolCount: '18 working tools',
     moreTools: 'more',
     previousTools: 'Previous tools',
     localMode: 'On device',
@@ -586,7 +593,7 @@ const localizedCopy = {
       '\u0412\u044b\u0431\u0435\u0440\u0438\u0442\u0435 \u0440\u0435\u0437\u0443\u043b\u044c\u0442\u0430\u0442 — FileFlow \u0440\u0430\u0437\u0431\u0435\u0440\u0451\u0442\u0441\u044f \u0441 \u0444\u043e\u0440\u043c\u0430\u0442\u043e\u043c.',
     viewAll:
       '\u0412\u0441\u0435 \u0438\u043d\u0441\u0442\u0440\u0443\u043c\u0435\u043d\u0442\u044b',
-    toolCount: '17 рабочих инструментов',
+    toolCount: '18 рабочих инструментов',
     moreTools: 'ещё',
     previousTools: 'Предыдущие инструменты',
     localMode: 'На устройстве',
@@ -656,7 +663,7 @@ const localizedCopy = {
     bestOptions: 'Mejores opciones para',
     outcomeLead: 'Elige el resultado. FileFlow se ocupa de los formatos.',
     viewAll: 'Ver herramientas',
-    toolCount: '17 herramientas activas',
+    toolCount: '18 herramientas activas',
     moreTools: 'más',
     previousTools: 'Herramientas anteriores',
     localMode: 'En el dispositivo',

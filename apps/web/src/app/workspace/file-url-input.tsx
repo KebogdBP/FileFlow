@@ -23,6 +23,7 @@ import { BatchImageTool } from './batch-image-tool';
 import { MAX_BATCH_FILES, validateBatchCount } from './batch-model';
 import { CloudJobTool } from './cloud-job-tool';
 import { SocialImportTool } from './social-import-tool';
+import { QuickPdfEditor } from './quick-pdf-editor';
 import type { FileFlowLanguage } from '../use-fileflow-language';
 
 type Source = { kind: 'file'; file: File } | { kind: 'url'; url: string; platform: InputPlatform };
@@ -169,6 +170,7 @@ const workspaceCopy = {
       'Изменён',
     ],
     operationNames: {
+      'quick-edit-pdf': 'Быстро редактировать PDF',
       'compress-pdf': 'Сжать PDF',
       'split-pdf': 'Разделить PDF',
       'merge-pdf': 'Объединить PDF',
@@ -283,6 +285,7 @@ const workspaceCopy = {
       'Modificado',
     ],
     operationNames: {
+      'quick-edit-pdf': 'Editar PDF rápidamente',
       'compress-pdf': 'Comprimir PDF',
       'split-pdf': 'Dividir PDF',
       'merge-pdf': 'Unir PDFs',
@@ -804,6 +807,9 @@ function RecommendationPanel({
           operationId={result.plan.operationId}
           language={language}
         />
+      ) : null}
+      {result.plan.operationId === 'quick-edit-pdf' ? (
+        <QuickPdfEditor file={file} language={language} />
       ) : null}
     </section>
   );
