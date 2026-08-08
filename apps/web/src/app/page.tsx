@@ -15,7 +15,14 @@ export const metadata: Metadata = {
     type: 'website',
     url: '/',
     siteName: 'File Flow',
-    images: [{ url: '/og.png', width: 1736, height: 907, alt: 'File Flow glass file workspace' }],
+    images: [
+      {
+        url: '/og.png',
+        width: 1731,
+        height: 909,
+        alt: 'FileFlow subtitle extraction and AI answers workflow',
+      },
+    ],
   },
   twitter: {
     card: 'summary_large_image',

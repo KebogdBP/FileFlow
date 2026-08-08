@@ -87,6 +87,18 @@ def test_clean_file_is_streamed_and_released() -> None:
     assert service.require_clean(upload_id).id == upload_id
 
 
+def test_webvtt_subtitles_pass_the_existing_malware_pipeline() -> None:
+    content = b"WEBVTT\n\n00:00.000 --> 00:01.000\nHello"
+    service, upload_id, storage, scanner = safety_service(
+        content, "text/vtt", ScanResult(MalwareVerdict.CLEAN)
+    )
+    upload = service.inspect(upload_id)
+    assert upload.safety_status == SafetyStatus.CLEAN
+    assert upload.detected_content_type == "text/vtt"
+    assert scanner.received == content
+    assert not storage.deleted
+
+
 @pytest.mark.parametrize(
     ("content", "declared", "result", "reason"),
     [

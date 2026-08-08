@@ -21,6 +21,7 @@ class RecordingRunner:
             "mp4": b"\x00\x00\x00\x18ftypisom",
             "mp3": b"ID3safe-audio",
             "wav": b"RIFF\x00\x00\x00\x00WAVE",
+            "webvtt": b"WEBVTT\n\n00:00.000 --> 00:01.000\nHello",
         }
         output.write_bytes(signatures[output_format] + b"result")
 
@@ -100,6 +101,17 @@ def test_audio_trim_seeks_to_start_and_uses_end_as_an_absolute_time(tmp_path: Pa
     assert command.index("-ss") < command.index("-i")
     assert command[command.index("-ss") + 1] == "5.000"
     assert command[command.index("-t") + 1] == "7.500"
+
+
+def test_subtitle_extraction_selects_first_embedded_track_as_webvtt(tmp_path: Path) -> None:
+    runner = RecordingRunner()
+    result = FfmpegHandler("/usr/bin/ffmpeg", runner, "extract-subtitles").execute(
+        request(tmp_path)
+    )
+    command = runner.commands[0]
+    assert result.content_type == "text/vtt"
+    assert command[command.index("-map") + 1] == "0:s:0"
+    assert command[command.index("-c:s") + 1] == "webvtt"
 
 
 def test_audio_trim_rejects_an_end_before_the_start(tmp_path: Path) -> None:

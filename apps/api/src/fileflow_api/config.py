@@ -2,7 +2,7 @@ from decimal import Decimal
 from functools import lru_cache
 from typing import Literal
 
-from pydantic import AnyHttpUrl, Field
+from pydantic import AnyHttpUrl, Field, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -67,6 +67,12 @@ class Settings(BaseSettings):
     social_import_pot_provider_url: str | None = None
     social_import_proxy_url: str | None = None
     social_import_allow_remote_ejs: bool = True
+    deepseek_api_key: SecretStr | None = None
+    deepseek_base_url: AnyHttpUrl = AnyHttpUrl("https://api.deepseek.com")
+    deepseek_model: str = "deepseek-v4-flash"
+    deepseek_timeout_seconds: float = Field(default=90, gt=1, le=300)
+    daily_ai_requests: int = Field(default=20, ge=1, le=1000)
+    ai_max_source_characters: int = Field(default=400_000, ge=1_000, le=2_000_000)
     allowed_origins: list[AnyHttpUrl] = Field(
         default_factory=lambda: [AnyHttpUrl("http://localhost:3000")]
     )

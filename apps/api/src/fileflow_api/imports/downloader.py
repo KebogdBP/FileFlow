@@ -32,6 +32,7 @@ class ImportOptions:
     playlist_item: int | None = None
     playlist_count: int | None = None
     generic_audio: bool = False
+    subtitle_language: str = "en"
 
 
 @dataclass(frozen=True)
@@ -110,7 +111,10 @@ class YtDlpClient:
             "vt.tiktok.com",
         }
         postprocessors: list[dict[str, Any]]
-        if selected.media_type == "audio":
+        if selected.media_type == "subtitles":
+            postprocessors = []
+            format_spec: str | None = None
+        elif selected.media_type == "audio":
             postprocessors = [
                 {
                     "key": "FFmpegExtractAudio",
@@ -128,7 +132,6 @@ class YtDlpClient:
             ]
             format_spec = _video_format(selected.video_quality)
         options: dict[str, Any] = {
-            "format": format_spec,
             "merge_output_format": "mp4",
             "postprocessors": postprocessors,
             "outtmpl": str(
@@ -149,6 +152,18 @@ class YtDlpClient:
             "progress_hooks": [_download_progress_hook(on_progress)],
             "postprocessor_hooks": [_postprocessor_progress_hook(on_progress)],
         }
+        if format_spec is not None:
+            options["format"] = format_spec
+        else:
+            options.update(
+                {
+                    "skip_download": True,
+                    "writesubtitles": True,
+                    "writeautomaticsub": True,
+                    "subtitleslangs": [f"{selected.subtitle_language}.*"],
+                    "subtitlesformat": "vtt",
+                }
+            )
         if selected.playlist_item is not None:
             options["playlist_items"] = str(selected.playlist_item)
         elif is_playlist and selected.playlist_count:
@@ -229,9 +244,17 @@ class YtDlpClient:
         creator = _metadata_text(raw, "uploader", 255)
         thumbnail = _metadata_text(raw, "thumbnail", 2048)
         files = [path for path in workspace.iterdir() if path.is_file() and not path.is_symlink()]
-        expected_suffix = ".mp3" if selected.media_type == "audio" else ".mp4"
+        expected_suffix = (
+            ".vtt"
+            if selected.media_type == "subtitles"
+            else ".mp3"
+            if selected.media_type == "audio"
+            else ".mp4"
+        )
         media_files = sorted(path for path in files if path.suffix.lower() == expected_suffix)
         if not media_files:
+            if selected.media_type == "subtitles":
+                raise ImportDownloadError("subtitles_not_found")
             raise ValueError(f"import did not produce a {expected_suffix} artifact")
         if is_playlist:
             archive = workspace / "playlist.zip"
@@ -250,6 +273,8 @@ class YtDlpClient:
                 creator,
                 thumbnail,
             )
+        if selected.media_type == "subtitles" and media_files:
+            media_files = media_files[:1]
         if len(media_files) != 1:
             raise ValueError(f"import did not produce one {expected_suffix} artifact")
         media = media_files[0]
@@ -257,7 +282,12 @@ class YtDlpClient:
             raise ValueError("imported media violates size limits")
         with media.open("rb") as downloaded:
             header = downloaded.read(12)
-        if selected.media_type == "audio":
+        if selected.media_type == "subtitles":
+            if not header.startswith(b"WEBVTT"):
+                raise ValueError("imported subtitles are not WebVTT")
+            content_type = "text/vtt"
+            filename = converted_filename(title or "Subtitles", ".vtt", source_is_filename=False)
+        elif selected.media_type == "audio":
             if not _is_mp3_header(header):
                 raise ValueError("imported media is not an MP3 file")
             content_type = "audio/mpeg"

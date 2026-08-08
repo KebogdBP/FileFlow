@@ -56,6 +56,7 @@ class SocialImportService:
             playlist_item=request.playlist_item,
             playlist_count=request.playlist_count,
             generic_audio=request.generic_audio,
+            subtitle_language=request.subtitle_language,
             error_code=None,
             created_at=datetime.now(UTC),
             finished_at=None,
@@ -115,6 +116,7 @@ class SocialImportService:
                         playlist_item=item.playlist_item,
                         playlist_count=item.playlist_count,
                         generic_audio=item.generic_audio,
+                        subtitle_language=item.subtitle_language,
                     ),
                     report_progress,
                 )

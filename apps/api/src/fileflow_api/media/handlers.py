@@ -2,7 +2,12 @@ from collections.abc import Mapping, Sequence
 from pathlib import Path, PurePosixPath
 from typing import Protocol
 
-from fileflow_api.workers.contracts import Parameter, WorkRequest, WorkResult
+from fileflow_api.workers.contracts import (
+    Parameter,
+    WorkerExecutionFailure,
+    WorkRequest,
+    WorkResult,
+)
 
 
 class CommandRunner(Protocol):
@@ -47,6 +52,7 @@ class FfmpegHandler:
             "video-to-mp4",
             "remove-video-metadata",
             "extract-audio",
+            "extract-subtitles",
         }:
             return content_type.startswith("video/")
         return content_type.startswith("audio/")
@@ -54,7 +60,12 @@ class FfmpegHandler:
     def execute(self, request: WorkRequest) -> WorkResult:
         argv, content_type = self._command(request)
         request.report_progress(10)
-        self._runner.run(argv, request.output_path.parent)
+        try:
+            self._runner.run(argv, request.output_path.parent)
+        except RuntimeError as error:
+            if self._operation == "extract-subtitles":
+                raise WorkerExecutionFailure("subtitles_not_found") from error
+            raise
         self._validate_signature(request.output_path, content_type)
         request.report_progress(95)
         return WorkResult(content_type=content_type)
@@ -92,6 +103,21 @@ class FfmpegHandler:
                     output,
                 ],
                 "video/mp4",
+            )
+        if self._operation == "extract-subtitles":
+            reject_unknown(parameters, set())
+            return (
+                [
+                    *common,
+                    "-map",
+                    "0:s:0",
+                    "-c:s",
+                    "webvtt",
+                    "-f",
+                    "webvtt",
+                    output,
+                ],
+                "text/vtt",
             )
         if self._operation in {"compress-video", "video-to-mp4"}:
             reject_unknown(parameters, {"quality", "preset", "max_height"})
@@ -187,6 +213,7 @@ class FfmpegHandler:
             "audio/mpeg": header.startswith(b"ID3")
             or header.startswith((b"\xff\xfb", b"\xff\xf3", b"\xff\xf2")),
             "audio/wav": header.startswith(b"RIFF") and header[8:12] == b"WAVE",
+            "text/vtt": header.startswith(b"WEBVTT"),
         }
         if not valid.get(content_type, False):
             raise ValueError("ffmpeg returned an unexpected output signature")

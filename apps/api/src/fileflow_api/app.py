@@ -11,6 +11,9 @@ from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 from fileflow_api.accounts.router import router as account_router
 from fileflow_api.accounts.service import AccountService
+from fileflow_api.ai.client import DeepSeekClient
+from fileflow_api.ai.router import router as subtitle_router
+from fileflow_api.ai.service import SubtitleAiService
 from fileflow_api.analytics.router import router as analytics_router
 from fileflow_api.analytics.service import AnalyticsService
 from fileflow_api.config import Settings, get_settings
@@ -42,6 +45,7 @@ def create_app(
     import_service: SocialImportService | None = None,
     account_service: AccountService | None = None,
     analytics_service: AnalyticsService | None = None,
+    subtitle_ai_service: SubtitleAiService | None = None,
 ) -> FastAPI:
     current = settings or get_settings()
     app = FastAPI(
@@ -89,6 +93,9 @@ def create_app(
     )
     app.state.account_service = account_service or AccountService(sessions, current)
     app.state.analytics_service = analytics_service or AnalyticsService(sessions)
+    app.state.subtitle_ai_service = subtitle_ai_service or SubtitleAiService(
+        sessions, DeepSeekClient(current), current
+    )
     app.add_middleware(TrustedHostMiddleware, allowed_hosts=current.trusted_hosts)
     app.add_middleware(
         CORSMiddleware,
@@ -128,6 +135,7 @@ def create_app(
     app.include_router(imports_router, prefix=current.api_prefix)
     app.include_router(account_router, prefix=current.api_prefix)
     app.include_router(analytics_router, prefix=current.api_prefix)
+    app.include_router(subtitle_router, prefix=current.api_prefix)
 
     @app.get("/", response_model=MessageResponse, include_in_schema=False)
     def root() -> MessageResponse:

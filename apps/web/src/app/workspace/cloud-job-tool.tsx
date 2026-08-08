@@ -15,6 +15,7 @@ import {
 import { formatFileSize } from './input-policy';
 import type { FileFlowLanguage } from '../use-fileflow-language';
 import { recordCompletedOperations } from '../visitor-counter';
+import { SubtitleWorkspace } from './subtitle-assistant';
 
 const cloudCopy = {
   en: {
@@ -144,6 +145,7 @@ const cloudErrorCopy: Record<FileFlowLanguage, Record<string, string>> = {
     document_conversion_failed:
       'The document converter could not process this file. Try resaving it and upload again.',
     worker_execution_failed: 'The processing worker stopped unexpectedly. Please try again.',
+    subtitles_not_found: 'This video does not contain an embedded subtitle track.',
   },
   ru: {
     invalid_or_protected_pdf: 'PDF повреждён или защищён паролем.',
@@ -152,6 +154,7 @@ const cloudErrorCopy: Record<FileFlowLanguage, Record<string, string>> = {
     document_conversion_failed:
       'Конвертер не смог обработать документ. Пересохраните файл и загрузите его снова.',
     worker_execution_failed: 'Воркер обработки неожиданно остановился. Попробуйте ещё раз.',
+    subtitles_not_found: 'В этом видео нет встроенной дорожки субтитров.',
   },
   es: {
     invalid_or_protected_pdf: 'El PDF está dañado o protegido con contraseña.',
@@ -160,6 +163,7 @@ const cloudErrorCopy: Record<FileFlowLanguage, Record<string, string>> = {
     document_conversion_failed:
       'El conversor no pudo procesar el documento. Guarda el archivo de nuevo y reinténtalo.',
     worker_execution_failed: 'El proceso se detuvo de forma inesperada. Inténtalo de nuevo.',
+    subtitles_not_found: 'Este vídeo no contiene una pista de subtítulos integrada.',
   },
 };
 
@@ -182,7 +186,7 @@ const pageSelectionCopy = {
 type State =
   | { status: 'idle' }
   | { status: 'running'; progress: number; stage: string }
-  | { status: 'completed'; job: CloudJob; url: string; filename: string }
+  | { status: 'completed'; job: CloudJob; url: string; filename: string; text?: string }
   | { status: 'error'; message: string };
 
 export function CloudJobTool({
@@ -285,7 +289,14 @@ export function CloudJobTool({
       if (resultUrl.current) URL.revokeObjectURL(resultUrl.current);
       const url = URL.createObjectURL(result.blob);
       resultUrl.current = url;
-      setState({ status: 'completed', job: completed, url, filename: result.filename });
+      const textResult = operationId === 'extract-subtitles' ? await result.blob.text() : undefined;
+      setState({
+        status: 'completed',
+        job: completed,
+        url,
+        filename: result.filename,
+        text: textResult,
+      });
       void recordCompletedOperations();
     } catch (error) {
       setState({
@@ -380,6 +391,9 @@ export function CloudJobTool({
             {text.result[2]}
           </a>
         </div>
+      ) : null}
+      {state.status === 'completed' && state.text ? (
+        <SubtitleWorkspace initialText={state.text} filename={state.filename} language={language} />
       ) : null}
     </section>
   );

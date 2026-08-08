@@ -6,6 +6,7 @@ MEDIA_OPERATIONS = (
     "video-to-mp4",
     "remove-video-metadata",
     "extract-audio",
+    "extract-subtitles",
     "audio-to-mp3",
     "audio-to-wav",
     "optimize-audio",
