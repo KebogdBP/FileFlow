@@ -37,6 +37,7 @@ class SocialImport(Base):
     playlist_item: Mapped[int | None] = mapped_column(Integer, nullable=True)
     playlist_count: Mapped[int | None] = mapped_column(Integer, nullable=True)
     generic_audio: Mapped[bool] = mapped_column(Boolean, default=False)
+    subtitle_language: Mapped[str] = mapped_column(String(16), default="en")
     error_code: Mapped[str | None] = mapped_column(String(64), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)
     finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)

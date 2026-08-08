@@ -35,7 +35,7 @@ export type SocialImport = {
   title: string | null;
   creator: string | null;
   thumbnail_url: string | null;
-  media_type: 'video' | 'audio';
+  media_type: 'video' | 'audio' | 'subtitles';
   video_quality: 'best' | '1080' | '720' | '480';
   audio_bitrate_kbps: 128 | 192 | 320;
   start_seconds: number | null;
@@ -43,11 +43,12 @@ export type SocialImport = {
   playlist_item: number | null;
   playlist_count: number | null;
   generic_audio: boolean;
+  subtitle_language: string;
   error_code: string | null;
 };
 
 export type SocialImportOptions = {
-  media_type: 'video' | 'audio';
+  media_type: 'video' | 'audio' | 'subtitles';
   video_quality: 'best' | '1080' | '720' | '480';
   audio_bitrate_kbps: 128 | 192 | 320;
   start_seconds?: number;
@@ -55,6 +56,7 @@ export type SocialImportOptions = {
   playlist_item?: number;
   playlist_count?: number;
   generic_audio?: boolean;
+  subtitle_language?: string;
 };
 
 function contentType(file: File) {
@@ -287,6 +289,49 @@ export async function downloadSocialImportResult(
   anchor.click();
   anchor.remove();
   window.setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
+}
+
+export async function getSocialImportResult(importId: string) {
+  const response = await fetch(`${API_URL}/imports/${importId}/result`);
+  if (!response.ok) throw new Error(await responseError(response));
+  const disposition = response.headers.get('Content-Disposition') ?? '';
+  return {
+    blob: await response.blob(),
+    filename: responseFilename(disposition, `fileflow-${importId}.vtt`),
+  };
+}
+
+export type AiChatMessage = { role: 'user' | 'assistant'; content: string };
+
+export function askSubtitleAi(
+  sourceText: string,
+  prompt: string,
+  history: readonly AiChatMessage[],
+  token: string,
+) {
+  return apiJson<{ answer: string; model: string; remaining_today: number }>(
+    '/subtitles/assist',
+    {
+      method: 'POST',
+      body: JSON.stringify({
+        source_text: sourceText,
+        prompt,
+        history: history.slice(-8),
+        response_language: 'auto',
+      }),
+    },
+    token,
+  );
+}
+
+export async function downloadSubtitleDocx(title: string, subtitleText: string, token: string) {
+  const response = await fetch(`${API_URL}/subtitles/docx`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ title, text: subtitleText }),
+  });
+  if (!response.ok) throw new Error(await responseError(response));
+  return response.blob();
 }
 
 function delay(milliseconds: number, signal?: AbortSignal) {

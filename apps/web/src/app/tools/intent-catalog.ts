@@ -7,6 +7,8 @@ const descriptions: Record<string, string> = {
   'video-to-mp4': 'Convert a video into a broadly compatible MP4 file.',
   'remove-video-metadata': 'Remove embedded video metadata without changing its dimensions.',
   'extract-audio': 'Extract a video soundtrack as a lightweight MP3 file.',
+  'extract-subtitles':
+    'Extract an embedded subtitle track, edit the text and analyze it with the AI assistant.',
   'optimize-audio': 'Reduce audio size with practical quality defaults.',
   'audio-to-mp3': 'Convert audio to an MP3 that works across common players.',
   'audio-to-wav': 'Convert audio to an uncompressed WAV for editing and production.',

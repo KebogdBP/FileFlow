@@ -49,6 +49,7 @@ def download_result(job_id: str, request: Request) -> StreamingResponse:
         "video/mp4": ".mp4",
         "audio/mpeg": ".mp3",
         "audio/wav": ".wav",
+        "text/vtt": ".vtt",
         "application/pdf": ".pdf",
         "image/jpeg": ".jpg",
         "application/vnd.openxmlformats-officedocument.wordprocessingml.document": ".docx",

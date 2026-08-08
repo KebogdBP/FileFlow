@@ -14,6 +14,7 @@ import {
 import { CloudJobTool } from './cloud-job-tool';
 import type { FileFlowLanguage } from '../use-fileflow-language';
 import { recordCompletedOperations } from '../visitor-counter';
+import { ImportedSubtitleWorkspace } from './subtitle-assistant';
 
 const socialCopy = {
   en: {
@@ -27,11 +28,12 @@ const socialCopy = {
     stop: 'Stop waiting',
     thumbnail: 'Imported media thumbnail',
     imported: 'IMPORTED',
-    fallbackTitle: ['Imported video', 'Imported audio'],
+    fallbackTitle: ['Imported video', 'Imported audio', 'Imported subtitles'],
     next: 'What next?',
-    download: ['Download video', 'Download MP3'],
+    download: ['Download video', 'Download MP3', 'Download VTT'],
     mediaType: 'Import as',
-    mediaTypes: ['Video', 'Audio (MP3)'],
+    mediaTypes: ['Video', 'Audio (MP3)', 'Subtitles + AI'],
+    subtitleLanguage: 'Subtitle language',
     videoQuality: 'Video quality',
     qualities: ['Best available', 'Up to 1080p', 'Up to 720p', 'Up to 480p'],
     audioQuality: 'MP3 quality',
@@ -53,6 +55,7 @@ const socialCopy = {
       supported_format_unavailable: 'No supported media format is available.',
       media_too_large: 'This media is larger than the 512 MB server limit.',
       import_failed: 'The platform could not import this link.',
+      subtitles_not_found: 'No subtitles were found in the selected language.',
     },
   },
   ru: {
@@ -66,11 +69,12 @@ const socialCopy = {
     stop: 'Прекратить ожидание',
     thumbnail: 'Превью импортированного медиа',
     imported: 'ИМПОРТИРОВАНО',
-    fallbackTitle: ['Импортированное видео', 'Импортированное аудио'],
+    fallbackTitle: ['Импортированное видео', 'Импортированное аудио', 'Извлечённые субтитры'],
     next: 'Что сделать дальше?',
-    download: ['Скачать видео', 'Скачать MP3'],
+    download: ['Скачать видео', 'Скачать MP3', 'Скачать VTT'],
     mediaType: 'Импортировать как',
-    mediaTypes: ['Видео', 'Аудио (MP3)'],
+    mediaTypes: ['Видео', 'Аудио (MP3)', 'Субтитры + AI'],
+    subtitleLanguage: 'Язык субтитров',
     videoQuality: 'Качество видео',
     qualities: ['Лучшее доступное', 'До 1080p', 'До 720p', 'До 480p'],
     audioQuality: 'Качество MP3',
@@ -98,6 +102,7 @@ const socialCopy = {
       supported_format_unavailable: 'Поддерживаемый формат медиа не найден.',
       media_too_large: 'Файл превышает серверный лимит 512 МБ.',
       import_failed: 'Не удалось импортировать медиа по этой ссылке.',
+      subtitles_not_found: 'Субтитры на выбранном языке не найдены.',
     },
   },
   es: {
@@ -111,11 +116,12 @@ const socialCopy = {
     stop: 'Dejar de esperar',
     thumbnail: 'Miniatura del contenido importado',
     imported: 'IMPORTADO',
-    fallbackTitle: ['Vídeo importado', 'Audio importado'],
+    fallbackTitle: ['Vídeo importado', 'Audio importado', 'Subtítulos extraídos'],
     next: '¿Qué hacer después?',
-    download: ['Descargar vídeo', 'Descargar MP3'],
+    download: ['Descargar vídeo', 'Descargar MP3', 'Descargar VTT'],
     mediaType: 'Importar como',
-    mediaTypes: ['Vídeo', 'Audio (MP3)'],
+    mediaTypes: ['Vídeo', 'Audio (MP3)', 'Subtítulos + IA'],
+    subtitleLanguage: 'Idioma de subtítulos',
     videoQuality: 'Calidad de vídeo',
     qualities: ['Mejor disponible', 'Hasta 1080p', 'Hasta 720p', 'Hasta 480p'],
     audioQuality: 'Calidad MP3',
@@ -136,6 +142,7 @@ const socialCopy = {
       supported_format_unavailable: 'No hay un formato compatible disponible.',
       media_too_large: 'El archivo supera el límite de 512 MB del servidor.',
       import_failed: 'No se pudo importar el contenido desde este enlace.',
+      subtitles_not_found: 'No se encontraron subtítulos en el idioma elegido.',
     },
   },
 } as const;
@@ -150,7 +157,8 @@ export function SocialImportTool({
   onChooseFile?: () => void;
 }) {
   const text = socialCopy[language];
-  const [mediaType, setMediaType] = useState<'video' | 'audio'>('video');
+  const [mediaType, setMediaType] = useState<'video' | 'audio' | 'subtitles'>('video');
+  const [subtitleLanguage, setSubtitleLanguage] = useState('en');
   const [videoQuality, setVideoQuality] = useState<'best' | '1080' | '720' | '480'>('best');
   const [audioBitrate, setAudioBitrate] = useState<128 | 192 | 320>(192);
   const [startSeconds, setStartSeconds] = useState('');
@@ -176,9 +184,14 @@ export function SocialImportTool({
       media_type: mediaType,
       video_quality: videoQuality,
       audio_bitrate_kbps: audioBitrate,
-      ...(startValue === undefined ? {} : { start_seconds: startValue }),
-      ...(endValue === undefined ? {} : { end_seconds: endValue }),
-      ...(playlistItem === '' ? {} : { playlist_item: Number(playlistItem) }),
+      subtitle_language: subtitleLanguage,
+      ...(mediaType === 'subtitles' || startValue === undefined
+        ? {}
+        : { start_seconds: startValue }),
+      ...(mediaType === 'subtitles' || endValue === undefined ? {} : { end_seconds: endValue }),
+      ...(mediaType === 'subtitles' || playlistItem === ''
+        ? {}
+        : { playlist_item: Number(playlistItem) }),
     };
     setOperation(mediaType === 'audio' ? 'optimize-audio' : 'compress-video');
     const controller = new AbortController();
@@ -230,6 +243,7 @@ export function SocialImportTool({
 
   const editable = state.status === 'idle' || state.status === 'error';
   const completedType = state.status === 'completed' ? state.item.media_type : mediaType;
+  const completedIndex = completedType === 'audio' ? 1 : completedType === 'subtitles' ? 2 : 0;
   const operations =
     completedType === 'audio'
       ? [
@@ -254,10 +268,13 @@ export function SocialImportTool({
             className="social-import-select"
             label={text.mediaType}
             value={mediaType}
-            onChange={(event) => setMediaType(event.target.value as 'video' | 'audio')}
+            onChange={(event) =>
+              setMediaType(event.target.value as 'video' | 'audio' | 'subtitles')
+            }
           >
             <option value="video">{text.mediaTypes[0]}</option>
             <option value="audio">{text.mediaTypes[1]}</option>
+            <option value="subtitles">{text.mediaTypes[2]}</option>
           </Select>
           {mediaType === 'video' ? (
             <Select
@@ -275,7 +292,7 @@ export function SocialImportTool({
                 </option>
               ))}
             </Select>
-          ) : (
+          ) : mediaType === 'audio' ? (
             <Select
               id="social-audio-quality"
               className="social-import-select"
@@ -287,38 +304,59 @@ export function SocialImportTool({
               <option value="192">192 kbps</option>
               <option value="128">128 kbps</option>
             </Select>
+          ) : (
+            <Select
+              id="social-subtitle-language"
+              className="social-import-select"
+              label={text.subtitleLanguage}
+              value={subtitleLanguage}
+              onChange={(event) => setSubtitleLanguage(event.target.value)}
+            >
+              <option value="en">English</option>
+              <option value="ru">Русский</option>
+              <option value="es">Español</option>
+              <option value="uk">Українська</option>
+              <option value="de">Deutsch</option>
+              <option value="fr">Français</option>
+            </Select>
           )}
-          <Input
-            id="social-start"
-            label={text.startTime}
-            type="number"
-            min="0"
-            max="86400"
-            step="0.1"
-            value={startSeconds}
-            onChange={(event) => setStartSeconds(event.target.value)}
-          />
-          <Input
-            id="social-end"
-            label={text.endTime}
-            type="number"
-            min="0.1"
-            max="86400"
-            step="0.1"
-            value={endSeconds}
-            onChange={(event) => setEndSeconds(event.target.value)}
-          />
-          <Input
-            id="social-playlist-item"
-            label={text.playlistItem}
-            description={text.playlistHint}
-            type="number"
-            min="1"
-            max="500"
-            step="1"
-            value={playlistItem}
-            onChange={(event) => setPlaylistItem(event.target.value)}
-          />
+          {mediaType !== 'subtitles' ? (
+            <Input
+              id="social-start"
+              label={text.startTime}
+              type="number"
+              min="0"
+              max="86400"
+              step="0.1"
+              value={startSeconds}
+              onChange={(event) => setStartSeconds(event.target.value)}
+            />
+          ) : null}
+          {mediaType !== 'subtitles' ? (
+            <Input
+              id="social-end"
+              label={text.endTime}
+              type="number"
+              min="0.1"
+              max="86400"
+              step="0.1"
+              value={endSeconds}
+              onChange={(event) => setEndSeconds(event.target.value)}
+            />
+          ) : null}
+          {mediaType !== 'subtitles' ? (
+            <Input
+              id="social-playlist-item"
+              label={text.playlistItem}
+              description={text.playlistHint}
+              type="number"
+              min="1"
+              max="500"
+              step="1"
+              value={playlistItem}
+              onChange={(event) => setPlaylistItem(event.target.value)}
+            />
+          ) : null}
         </div>
       ) : null}
       {editable ? (
@@ -375,32 +413,36 @@ export function SocialImportTool({
             ) : null}
             <div>
               <Badge variant="success">{text.imported}</Badge>
-              <strong>
-                {state.item.title ?? text.fallbackTitle[state.item.media_type === 'audio' ? 1 : 0]}
-              </strong>
+              <strong>{state.item.title ?? text.fallbackTitle[completedIndex]}</strong>
               <span>{state.item.creator ?? state.item.provider}</span>
             </div>
           </div>
-          <Select
-            id="import-operation"
-            label={text.next}
-            value={operation}
-            onChange={(event) => setOperation(event.target.value)}
-          >
-            {operations.map(([value, label]) => (
-              <option key={value} value={value}>
-                {label}
-              </option>
-            ))}
-          </Select>
           <a className="image-download" href={`${API_URL}/imports/${state.item.id}/result`}>
-            {text.download[state.item.media_type === 'audio' ? 1 : 0]}
+            {text.download[completedIndex]}
           </a>
-          <CloudJobTool
-            operationId={operation}
-            existingUploadId={state.item.upload_id}
-            language={language}
-          />
+          {state.item.media_type === 'subtitles' ? (
+            <ImportedSubtitleWorkspace importId={state.item.id} language={language} />
+          ) : (
+            <>
+              <Select
+                id="import-operation"
+                label={text.next}
+                value={operation}
+                onChange={(event) => setOperation(event.target.value)}
+              >
+                {operations.map(([value, label]) => (
+                  <option key={value} value={value}>
+                    {label}
+                  </option>
+                ))}
+              </Select>
+              <CloudJobTool
+                operationId={operation}
+                existingUploadId={state.item.upload_id}
+                language={language}
+              />
+            </>
+          )}
         </>
       ) : null}
     </div>

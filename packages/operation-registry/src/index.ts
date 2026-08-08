@@ -52,6 +52,13 @@ export const operations = [
     supportedOutputs: ['mp3'],
   },
   {
+    id: 'extract-subtitles',
+    displayName: 'Extract subtitles',
+    executionMode: 'cloud',
+    supportedInputs: ['video'],
+    supportedOutputs: ['vtt'],
+  },
+  {
     id: 'optimize-audio',
     displayName: 'Make this audio easier to share',
     executionMode: 'cloud',

@@ -39,12 +39,12 @@ describe('glass File Flow landing page', () => {
     expect(markup).toContain('Compress video');
     expect(markup).toContain('Video to MP4');
     expect(markup).toContain('Trim audio');
-    expect(markup).toContain('18 working tools');
+    expect(markup).toContain('19 working tools');
     expect(markup).toContain('Quick edit PDF');
-    expect(markup.match(/: open tool/g)).toHaveLength(18);
+    expect(markup.match(/: open tool/g)).toHaveLength(19);
     expect(markup).toContain('AI transcription');
     expect(markup).toContain('Roadmap');
-    expect(markup.match(/ff-roadmap-card/g)).toHaveLength(8);
+    expect(markup.match(/ff-roadmap-card/g)).toHaveLength(7);
     expect(landingCss).toContain('scroll-snap-type: inline mandatory');
   });
 

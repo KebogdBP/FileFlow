@@ -275,6 +275,41 @@ def test_downloader_enables_node_and_format_fallbacks_for_public_youtube(
     assert captured["postprocessors"] == [{"key": "FFmpegVideoRemuxer", "preferedformat": "mp4"}]
 
 
+def test_downloader_fetches_selected_manual_or_automatic_subtitles(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    captured: dict[str, object] = {}
+
+    class FakeYoutubeDL:
+        def __init__(self, options: dict[str, object]) -> None:
+            captured.update(options)
+
+        def __enter__(self) -> "FakeYoutubeDL":
+            return self
+
+        def __exit__(self, *args: object) -> None:
+            pass
+
+        def extract_info(self, url: str, download: bool) -> dict[str, str]:
+            (tmp_path / "source.ru.vtt").write_bytes(b"WEBVTT\n\n00:00.000 --> 00:01.000\nPrivet")
+            return {"title": "Podcast", "uploader": "Creator"}
+
+    monkeypatch.setattr(downloader_module, "YoutubeDL", FakeYoutubeDL)
+    result = YtDlpClient().download(
+        "https://www.youtube.com/watch?v=abc",
+        tmp_path,
+        1024 * 1024,
+        ImportOptions(media_type="subtitles", subtitle_language="ru"),
+    )
+
+    assert result.content_type == "text/vtt"
+    assert result.filename.endswith(".vtt")
+    assert captured["skip_download"] is True
+    assert captured["writesubtitles"] is True
+    assert captured["writeautomaticsub"] is True
+    assert captured["subtitleslangs"] == ["ru.*"]
+
+
 def test_downloader_applies_audio_quality_trim_and_playlist_item(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
