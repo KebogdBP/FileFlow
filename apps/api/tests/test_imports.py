@@ -1,6 +1,7 @@
 import os
 from collections.abc import Callable
 from pathlib import Path
+from unittest.mock import MagicMock
 
 import pytest
 from fastapi import HTTPException
@@ -466,17 +467,12 @@ def test_youtube_tries_embedded_client_after_safari_failure(
 ) -> None:
     attempts: list[dict[str, object]] = []
 
-    class FakeYoutubeDL:
-        def __init__(self, options: dict[str, object]) -> None:
-            attempts.append(options)
+    def fake_youtube_dl(options: dict[str, object]) -> MagicMock:
+        attempts.append(options)
+        instance = MagicMock()
+        instance.__enter__.return_value = instance
 
-        def __enter__(self) -> "FakeYoutubeDL":
-            return self
-
-        def __exit__(self, *args: object) -> None:
-            pass
-
-        def extract_info(self, url: str, download: bool) -> dict[str, str]:
+        def extract_info(url: str, download: bool) -> dict[str, str]:
             if len(attempts) < 3:
                 (tmp_path / "source.part").write_bytes(b"partial")
                 raise downloader_module.DownloadError("client failed")
@@ -484,7 +480,10 @@ def test_youtube_tries_embedded_client_after_safari_failure(
             (tmp_path / "source.mp4").write_bytes(b"\x00\x00\x00\x18ftypisom-public-video")
             return {"title": "Video"}
 
-    monkeypatch.setattr(downloader_module, "YoutubeDL", FakeYoutubeDL)
+        instance.extract_info.side_effect = extract_info
+        return instance
+
+    monkeypatch.setattr(downloader_module, "YoutubeDL", fake_youtube_dl)
     YtDlpClient(pot_provider_url="http://pot-provider:4416").download(
         "https://www.youtube.com/watch?v=abc",
         tmp_path,
