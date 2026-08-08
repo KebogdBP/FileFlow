@@ -358,7 +358,9 @@ describe('M05 file and URL input UI', () => {
   });
 
   it('offers a real device-upload action when a platform import fails', async () => {
-    const fetchMock = vi.spyOn(globalThis, 'fetch').mockRejectedValue(new TypeError('Failed to fetch'));
+    const fetchMock = vi
+      .spyOn(globalThis, 'fetch')
+      .mockRejectedValue(new TypeError('Failed to fetch'));
     const container = document.createElement('div');
     const root = createRoot(container);
     await act(async () => root.render(<FileUrlInput />));

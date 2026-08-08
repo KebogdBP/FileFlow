@@ -6,7 +6,7 @@ import pytest
 
 from fileflow_api.documents.handlers import DOCX_TYPE, DocumentHandler
 from fileflow_api.documents.registry import DOCUMENT_OPERATIONS, register_document_operations
-from fileflow_api.workers.contracts import OperationRegistry, WorkRequest
+from fileflow_api.workers.contracts import OperationRegistry, WorkerExecutionFailure, WorkRequest
 
 TOOLS = {
     "libreoffice": "/usr/bin/libreoffice",
@@ -45,6 +45,8 @@ class RecordingRunner:
             Path(command[-1]).write_text("Editable PDF text", encoding="utf-8")
         elif command[0] == TOOLS["pdftoppm"]:
             Path(f"{command[-1]}.jpg").write_bytes(b"\xff\xd8\xffresult")
+        elif command[0] == TOOLS["qpdf"] and "--check" in command:
+            return
         else:
             output = next(
                 (
@@ -96,7 +98,7 @@ def test_merge_requires_multiple_clean_materialized_sources(tmp_path: Path) -> N
         pdf_request(tmp_path, source_count=3)
     )
     assert result.content_type == "application/pdf"
-    assert runner.commands[0][1:3] == ["--empty", "--pages"]
+    assert runner.commands[-1][1:3] == ["--empty", "--pages"]
     with pytest.raises(ValueError, match="between 2 and 20"):
         DocumentHandler(TOOLS, runner, "merge-pdf").execute(pdf_request(tmp_path))
 
@@ -118,10 +120,10 @@ def test_pdf_converts_to_editable_office_formats(
     runner = RecordingRunner()
     result = DocumentHandler(TOOLS, runner, operation).execute(pdf_request(tmp_path))
     assert result.content_type == content_type
-    assert runner.commands[0][0] == tool
+    assert any(command[0] == tool for command in runner.commands)
     assert all('"' not in argument for command in runner.commands for argument in command)
     if operation == "pdf-to-pptx":
-        assert "--infilter=impress_pdf_import" in runner.commands[0]
+        assert any("--infilter=impress_pdf_import" in command for command in runner.commands)
 
 
 def test_pdf_to_pptx_rejects_empty_libreoffice_package(tmp_path: Path) -> None:
@@ -138,6 +140,29 @@ def test_pdf_to_pptx_rejects_empty_libreoffice_package(tmp_path: Path) -> None:
         )
 
 
+def test_pdf_to_docx_explains_scanned_or_empty_documents(tmp_path: Path) -> None:
+    class EmptyTextRunner(RecordingRunner):
+        def run(self, argv: Sequence[str], workspace: Path) -> None:
+            command = list(argv)
+            self.commands.append(command)
+            if command[0] == TOOLS["pdftotext"]:
+                Path(command[-1]).write_text("\n", encoding="utf-8")
+
+    with pytest.raises(WorkerExecutionFailure, match="pdf_has_no_extractable_text"):
+        DocumentHandler(TOOLS, EmptyTextRunner(), "pdf-to-docx").execute(pdf_request(tmp_path))
+
+
+def test_invalid_pdf_gets_a_stable_client_safe_error(tmp_path: Path) -> None:
+    class InvalidPdfRunner(RecordingRunner):
+        def run(self, argv: Sequence[str], workspace: Path) -> None:
+            if "--check" in argv:
+                raise RuntimeError("qpdf rejected input")
+            super().run(argv, workspace)
+
+    with pytest.raises(WorkerExecutionFailure, match="invalid_or_protected_pdf"):
+        DocumentHandler(TOOLS, InvalidPdfRunner(), "compress-pdf").execute(pdf_request(tmp_path))
+
+
 @pytest.mark.parametrize(
     ("operation", "parameters", "tool"),
     [
@@ -151,7 +176,7 @@ def test_pdf_operations_have_bounded_parameters(
 ) -> None:
     runner = RecordingRunner()
     DocumentHandler(TOOLS, runner, operation).execute(pdf_request(tmp_path, parameters))
-    assert runner.commands[0][0] == tool
+    assert any(command[0] == tool for command in runner.commands)
 
 
 @pytest.mark.parametrize(
@@ -170,7 +195,7 @@ def test_untrusted_document_parameters_never_become_arguments(
     runner = RecordingRunner()
     with pytest.raises(ValueError, match="invalid"):
         DocumentHandler(TOOLS, runner, operation).execute(pdf_request(tmp_path, parameters))
-    assert runner.commands == []
+    assert all("--check" in command for command in runner.commands)
 
 
 def test_document_registry_exposes_reviewed_operations_and_types() -> None:
@@ -186,5 +211,5 @@ def test_pdf_page_extraction_supports_all_or_selected_pages(
 ) -> None:
     runner = RecordingRunner()
     DocumentHandler(TOOLS, runner, "split-pdf").execute(pdf_request(tmp_path, {"pages": pages}))
-    command = runner.commands[0]
+    command = runner.commands[-1]
     assert command[command.index(".") + 1] == expected

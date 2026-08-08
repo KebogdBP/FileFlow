@@ -33,9 +33,19 @@ const downloaderCopy = {
     count: 'How many files',
     all: 'All',
     working: 'Preparing your download…',
+    importing: 'Downloading from the source…',
+    checking: 'Checking the downloaded file…',
     downloading: 'Downloading directly to your device…',
     ready: 'The download has started.',
     failed: 'The file could not be downloaded.',
+    errors: {
+      media_too_large: 'This media is larger than the 512 MB server limit.',
+      platform_auth_required: 'The platform requires verification. Try again later.',
+      platform_ip_blocked: 'The platform blocked the server address. Try again later.',
+      platform_rate_limited: 'The platform temporarily rate-limited the server.',
+      media_unavailable: 'This media is unavailable or private.',
+      import_failed: 'The platform could not download this link.',
+    },
   },
   ru: {
     eyebrow: 'Video Downloader',
@@ -54,9 +64,19 @@ const downloaderCopy = {
     count: 'Сколько файлов скачать',
     all: 'Все',
     working: 'Готовим скачивание…',
+    importing: 'Скачиваем с источника…',
+    checking: 'Проверяем скачанный файл…',
     downloading: 'Скачиваем прямо на ваше устройство…',
     ready: 'Скачивание началось.',
     failed: 'Не удалось скачать файл.',
+    errors: {
+      media_too_large: 'Файл превышает серверный лимит 512 МБ.',
+      platform_auth_required: 'Платформа запросила подтверждение. Попробуйте позже.',
+      platform_ip_blocked: 'Платформа заблокировала адрес сервера. Попробуйте позже.',
+      platform_rate_limited: 'Платформа временно ограничила запросы сервера.',
+      media_unavailable: 'Видео или аудио недоступно либо является приватным.',
+      import_failed: 'Не удалось скачать файл по этой ссылке.',
+    },
   },
   es: {
     eyebrow: 'Video Downloader',
@@ -75,9 +95,19 @@ const downloaderCopy = {
     count: 'Cuántos archivos',
     all: 'Todos',
     working: 'Preparando la descarga…',
+    importing: 'Descargando desde la fuente…',
+    checking: 'Comprobando el archivo descargado…',
     downloading: 'Descargando directamente en tu dispositivo…',
     ready: 'La descarga ha comenzado.',
     failed: 'No se pudo descargar el archivo.',
+    errors: {
+      media_too_large: 'El archivo supera el límite de 512 MB del servidor.',
+      platform_auth_required: 'La plataforma requiere verificación. Inténtalo más tarde.',
+      platform_ip_blocked: 'La plataforma bloqueó el servidor. Inténtalo más tarde.',
+      platform_rate_limited: 'La plataforma limitó temporalmente el servidor.',
+      media_unavailable: 'Este contenido no está disponible o es privado.',
+      import_failed: 'No se pudo descargar el contenido desde este enlace.',
+    },
   },
 } as const;
 
@@ -132,22 +162,34 @@ export function VideoDownloader({ language }: { language: FileFlowLanguage }) {
 
     setStatus('running');
     setMessage(text.working);
-    setProgress(null);
+    setProgress(1);
     try {
       const item = await createSocialImport(url.trim(), options);
-      const completed = await waitForSocialImport(item.id);
+      const completed = await waitForSocialImport(item.id, (current) => {
+        setMessage(current.status === 'queued' ? text.working : text.importing);
+        setProgress(Math.max(2, Math.round(current.progress * 0.78)));
+      });
       if (completed.upload_id) {
-        await waitForCleanUpload(completed.upload_id, () => undefined);
+        setMessage(text.checking);
+        await waitForCleanUpload(completed.upload_id, (value) =>
+          setProgress(Math.max(79, Math.min(84, Math.round(79 + value / 20)))),
+        );
       }
       setMessage(text.downloading);
-      await downloadSocialImportResult(completed.id, setProgress);
+      await downloadSocialImportResult(completed.id, (value) =>
+        setProgress(value === null ? 85 : Math.round(85 + value * 0.15)),
+      );
       setStatus('ready');
       setMessage(text.ready);
       void recordCompletedOperations();
     } catch (error) {
       setStatus('error');
       setProgress(null);
-      setMessage(error instanceof Error && error.message ? error.message : text.failed);
+      setMessage(
+        error instanceof Error && error.message
+          ? (text.errors[error.message as keyof typeof text.errors] ?? error.message)
+          : text.failed,
+      );
     }
   }
 
@@ -260,15 +302,21 @@ export function VideoDownloader({ language }: { language: FileFlowLanguage }) {
         </div>
 
         {status === 'running' ? (
-          <div
-            className={`ff-downloader-progress ${progress === null ? 'is-indeterminate' : ''}`}
-            role="progressbar"
-            aria-label={message}
-            aria-valuemin={0}
-            aria-valuemax={100}
-            aria-valuenow={progress ?? undefined}
-          >
-            <span style={progress === null ? undefined : { width: `${progress}%` }} />
+          <div className="ff-downloader-progress-shell" aria-live="polite">
+            <div className="ff-downloader-progress-meta">
+              <span>{message}</span>
+              <strong>{progress === null ? '•••' : `${progress}%`}</strong>
+            </div>
+            <div
+              className={`ff-downloader-progress ${progress === null ? 'is-indeterminate' : ''}`}
+              role="progressbar"
+              aria-label={message}
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-valuenow={progress ?? undefined}
+            >
+              <span style={progress === null ? undefined : { width: `${progress}%` }} />
+            </div>
           </div>
         ) : null}
 

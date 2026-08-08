@@ -1,5 +1,6 @@
 import os
 import shutil
+from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Protocol
@@ -51,7 +52,12 @@ class ImportDownloadError(RuntimeError):
 
 class ImportClient(Protocol):
     def download(
-        self, url: str, workspace: Path, max_bytes: int, options: ImportOptions
+        self,
+        url: str,
+        workspace: Path,
+        max_bytes: int,
+        options: ImportOptions,
+        on_progress: Callable[[int], None] | None = None,
     ) -> ImportedMedia: ...
 
 
@@ -76,6 +82,7 @@ class YtDlpClient:
         workspace: Path,
         max_bytes: int,
         import_options: ImportOptions | None = None,
+        on_progress: Callable[[int], None] | None = None,
     ) -> ImportedMedia:
         selected = import_options or ImportOptions()
         is_playlist = selected.playlist_count is not None
@@ -139,6 +146,8 @@ class YtDlpClient:
             "restrictfilenames": True,
             "overwrites": False,
             "noplaylist": selected.playlist_item is None and not is_playlist,
+            "progress_hooks": [_download_progress_hook(on_progress)],
+            "postprocessor_hooks": [_postprocessor_progress_hook(on_progress)],
         }
         if selected.playlist_item is not None:
             options["playlist_items"] = str(selected.playlist_item)
@@ -248,16 +257,12 @@ class YtDlpClient:
             if not _is_mp3_header(header):
                 raise ValueError("imported media is not an MP3 file")
             content_type = "audio/mpeg"
-            filename = converted_filename(
-                title or "Audio", ".mp3", source_is_filename=False
-            )
+            filename = converted_filename(title or "Audio", ".mp3", source_is_filename=False)
         else:
             if len(header) < 8 or header[4:8] != b"ftyp":
                 raise ValueError("imported media is not an MP4 container")
             content_type = "video/mp4"
-            filename = converted_filename(
-                title or "Video", ".mp4", source_is_filename=False
-            )
+            filename = converted_filename(title or "Video", ".mp4", source_is_filename=False)
 
         return ImportedMedia(
             media,
@@ -267,6 +272,36 @@ class YtDlpClient:
             creator,
             thumbnail,
         )
+
+
+def _download_progress_hook(
+    on_progress: Callable[[int], None] | None,
+) -> Callable[[dict[str, Any]], None]:
+    def report(event: dict[str, Any]) -> None:
+        if on_progress is None:
+            return
+        if event.get("status") == "finished":
+            on_progress(88)
+            return
+        if event.get("status") != "downloading":
+            return
+        downloaded = event.get("downloaded_bytes")
+        total = event.get("total_bytes") or event.get("total_bytes_estimate")
+        if isinstance(downloaded, (int, float)) and isinstance(total, (int, float)) and total > 0:
+            on_progress(min(85, max(5, round(5 + (downloaded / total) * 80))))
+
+    return report
+
+
+def _postprocessor_progress_hook(
+    on_progress: Callable[[int], None] | None,
+) -> Callable[[dict[str, Any]], None]:
+    def report(event: dict[str, Any]) -> None:
+        if on_progress is None:
+            return
+        on_progress(94 if event.get("status") == "finished" else 90)
+
+    return report
 
 
 def _javascript_options(allow_remote_ejs: bool) -> dict[str, Any]:
@@ -327,6 +362,12 @@ def _single_video_url(url: str) -> str:
 
 def _download_error_code(message: str) -> str:
     normalized = message.lower()
+    if (
+        "larger than max-filesize" in normalized
+        or "file is larger than" in normalized
+        or "exceeds configured upload limit" in normalized
+    ):
+        return "media_too_large"
     if "http error 429" in normalized or "rate-limit reached" in normalized:
         return "platform_rate_limited"
     if "ip address is blocked" in normalized or "blocked from accessing" in normalized:

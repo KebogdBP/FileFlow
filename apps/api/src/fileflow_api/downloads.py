@@ -22,13 +22,8 @@ def converted_filename(
 
 
 def attachment_disposition(filename: str) -> str:
-    ascii_name = (
-        unicodedata.normalize("NFKD", filename).encode("ascii", "ignore").decode("ascii")
-    )
+    ascii_name = unicodedata.normalize("NFKD", filename).encode("ascii", "ignore").decode("ascii")
     ascii_name = INVALID_FILENAME_CHARACTERS.sub("_", ascii_name).strip(" .")
     if not ascii_name:
         ascii_name = "Converted"
-    return (
-        f'attachment; filename="{ascii_name}"; '
-        f"filename*=UTF-8''{quote(filename, safe='')}"
-    )
+    return f"attachment; filename=\"{ascii_name}\"; filename*=UTF-8''{quote(filename, safe='')}"

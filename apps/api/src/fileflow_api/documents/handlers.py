@@ -6,7 +6,7 @@ from pathlib import Path, PurePosixPath
 from zipfile import BadZipFile, ZipFile
 
 from fileflow_api.media.handlers import CommandRunner, integer_parameter, reject_unknown
-from fileflow_api.workers.contracts import WorkRequest, WorkResult
+from fileflow_api.workers.contracts import WorkerExecutionFailure, WorkRequest, WorkResult
 
 DOCX_TYPE = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
 PPTX_TYPE = "application/vnd.openxmlformats-officedocument.presentationml.presentation"
@@ -31,29 +31,37 @@ class DocumentHandler:
 
     def execute(self, request: WorkRequest) -> WorkResult:
         request.report_progress(10)
-        if self._operation == "docx-to-pdf":
-            self._docx_to_pdf(request)
-            content_type = PDF_TYPE
-        elif self._operation == "merge-pdf":
-            self._merge_pdf(request)
-            content_type = PDF_TYPE
-        elif self._operation == "split-pdf":
-            self._split_pdf(request)
-            content_type = PDF_TYPE
-        elif self._operation == "compress-pdf":
-            self._compress_pdf(request)
-            content_type = PDF_TYPE
-        elif self._operation == "pdf-to-jpg":
-            self._pdf_to_jpg(request)
-            content_type = "image/jpeg"
-        elif self._operation == "pdf-to-docx":
-            self._pdf_to_docx(request)
-            content_type = DOCX_TYPE
-        elif self._operation == "pdf-to-pptx":
-            self._pdf_to_pptx(request)
-            content_type = PPTX_TYPE
-        else:
-            raise ValueError(f"unsupported document operation: {self._operation}")
+        try:
+            if self._operation == "docx-to-pdf":
+                self._docx_to_pdf(request)
+                content_type = PDF_TYPE
+            else:
+                self._validate_pdf_sources(request)
+                request.report_progress(20)
+                if self._operation == "merge-pdf":
+                    self._merge_pdf(request)
+                    content_type = PDF_TYPE
+                elif self._operation == "split-pdf":
+                    self._split_pdf(request)
+                    content_type = PDF_TYPE
+                elif self._operation == "compress-pdf":
+                    self._compress_pdf(request)
+                    content_type = PDF_TYPE
+                elif self._operation == "pdf-to-jpg":
+                    self._pdf_to_jpg(request)
+                    content_type = "image/jpeg"
+                elif self._operation == "pdf-to-docx":
+                    self._pdf_to_docx(request)
+                    content_type = DOCX_TYPE
+                elif self._operation == "pdf-to-pptx":
+                    self._pdf_to_pptx(request)
+                    content_type = PPTX_TYPE
+                else:
+                    raise ValueError(f"unsupported document operation: {self._operation}")
+        except WorkerExecutionFailure:
+            raise
+        except (OSError, RuntimeError) as error:
+            raise WorkerExecutionFailure("document_conversion_failed") from error
         self._validate_output(request.output_path, content_type)
         request.report_progress(95)
         return WorkResult(content_type=content_type)
@@ -190,6 +198,8 @@ class DocumentHandler:
             ],
             request.output_path.parent,
         )
+        if not self._has_extractable_text(text_path):
+            raise WorkerExecutionFailure("pdf_has_no_extractable_text")
         self._runner.run(
             [
                 self._tools["libreoffice"],
@@ -207,6 +217,28 @@ class DocumentHandler:
             request.output_path.parent,
         )
         os.replace(text_path.with_suffix(".docx"), request.output_path)
+
+    def _validate_pdf_sources(self, request: WorkRequest) -> None:
+        for source in request.input_paths:
+            try:
+                self._runner.run(
+                    [self._tools["qpdf"], "--warning-exit-0", "--check", str(source)],
+                    request.output_path.parent,
+                )
+            except RuntimeError as error:
+                raise WorkerExecutionFailure("invalid_or_protected_pdf") from error
+
+    @staticmethod
+    def _has_extractable_text(path: Path) -> bool:
+        if not path.is_file():
+            return False
+        whitespace = frozenset(b" \t\r\n\f\v\0")
+        with path.open("rb") as source:
+            return any(
+                byte not in whitespace
+                for chunk in iter(lambda: source.read(64 * 1024), b"")
+                for byte in chunk
+            )
 
     def _pdf_to_pptx(self, request: WorkRequest) -> None:
         reject_unknown(request.parameters, set())
@@ -278,9 +310,7 @@ class DocumentHandler:
         with ZipFile(path) as archive:
             names = set(archive.namelist())
             slides = {
-                name
-                for name in names
-                if re.fullmatch(r"ppt/slides/slide[1-9][0-9]*\.xml", name)
+                name for name in names if re.fullmatch(r"ppt/slides/slide[1-9][0-9]*\.xml", name)
             }
             required = {
                 "ppt/_rels/presentation.xml.rels",

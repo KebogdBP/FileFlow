@@ -42,6 +42,7 @@ class SocialImportService:
             source_url=url,
             provider=provider,
             status=ImportStatus.QUEUED,
+            progress=0,
             task_id=None,
             upload_id=None,
             title=None,
@@ -86,9 +87,19 @@ class SocialImportService:
             if item is None or item.status != ImportStatus.QUEUED:
                 raise HTTPException(status_code=409, detail="Import cannot be started.")
             item.status = ImportStatus.RUNNING
+            item.progress = 2
         item = self.get(import_id)
         key = f"temporary/imports/{item.id}/source"
         uploaded = False
+        reported_progress = 2
+
+        def report_progress(value: int) -> None:
+            nonlocal reported_progress
+            bounded = min(95, max(2, value))
+            if bounded > reported_progress:
+                reported_progress = bounded
+                self._progress(item.id, bounded)
+
         try:
             with TemporaryDirectory(prefix=f"fileflow-import-{item.id}-") as directory:
                 media = self._client.download(
@@ -105,6 +116,7 @@ class SocialImportService:
                         playlist_count=item.playlist_count,
                         generic_audio=item.generic_audio,
                     ),
+                    report_progress,
                 )
                 size = media.path.stat().st_size
                 self._storage.upload_file(key, media.path, media.content_type)
@@ -136,6 +148,7 @@ class SocialImportService:
                 # SQLAlchemy cannot infer that Upload must be inserted first.
                 session.flush()
                 stored.status = ImportStatus.COMPLETED
+                stored.progress = 100
                 stored.upload_id = upload.id
                 stored.title = media.title
                 stored.creator = media.creator
@@ -187,3 +200,10 @@ class SocialImportService:
             item.error_code = code
             item.finished_at = datetime.now(UTC)
         return self.get(import_id)
+
+    def _progress(self, import_id: str, value: int) -> None:
+        bounded = min(95, max(2, value))
+        with self._sessions.begin() as session:
+            item = session.get(SocialImport, import_id)
+            if item is not None and item.status == ImportStatus.RUNNING and bounded > item.progress:
+                item.progress = bounded

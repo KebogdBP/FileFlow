@@ -87,6 +87,13 @@ export const operations = [
     supportedOutputs: ['pdf'],
   },
   {
+    id: 'quick-edit-pdf',
+    displayName: 'Quick edit PDF',
+    executionMode: 'local',
+    supportedInputs: ['pdf'],
+    supportedOutputs: ['pdf'],
+  },
+  {
     id: 'compress-pdf',
     displayName: 'Make this PDF smaller',
     executionMode: 'cloud',
@@ -226,6 +233,7 @@ function selectedPlan(
   if (operation.id === 'compress-video') return videoPlan();
   if (operation.id === 'optimize-audio') return audioPlan();
   if (operation.id === 'compress-pdf') return pdfPlan();
+  if (operation.id === 'quick-edit-pdf') return quickEditPdfPlan();
   if (operation.id === 'docx-to-pdf') return documentPlan();
   const mode: ProcessingMode = operation.executionMode === 'local' ? 'local' : 'cloud';
   const output = operation.supportedOutputs[0]?.toUpperCase() ?? 'new file';
@@ -367,6 +375,31 @@ function pdfPlan(): RecommendationPlan {
       { label: 'Structure', value: 'Preserve', reason: 'Keeps pages, links and document order.' },
     ],
     tradeoffs: ['Scanned images may lose some fine detail.'],
+    alternatives: [],
+  };
+}
+
+function quickEditPdfPlan(): RecommendationPlan {
+  return {
+    operationId: 'quick-edit-pdf',
+    title: 'Quick edit PDF',
+    outcome: 'A corrected PDF with notes, highlights, signatures, and reordered pages.',
+    mode: 'local',
+    reason: 'Quick corrections can run privately in your browser without an upload or queue.',
+    expectation: 'Edit pages visually, undo changes, then download a new PDF.',
+    privacy: 'Runs on this device. The source PDF is not uploaded.',
+    defaults: [
+      {
+        label: 'Editing',
+        value: 'Non-destructive',
+        reason: 'The original file is never overwritten.',
+      },
+      { label: 'Privacy', value: 'On device', reason: 'The document stays in this browser.' },
+    ],
+    tradeoffs: [
+      'New text and marks are added on top of the existing page; original PDF text is not reflowed.',
+      'Password-protected PDFs must be unlocked before editing.',
+    ],
     alternatives: [],
   };
 }

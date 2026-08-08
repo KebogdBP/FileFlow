@@ -51,6 +51,7 @@ const socialCopy = {
         'The platform changed its page format. The server extractor needs an update.',
       media_unavailable: 'This media is unavailable or private.',
       supported_format_unavailable: 'No supported media format is available.',
+      media_too_large: 'This media is larger than the 512 MB server limit.',
       import_failed: 'The platform could not import this link.',
     },
   },
@@ -95,6 +96,7 @@ const socialCopy = {
         'Платформа изменила формат страницы. Нужно обновить серверный экстрактор.',
       media_unavailable: 'Это медиа недоступно или является приватным.',
       supported_format_unavailable: 'Поддерживаемый формат медиа не найден.',
+      media_too_large: 'Файл превышает серверный лимит 512 МБ.',
       import_failed: 'Не удалось импортировать медиа по этой ссылке.',
     },
   },
@@ -132,6 +134,7 @@ const socialCopy = {
       extractor_outdated: 'La plataforma cambió su formato. Hay que actualizar el extractor.',
       media_unavailable: 'Este contenido no está disponible o es privado.',
       supported_format_unavailable: 'No hay un formato compatible disponible.',
+      media_too_large: 'El archivo supera el límite de 512 MB del servidor.',
       import_failed: 'No se pudo importar el contenido desde este enlace.',
     },
   },
@@ -156,7 +159,7 @@ export function SocialImportTool({
   const [operation, setOperation] = useState('compress-video');
   const [state, setState] = useState<
     | { status: 'idle' }
-    | { status: 'running'; stage: string }
+    | { status: 'running'; stage: string; progress: number }
     | { status: 'completed'; item: SocialImport }
     | { status: 'error'; message: string }
   >({ status: 'idle' });
@@ -180,13 +183,31 @@ export function SocialImportTool({
     setOperation(mediaType === 'audio' ? 'optimize-audio' : 'compress-video');
     const controller = new AbortController();
     aborter.current = controller;
-    setState({ status: 'running', stage: text.stages[0] });
+    setState({ status: 'running', stage: text.stages[0], progress: 1 });
     try {
       const created = await createSocialImport(url, options, controller.signal);
-      setState({ status: 'running', stage: `${text.stages[1]} ${created.provider}` });
-      const completed = await waitForSocialImport(created.id, controller.signal);
+      setState({ status: 'running', stage: `${text.stages[1]} ${created.provider}`, progress: 2 });
+      const completed = await waitForSocialImport(
+        created.id,
+        (current) =>
+          setState({
+            status: 'running',
+            stage: `${text.stages[1]} ${created.provider}`,
+            progress: Math.max(2, Math.round(current.progress * 0.9)),
+          }),
+        controller.signal,
+      );
       if (completed.upload_id) {
-        await waitForCleanUpload(completed.upload_id, () => undefined, controller.signal);
+        await waitForCleanUpload(
+          completed.upload_id,
+          (value) =>
+            setState({
+              status: 'running',
+              stage: text.importing,
+              progress: Math.max(91, Math.min(99, Math.round(91 + value / 12))),
+            }),
+          controller.signal,
+        );
       }
       setState({ status: 'completed', item: completed });
       void recordCompletedOperations();
@@ -306,12 +327,26 @@ export function SocialImportTool({
         </Button>
       ) : null}
       {state.status === 'running' ? (
-        <div className="cloud-tool-actions">
-          <Badge variant="cloud">{text.importing}</Badge>
-          <strong>{state.stage}</strong>
-          <Button type="button" variant="secondary" onClick={() => aborter.current?.abort()}>
-            {text.stop}
-          </Button>
+        <div className="social-import-progress-card">
+          <div className="cloud-tool-actions">
+            <Badge variant="cloud">{text.importing}</Badge>
+            <strong>{state.stage}</strong>
+            <Button type="button" variant="secondary" onClick={() => aborter.current?.abort()}>
+              {text.stop}
+            </Button>
+          </div>
+          <div className="cloud-progress" aria-live="polite">
+            <span
+              role="progressbar"
+              aria-label={state.stage}
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-valuenow={state.progress}
+            >
+              <span style={{ width: `${state.progress}%` }} />
+            </span>
+            <small>{state.progress}%</small>
+          </div>
         </div>
       ) : null}
       {state.status === 'error' ? (

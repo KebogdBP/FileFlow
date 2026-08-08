@@ -39,8 +39,9 @@ describe('glass File Flow landing page', () => {
     expect(markup).toContain('Compress video');
     expect(markup).toContain('Video to MP4');
     expect(markup).toContain('Trim audio');
-    expect(markup).toContain('17 working tools');
-    expect(markup.match(/: open tool/g)).toHaveLength(17);
+    expect(markup).toContain('18 working tools');
+    expect(markup).toContain('Quick edit PDF');
+    expect(markup.match(/: open tool/g)).toHaveLength(18);
     expect(markup).toContain('AI transcription');
     expect(markup).toContain('Roadmap');
     expect(markup.match(/ff-roadmap-card/g)).toHaveLength(8);

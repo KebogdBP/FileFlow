@@ -93,6 +93,7 @@ describe('M07 recommendation and explainability engine', () => {
     const context = { category: 'pdf' as const, size: 10_000, confidence: 'verified' as const };
     expect(availableOperations(context).map((operation) => operation.id)).toEqual([
       'merge-pdf',
+      'quick-edit-pdf',
       'compress-pdf',
       'split-pdf',
       'pdf-to-jpg',
@@ -102,6 +103,10 @@ describe('M07 recommendation and explainability engine', () => {
     expect(recommendOperation(context, 'pdf-to-jpg')).toMatchObject({
       status: 'ready',
       plan: { operationId: 'pdf-to-jpg', mode: 'cloud' },
+    });
+    expect(recommendOperation(context, 'quick-edit-pdf')).toMatchObject({
+      status: 'ready',
+      plan: { operationId: 'quick-edit-pdf', mode: 'local' },
     });
     expect(recommendOperation(context, 'trim-audio')).toMatchObject({ status: 'unsupported' });
   });

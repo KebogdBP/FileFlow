@@ -6,6 +6,14 @@ from typing import Protocol
 Parameter = str | int | float | bool | None
 
 
+class WorkerExecutionFailure(RuntimeError):
+    """A safe, stable failure code that may be returned to a client."""
+
+    def __init__(self, code: str) -> None:
+        self.code = code
+        super().__init__(code)
+
+
 @dataclass(frozen=True)
 class WorkRequest:
     input_path: Path

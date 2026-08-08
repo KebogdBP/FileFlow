@@ -781,9 +781,42 @@
   color: #df3f57;
 }
 
+.ff-downloader-progress-shell {
+  display: grid;
+  gap: 9px;
+  margin: 18px auto 0;
+  padding: 13px 14px 14px;
+  border: 1px solid color-mix(in srgb, var(--home-blue) 18%, var(--glass-line));
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--glass-bg-strong) 86%, transparent);
+  box-shadow: 0 12px 30px color-mix(in srgb, var(--home-blue) 10%, transparent);
+}
+
+.ff-downloader-progress-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--home-muted);
+  font-size: 12px;
+  font-weight: 720;
+}
+
+.ff-downloader-progress-meta span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ff-downloader-progress-meta strong {
+  flex: none;
+  color: var(--home-blue);
+  font-variant-numeric: tabular-nums;
+}
+
 .ff-downloader-progress {
   height: 7px;
-  margin: 18px auto 0;
   overflow: hidden;
   border: 1px solid color-mix(in srgb, var(--home-blue) 16%, var(--glass-line));
   border-radius: 999px;
@@ -1527,6 +1560,17 @@
   .ff-download-action > button {
     aspect-ratio: auto;
     min-height: 108px;
+  }
+  .ff-downloader-progress-shell {
+    position: sticky;
+    bottom: 12px;
+    z-index: 8;
+    padding: 14px;
+    border-radius: 18px;
+    backdrop-filter: blur(18px) saturate(145%);
+  }
+  .ff-downloader-progress {
+    height: 10px;
   }
   .ff-tool-rail-actions {
     width: 100%;
