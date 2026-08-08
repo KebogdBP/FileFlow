@@ -307,7 +307,7 @@ def test_downloader_fetches_selected_manual_or_automatic_subtitles(
     assert captured["skip_download"] is True
     assert captured["writesubtitles"] is True
     assert captured["writeautomaticsub"] is True
-    assert captured["subtitleslangs"] == ["ru.*"]
+    assert captured["subtitleslangs"] == ["ru"]
 
 
 def test_downloader_applies_audio_quality_trim_and_playlist_item(

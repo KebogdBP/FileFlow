@@ -77,6 +77,27 @@ const copy = {
   },
 } as const;
 
+const aiErrors: Record<FileFlowLanguage, Record<string, string>> = {
+  en: {
+    ai_not_configured: 'The AI assistant is not configured on this server yet.',
+    ai_rate_limited: 'DeepSeek is temporarily rate-limited. Please try again later.',
+    ai_provider_unavailable: 'DeepSeek is temporarily unavailable. Please try again later.',
+    ai_provider_failed: 'DeepSeek could not complete this request.',
+  },
+  ru: {
+    ai_not_configured: 'AI-помощник пока не настроен на сервере.',
+    ai_rate_limited: 'DeepSeek временно ограничил запросы. Попробуйте позже.',
+    ai_provider_unavailable: 'DeepSeek временно недоступен. Попробуйте позже.',
+    ai_provider_failed: 'DeepSeek не смог обработать этот запрос.',
+  },
+  es: {
+    ai_not_configured: 'El asistente de IA aún no está configurado en el servidor.',
+    ai_rate_limited: 'DeepSeek ha limitado temporalmente las solicitudes.',
+    ai_provider_unavailable: 'DeepSeek no está disponible temporalmente.',
+    ai_provider_failed: 'DeepSeek no pudo completar esta solicitud.',
+  },
+};
+
 export function ImportedSubtitleWorkspace({
   importId,
   language,
@@ -143,7 +164,8 @@ export function SubtitleWorkspace({
       setRemaining(response.remaining_today);
       setPrompt('');
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : 'AI request failed.');
+      const message = reason instanceof Error ? reason.message : 'AI request failed.';
+      setError(aiErrors[language][message] ?? message);
     } finally {
       setBusy(false);
     }
