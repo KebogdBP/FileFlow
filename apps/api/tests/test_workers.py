@@ -13,7 +13,12 @@ from fileflow_api.safety.scanner import MalwareVerdict, ScanResult
 from fileflow_api.safety.service import SafetyService
 from fileflow_api.uploads.contracts import CompletedPart, UploadCreate
 from fileflow_api.uploads.service import UploadService
-from fileflow_api.workers.contracts import OperationRegistry, WorkRequest, WorkResult
+from fileflow_api.workers.contracts import (
+    InvalidJobParameters,
+    OperationRegistry,
+    WorkRequest,
+    WorkResult,
+)
 from fileflow_api.workers.executor import CloudJobExecutor
 from fileflow_api.workers.subprocess import ProcessLimits, SafeSubprocessRunner
 
@@ -76,6 +81,14 @@ class CopyHandler:
         return WorkResult(content_type="image/png")
 
 
+class InvalidParameterHandler:
+    def accepts(self, content_type: str) -> bool:
+        return content_type == "image/png"
+
+    def execute(self, request: WorkRequest) -> WorkResult:
+        raise InvalidJobParameters()
+
+
 def executor_services() -> tuple[
     CloudJobExecutor, JobService, OperationRegistry, MemoryStorage, str
 ]:
@@ -128,6 +141,15 @@ def test_unknown_operation_fails_without_touching_storage() -> None:
     job = jobs.create(JobCreate(upload_id=upload_id, operation="unknown.operation"))
     assert executor.execute(job.id) == JobStatus.FAILED
     assert jobs.get(job.id).error_code == "unsupported_operation"
+    assert storage.results == {}
+
+
+def test_invalid_parameters_return_a_stable_failure_without_crashing_worker() -> None:
+    executor, jobs, registry, storage, upload_id = executor_services()
+    registry.register("test.invalid", InvalidParameterHandler())
+    job = jobs.create(JobCreate(upload_id=upload_id, operation="test.invalid"))
+    assert executor.execute(job.id) == JobStatus.FAILED
+    assert jobs.get(job.id).error_code == "invalid_job_parameters"
     assert storage.results == {}
 
 

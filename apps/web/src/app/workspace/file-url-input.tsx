@@ -797,7 +797,12 @@ function RecommendationPanel({
       </div>
       <RecommendationPlanView plan={result.plan} language={language} />
       {result.plan.mode === 'cloud' ? (
-        <CloudJobTool operationId={result.plan.operationId} files={[file]} language={language} />
+        <CloudJobTool
+          key={result.plan.operationId}
+          operationId={result.plan.operationId}
+          files={[file]}
+          language={language}
+        />
       ) : null}
       {result.plan.mode === 'local' &&
       (sourceMime === 'image/jpeg' || sourceMime === 'image/png') ? (

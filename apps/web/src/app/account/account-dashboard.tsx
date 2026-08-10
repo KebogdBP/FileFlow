@@ -176,6 +176,21 @@ function apiRequest(path: string, accessToken: string, init?: RequestInit) {
   });
 }
 
+function finishAuthentication() {
+  const parameters = new URLSearchParams(window.location.search);
+  const requested = parameters.get('return_to');
+  const returnTo = requested?.startsWith('/') && !requested.startsWith('//') ? requested : '/';
+  window.dispatchEvent(new Event('fileflow-auth-change'));
+  if (parameters.get('popup') === '1' && window.opener && !window.opener.closed) {
+    window.opener.postMessage({ type: 'fileflow-authenticated' }, window.location.origin);
+    window.opener.focus();
+    window.close();
+    window.setTimeout(() => window.location.assign(returnTo), 250);
+    return;
+  }
+  window.location.assign(returnTo);
+}
+
 export function AccountDashboard() {
   const { language } = useFileFlowLanguage();
   const text = authCopy[language];
@@ -229,6 +244,9 @@ export function AccountDashboard() {
       setLimits((await limitsResponse.json()) as Limits);
       setJobs(((await historyResponse.json()) as { items: Job[] }).items);
       setApiKeys(((await keysResponse.json()) as { items: ApiKey[] }).items);
+      if (new URLSearchParams(window.location.search).get('popup') === '1') {
+        finishAuthentication();
+      }
     },
     [loadAvatar],
   );
@@ -303,7 +321,7 @@ export function AccountDashboard() {
         );
         window.dispatchEvent(new Event('fileflow-profile-change'));
       }
-      window.location.assign('/');
+      finishAuthentication();
     } catch {
       setMessage('The account service is not available. Try again shortly.');
     } finally {

@@ -16,6 +16,7 @@ import { formatFileSize } from './input-policy';
 import type { FileFlowLanguage } from '../use-fileflow-language';
 import { recordCompletedOperations } from '../visitor-counter';
 import { SubtitleWorkspace } from './subtitle-assistant';
+import { defaultCloudParameters, parametersForOperation } from './cloud-parameters';
 
 const cloudCopy = {
   en: {
@@ -144,6 +145,8 @@ const cloudErrorCopy: Record<FileFlowLanguage, Record<string, string>> = {
       'This PDF contains no extractable text. It may be a scanned document.',
     document_conversion_failed:
       'The document converter could not process this file. Try resaving it and upload again.',
+    invalid_job_parameters:
+      'These settings do not belong to the selected converter. They were reset; please run it again.',
     worker_execution_failed: 'The processing worker stopped unexpectedly. Please try again.',
     subtitles_not_found: 'This video does not contain an embedded subtitle track.',
   },
@@ -153,6 +156,8 @@ const cloudErrorCopy: Record<FileFlowLanguage, Record<string, string>> = {
       'В PDF нет извлекаемого текста. Возможно, это отсканированный документ.',
     document_conversion_failed:
       'Конвертер не смог обработать документ. Пересохраните файл и загрузите его снова.',
+    invalid_job_parameters:
+      'Настройки не соответствуют выбранному конвертеру. Они сброшены; запустите ещё раз.',
     worker_execution_failed: 'Воркер обработки неожиданно остановился. Попробуйте ещё раз.',
     subtitles_not_found: 'В этом видео нет встроенной дорожки субтитров.',
   },
@@ -162,6 +167,8 @@ const cloudErrorCopy: Record<FileFlowLanguage, Record<string, string>> = {
       'El PDF no contiene texto extraíble. Puede ser un documento escaneado.',
     document_conversion_failed:
       'El conversor no pudo procesar el documento. Guarda el archivo de nuevo y reinténtalo.',
+    invalid_job_parameters:
+      'Estos ajustes no corresponden al conversor seleccionado. Se restablecieron; vuelve a ejecutarlo.',
     worker_execution_failed: 'El proceso se detuvo de forma inesperada. Inténtalo de nuevo.',
     subtitles_not_found: 'Este vídeo no contiene una pista de subtítulos integrada.',
   },
@@ -202,13 +209,13 @@ export function CloudJobTool({
 }) {
   const text = cloudCopy[language];
   const [parameters, setParameters] = useState<Record<string, string | number>>(() =>
-    defaultParameters(operationId),
+    defaultCloudParameters(operationId),
   );
   const [state, setState] = useState<State>({ status: 'idle' });
   const aborter = useRef<AbortController | null>(null);
   const jobId = useRef<string | null>(null);
   const resultUrl = useRef<string | null>(null);
-  const token = accountToken();
+  const [token, setToken] = useState<string | null>(() => accountToken());
 
   useEffect(() => {
     return () => {
@@ -217,12 +224,45 @@ export function CloudJobTool({
     };
   }, []);
 
+  useEffect(() => {
+    const refreshToken = () => setToken(accountToken());
+    window.addEventListener('storage', refreshToken);
+    window.addEventListener('fileflow-auth-change', refreshToken);
+    window.addEventListener('message', refreshToken);
+    return () => {
+      window.removeEventListener('storage', refreshToken);
+      window.removeEventListener('fileflow-auth-change', refreshToken);
+      window.removeEventListener('message', refreshToken);
+    };
+  }, []);
+
+  useEffect(() => {
+    aborter.current?.abort();
+    setParameters(defaultCloudParameters(operationId));
+    setState({ status: 'idle' });
+    jobId.current = null;
+    if (resultUrl.current) {
+      URL.revokeObjectURL(resultUrl.current);
+      resultUrl.current = null;
+    }
+  }, [operationId]);
+
   const totalSize = useMemo(() => files.reduce((sum, file) => sum + file.size, 0), [files]);
+
+  function beginSignIn() {
+    const popup = window.open(
+      '/account?return_to=%2F%23workspace-flow&popup=1',
+      'fileflow-account',
+      'popup=yes,width=560,height=760,resizable=yes,scrollbars=yes',
+    );
+    if (!popup) setState({ status: 'error', message: text.messages[0] });
+    else popup.focus();
+  }
 
   async function run() {
     const accessToken = accountToken();
     if (!accessToken) {
-      setState({ status: 'error', message: text.messages[0] });
+      beginSignIn();
       return;
     }
     const controller = new AbortController();
@@ -266,7 +306,7 @@ export function CloudJobTool({
         primary,
         uploadIds.slice(1),
         cloudOperationId,
-        parameters,
+        parametersForOperation(cloudOperationId, parameters),
         accessToken,
         controller.signal,
       );
@@ -347,7 +387,18 @@ export function CloudJobTool({
       />
       {!token ? (
         <p className="cloud-auth-note">
-          {text.auth[0]} <a href="/account">{text.auth[1]}</a>.
+          {text.auth[0]}{' '}
+          <a
+            href="/account?return_to=%2F%23workspace-flow&popup=1"
+            target="fileflow-account"
+            onClick={(event) => {
+              event.preventDefault();
+              beginSignIn();
+            }}
+          >
+            {text.auth[1]}
+          </a>
+          .
         </p>
       ) : null}
       <div className="cloud-tool-actions">
@@ -587,18 +638,6 @@ function OperationControls({
     );
   }
   return null;
-}
-
-function defaultParameters(operationId: string): Record<string, string | number> {
-  if (['compress-video', 'video-to-mp4'].includes(operationId))
-    return { quality: 23, preset: 'medium', max_height: 1080 };
-  if (['extract-audio', 'audio-to-mp3', 'optimize-audio'].includes(operationId))
-    return { bitrate_kbps: 192 };
-  if (operationId === 'trim-audio') return { start_ms: 0, end_ms: 30000 };
-  if (operationId === 'compress-pdf') return { quality: 'balanced' };
-  if (operationId === 'split-pdf') return { pages: 'all' };
-  if (operationId === 'pdf-to-jpg') return { page: 1, dpi: 150, quality: 85 };
-  return {};
 }
 
 const operationTitles: Record<Exclude<FileFlowLanguage, 'en'>, Record<string, string>> = {

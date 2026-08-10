@@ -442,6 +442,7 @@ export function SocialImportTool({
                 ))}
               </Select>
               <CloudJobTool
+                key={operation}
                 operationId={operation}
                 existingUploadId={state.item.upload_id}
                 language={language}
