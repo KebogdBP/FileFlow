@@ -6,7 +6,12 @@ import pytest
 
 from fileflow_api.documents.handlers import DOCX_TYPE, DocumentHandler
 from fileflow_api.documents.registry import DOCUMENT_OPERATIONS, register_document_operations
-from fileflow_api.workers.contracts import OperationRegistry, WorkerExecutionFailure, WorkRequest
+from fileflow_api.workers.contracts import (
+    InvalidJobParameters,
+    OperationRegistry,
+    WorkerExecutionFailure,
+    WorkRequest,
+)
 
 TOOLS = {
     "libreoffice": "/usr/bin/libreoffice",
@@ -194,7 +199,7 @@ def test_untrusted_document_parameters_never_become_arguments(
     tmp_path: Path, operation: str, parameters: dict[str, str | int]
 ) -> None:
     runner = RecordingRunner()
-    with pytest.raises(ValueError, match="invalid"):
+    with pytest.raises(InvalidJobParameters, match="invalid_job_parameters"):
         DocumentHandler(TOOLS, runner, operation).execute(pdf_request(tmp_path, parameters))
     assert all("--check" in command for command in runner.commands)
 

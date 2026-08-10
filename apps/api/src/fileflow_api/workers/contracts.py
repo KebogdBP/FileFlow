@@ -14,6 +14,13 @@ class WorkerExecutionFailure(RuntimeError):
         super().__init__(code)
 
 
+class InvalidJobParameters(WorkerExecutionFailure):
+    """The submitted operation settings do not match the selected operation."""
+
+    def __init__(self) -> None:
+        super().__init__("invalid_job_parameters")
+
+
 @dataclass(frozen=True)
 class WorkRequest:
     input_path: Path

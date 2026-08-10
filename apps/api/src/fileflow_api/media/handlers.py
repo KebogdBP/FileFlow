@@ -3,6 +3,7 @@ from pathlib import Path, PurePosixPath
 from typing import Protocol
 
 from fileflow_api.workers.contracts import (
+    InvalidJobParameters,
     Parameter,
     WorkerExecutionFailure,
     WorkRequest,
@@ -19,7 +20,7 @@ def integer_parameter(
 ) -> int:
     value = parameters.get(name, default)
     if type(value) is not int or value not in allowed:
-        raise ValueError(f"invalid {name}")
+        raise InvalidJobParameters()
     return value
 
 
@@ -28,14 +29,14 @@ def choice_parameter(
 ) -> str:
     value = parameters.get(name, default)
     if not isinstance(value, str) or value not in allowed:
-        raise ValueError(f"invalid {name}")
+        raise InvalidJobParameters()
     return value
 
 
 def reject_unknown(parameters: Mapping[str, Parameter], allowed: set[str]) -> None:
     unknown = set(parameters) - allowed
     if unknown:
-        raise ValueError(f"invalid parameters: {','.join(sorted(unknown))}")
+        raise InvalidJobParameters()
 
 
 class FfmpegHandler:
@@ -181,7 +182,7 @@ class FfmpegHandler:
             start_ms = integer_parameter(parameters, "start_ms", 0, range(0, 86_400_001))
             end_ms = integer_parameter(parameters, "end_ms", 30_000, range(100, 86_400_001))
             if end_ms <= start_ms:
-                raise ValueError("invalid audio trim range")
+                raise InvalidJobParameters()
             duration_ms = end_ms - start_ms
             return (
                 [

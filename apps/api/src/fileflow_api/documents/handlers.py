@@ -6,7 +6,12 @@ from pathlib import Path, PurePosixPath
 from zipfile import BadZipFile, ZipFile
 
 from fileflow_api.media.handlers import CommandRunner, integer_parameter, reject_unknown
-from fileflow_api.workers.contracts import WorkerExecutionFailure, WorkRequest, WorkResult
+from fileflow_api.workers.contracts import (
+    InvalidJobParameters,
+    WorkerExecutionFailure,
+    WorkRequest,
+    WorkResult,
+)
 
 DOCX_TYPE = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
 PPTX_TYPE = "application/vnd.openxmlformats-officedocument.presentationml.presentation"
@@ -109,7 +114,7 @@ class DocumentHandler:
         reject_unknown(request.parameters, {"pages"})
         pages = request.parameters.get("pages", "all")
         if not isinstance(pages, str) or len(request.input_paths) != 1:
-            raise ValueError("invalid PDF page range")
+            raise InvalidJobParameters()
         selection = self._page_selection(pages)
         self._runner.run(
             [
@@ -130,13 +135,13 @@ class DocumentHandler:
         if normalized == "all":
             return "1-z"
         if not normalized or not re.fullmatch(r"\d+(?:-\d+)?(?:,\d+(?:-\d+)?)*", normalized):
-            raise ValueError("invalid PDF page selection")
+            raise InvalidJobParameters()
         for item in normalized.split(","):
             bounds = [int(part) for part in item.split("-")]
             if any(page < 1 or page > 100_000 for page in bounds):
-                raise ValueError("invalid PDF page selection")
+                raise InvalidJobParameters()
             if len(bounds) == 2 and bounds[1] < bounds[0]:
-                raise ValueError("invalid PDF page selection")
+                raise InvalidJobParameters()
         return normalized
 
     def _compress_pdf(self, request: WorkRequest) -> None:
@@ -144,7 +149,7 @@ class DocumentHandler:
         quality = request.parameters.get("quality", "balanced")
         presets = {"screen": "/screen", "balanced": "/ebook", "print": "/printer"}
         if not isinstance(quality, str) or quality not in presets:
-            raise ValueError("invalid quality")
+            raise InvalidJobParameters()
         self._runner.run(
             [
                 self._tools["ghostscript"],

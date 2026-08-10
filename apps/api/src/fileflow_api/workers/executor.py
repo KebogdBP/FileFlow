@@ -79,8 +79,7 @@ class CloudJobExecutor:
                 self._jobs.attach_result(job.id, key, result.content_type, size)
             return self._jobs.succeed(job.id).status
         except WorkerExecutionFailure as error:
-            self._jobs.fail(job.id, error.code)
-            raise
+            return self._jobs.fail(job.id, error.code).status
         except Exception:
             self._jobs.fail(job.id, "worker_execution_failed")
             raise

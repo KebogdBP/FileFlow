@@ -5,7 +5,7 @@ import pytest
 
 from fileflow_api.media.handlers import FfmpegHandler
 from fileflow_api.media.registry import MEDIA_OPERATIONS, register_media_operations
-from fileflow_api.workers.contracts import OperationRegistry, WorkRequest
+from fileflow_api.workers.contracts import InvalidJobParameters, OperationRegistry, WorkRequest
 
 
 class RecordingRunner:
@@ -116,7 +116,7 @@ def test_subtitle_extraction_selects_first_embedded_track_as_webvtt(tmp_path: Pa
 
 def test_audio_trim_rejects_an_end_before_the_start(tmp_path: Path) -> None:
     runner = RecordingRunner()
-    with pytest.raises(ValueError, match="invalid audio trim range"):
+    with pytest.raises(InvalidJobParameters, match="invalid_job_parameters"):
         FfmpegHandler("/usr/bin/ffmpeg", runner, "trim-audio").execute(
             request(tmp_path, {"start_ms": 10_000, "end_ms": 2_000})
         )
@@ -136,7 +136,7 @@ def test_untrusted_video_parameters_cannot_become_arguments(
     tmp_path: Path, parameters: dict[str, str | int]
 ) -> None:
     runner = RecordingRunner()
-    with pytest.raises(ValueError, match="invalid"):
+    with pytest.raises(InvalidJobParameters, match="invalid_job_parameters"):
         FfmpegHandler("/usr/bin/ffmpeg", runner, "compress-video").execute(
             request(tmp_path, parameters)
         )
