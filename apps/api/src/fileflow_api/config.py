@@ -67,6 +67,7 @@ class Settings(BaseSettings):
     social_import_pot_provider_url: str | None = None
     social_import_proxy_url: str | None = None
     social_import_allow_remote_ejs: bool = True
+    direct_download_ticket_ttl_seconds: int = Field(default=15 * 60, ge=60, le=60 * 60)
     social_import_max_comments: int = Field(default=2_500, ge=1, le=10_000)
     social_import_max_comment_characters: int = Field(default=380_000, ge=10_000, le=2_000_000)
     ai_provider: Literal["deepseek", "gemini"] = "deepseek"

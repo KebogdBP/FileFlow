@@ -668,6 +668,52 @@
   box-shadow: 0 0 0 4px color-mix(in srgb, var(--home-blue) 12%, transparent);
 }
 
+.ff-delivery-mode {
+  display: grid;
+  gap: 9px;
+  margin-top: 14px;
+  padding: 12px;
+  border: 1px solid var(--glass-line);
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--glass-bg-strong) 82%, transparent);
+}
+
+.ff-delivery-mode > strong,
+.ff-delivery-mode > small {
+  color: var(--home-muted);
+  font-size: 11px;
+}
+
+.ff-delivery-mode > div {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.ff-delivery-mode button {
+  min-height: 42px;
+  padding: 8px 12px;
+  border: 1px solid var(--glass-line);
+  border-radius: 12px;
+  color: var(--home-text);
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 780;
+}
+
+.ff-delivery-mode button.is-active {
+  border-color: color-mix(in srgb, var(--home-blue) 55%, var(--glass-line));
+  color: var(--home-blue);
+  background: color-mix(in srgb, var(--home-blue) 9%, transparent);
+}
+
+.ff-delivery-mode button:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+
 .ff-downloader-actions {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
@@ -1499,6 +1545,10 @@
 
   .ff-downloader-actions {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .ff-delivery-mode > div {
+    grid-template-columns: 1fr;
   }
   .ff-link-card {
     min-height: auto;

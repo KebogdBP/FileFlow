@@ -59,6 +59,11 @@ export type SocialImportOptions = {
   subtitle_language?: string;
 };
 
+export type DirectDownloadTicket = {
+  download_path: string;
+  expires_at: string;
+};
+
 function contentType(file: File) {
   if (file.type) return file.type;
   const extension = file.name.split('.').pop()?.toLowerCase();
@@ -242,6 +247,28 @@ export function createSocialImport(
   });
 }
 
+export function createDirectDownload(
+  url: string,
+  options: SocialImportOptions,
+  signal?: AbortSignal,
+) {
+  return apiJson<DirectDownloadTicket>('/imports/direct', {
+    method: 'POST',
+    body: JSON.stringify({ url, ...options }),
+    signal,
+  });
+}
+
+export function startBrowserDownload(downloadPath: string) {
+  const anchor = document.createElement('a');
+  anchor.href = downloadPath.startsWith('http') ? downloadPath : `${API_URL}${downloadPath}`;
+  anchor.rel = 'noopener';
+  anchor.download = '';
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+}
+
 export async function waitForSocialImport(
   importId: string,
   onProgress?: (item: SocialImport) => void,
@@ -261,41 +288,9 @@ export async function downloadSocialImportResult(
   importId: string,
   onProgress?: (progress: number | null) => void,
 ) {
-  const response = await fetch(`${API_URL}/imports/${importId}/result`);
-  if (!response.ok) throw new Error(await responseError(response));
-  const disposition = response.headers.get('Content-Disposition') ?? '';
-  const filename = responseFilename(disposition, `fileflow-${importId}`);
-  const total = Number(response.headers.get('Content-Length')) || 0;
-  let blob: Blob;
-  if (!response.body) {
-    onProgress?.(null);
-    blob = await response.blob();
-  } else {
-    const reader = response.body.getReader();
-    const chunks: Uint8Array<ArrayBuffer>[] = [];
-    let received = 0;
-    onProgress?.(total ? 0 : null);
-    for (;;) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      const chunk = new Uint8Array(value);
-      chunks.push(chunk);
-      received += chunk.byteLength;
-      if (total) onProgress?.(Math.min(99, Math.round((received / total) * 100)));
-    }
-    blob = new Blob(chunks, {
-      type: response.headers.get('Content-Type') ?? 'application/octet-stream',
-    });
-  }
+  onProgress?.(null);
+  startBrowserDownload(`/imports/${importId}/result`);
   onProgress?.(100);
-  const objectUrl = URL.createObjectURL(blob);
-  const anchor = document.createElement('a');
-  anchor.href = objectUrl;
-  anchor.download = filename;
-  document.body.appendChild(anchor);
-  anchor.click();
-  anchor.remove();
-  window.setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
 }
 
 export async function getSocialImportResult(importId: string) {

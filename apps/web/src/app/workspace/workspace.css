@@ -913,6 +913,16 @@
   font-size: var(--ff-font-caption-size);
 }
 
+.direct-import-result {
+  align-items: stretch;
+  flex-direction: column;
+}
+
+.direct-import-result > div {
+  display: grid;
+  gap: var(--ff-space-2);
+}
+
 .cloud-controls {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));

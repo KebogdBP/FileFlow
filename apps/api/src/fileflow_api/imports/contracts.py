@@ -37,6 +37,11 @@ class ImportCreate(BaseModel):
         return self
 
 
+class DirectDownloadTicket(BaseModel):
+    download_path: str
+    expires_at: datetime
+
+
 class ImportResponse(BaseModel):
     id: str
     provider: str

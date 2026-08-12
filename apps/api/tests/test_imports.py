@@ -5,9 +5,11 @@ from unittest.mock import MagicMock
 
 import pytest
 from fastapi import HTTPException
+from fastapi.testclient import TestClient
 from sqlalchemy import create_engine, event
 from sqlalchemy.pool import StaticPool
 
+from fileflow_api.app import create_app
 from fileflow_api.config import Settings
 from fileflow_api.database import Base, build_session_factory
 from fileflow_api.imports import downloader as downloader_module
@@ -60,14 +62,20 @@ class FakeQueue:
 
 
 class FakeClient:
+    def __init__(self) -> None:
+        self.last_workspace: Path | None = None
+        self.last_max_bytes: int | None = -1
+
     def download(
         self,
         url: str,
         workspace: Path,
-        max_bytes: int,
+        max_bytes: int | None,
         options: ImportOptions,
         on_progress: Callable[[int], None] | None = None,
     ) -> ImportedMedia:
+        self.last_workspace = workspace
+        self.last_max_bytes = max_bytes
         assert url.startswith("https://www.youtube.com/")
         assert options.media_type == "video"
         path = workspace / "source.mp4"
@@ -89,7 +97,7 @@ class FailingClient:
         self,
         url: str,
         workspace: Path,
-        max_bytes: int,
+        max_bytes: int | None,
         options: ImportOptions,
         on_progress: Callable[[int], None] | None = None,
     ) -> ImportedMedia:
@@ -183,6 +191,107 @@ def test_import_contract_only_requires_a_platform_url() -> None:
     assert str(request.url) == "https://youtu.be/abc"
     assert request.media_type == "video"
     assert request.video_quality == "best"
+
+
+def test_direct_download_ticket_bypasses_cloud_storage_and_size_limit() -> None:
+    service, storage, queue = import_service()
+    ticket = service.create_direct_ticket(
+        ImportCreate(url="https://www.youtube.com/watch?v=abc", video_quality="best")
+    )
+
+    prepared = service.prepare_direct_download(ticket.download_path.rsplit("/", 1)[-1])
+    try:
+        assert prepared.media.path.is_file()
+        assert prepared.media.content_type == "video/mp4"
+        assert storage.objects == {}
+        assert queue.imports == []
+        assert queue.safety == []
+    finally:
+        prepared.cleanup()
+
+    assert not prepared.workspace.exists()
+
+
+def test_direct_download_rejects_a_tampered_ticket() -> None:
+    service, _, _ = import_service()
+    ticket = service.create_direct_ticket(
+        ImportCreate(url="https://www.youtube.com/watch?v=abc")
+    )
+    raw = ticket.download_path.rsplit("/", 1)[-1]
+
+    with pytest.raises(HTTPException) as error:
+        service.prepare_direct_download(f"{raw}tampered")
+
+    assert error.value.status_code == 410
+
+
+def test_direct_download_endpoint_streams_mp4_and_cleans_workspace() -> None:
+    downloader = FakeClient()
+    service, _, _ = import_service(downloader)
+    api = TestClient(create_app(Settings(environment="test"), import_service=service))
+    created = api.post(
+        "/api/v1/imports/direct",
+        json={"url": "https://www.youtube.com/watch?v=abc", "video_quality": "best"},
+    )
+
+    assert created.status_code == 200
+    response = api.get(f"/api/v1{created.json()['download_path']}")
+
+    assert response.status_code == 200
+    assert response.headers["content-type"] == "video/mp4"
+    assert response.headers["cache-control"] == "no-store"
+    assert response.content.startswith(b"\x00\x00\x00\x18ftyp")
+    assert downloader.last_max_bytes is None
+    assert downloader.last_workspace is not None
+    assert not downloader.last_workspace.exists()
+
+
+def test_downloader_omits_file_size_ceiling_for_direct_mode(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    captured: dict[str, object] = {}
+
+    class FakeYoutubeDL:
+        def __init__(self, options: dict[str, object]) -> None:
+            captured.update(options)
+
+        def __enter__(self) -> "FakeYoutubeDL":
+            return self
+
+        def __exit__(self, *args: object) -> None:
+            pass
+
+        def extract_info(self, url: str, download: bool) -> dict[str, str]:
+            (tmp_path / "source.mp4").write_bytes(b"\x00\x00\x00\x18ftypisom-video")
+            return {"title": "Direct video"}
+
+    monkeypatch.setattr(downloader_module, "YoutubeDL", FakeYoutubeDL)
+    YtDlpClient().download("https://vk.com/video-1_2", tmp_path, None)
+
+    assert "max_filesize" not in captured
+
+
+def test_cloud_size_overflow_returns_actionable_error(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    class FakeYoutubeDL:
+        def __init__(self, options: dict[str, object]) -> None:
+            assert options["max_filesize"] == 8
+
+        def __enter__(self) -> "FakeYoutubeDL":
+            return self
+
+        def __exit__(self, *args: object) -> None:
+            pass
+
+        def extract_info(self, url: str, download: bool) -> dict[str, str]:
+            (tmp_path / "source.mp4").write_bytes(b"\x00\x00\x00\x18ftypisom-video")
+            return {"title": "Oversized video"}
+
+    monkeypatch.setattr(downloader_module, "YoutubeDL", FakeYoutubeDL)
+
+    with pytest.raises(ImportDownloadError, match="media_too_large"):
+        YtDlpClient().download("https://vk.com/video-1_2", tmp_path, 8)
 
 
 @pytest.mark.parametrize(

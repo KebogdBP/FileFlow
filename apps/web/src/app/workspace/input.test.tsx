@@ -381,6 +381,7 @@ describe('M05 file and URL input UI', () => {
       (button) => button.textContent === 'Confirm import',
     ) as HTMLButtonElement;
     await act(async () => confirm.click());
+    expect(container.textContent).toContain('Direct to device · no size limit');
     const start = [...container.querySelectorAll('button')].find(
       (button) => button.textContent === 'Import media',
     ) as HTMLButtonElement;

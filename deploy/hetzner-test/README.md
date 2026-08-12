@@ -60,7 +60,8 @@ HTTPS certificates automatically after DNS resolves to the server.
 
 ## Test limits
 
-- maximum upload: 512 MiB
+- maximum checked-cloud upload/import: 2 GiB
+- direct-to-device social downloads: no FileFlow size ceiling; bounded by temporary server disk
 - one safety scan at a time
 - one processing/import task at a time
 - one-hour application retention

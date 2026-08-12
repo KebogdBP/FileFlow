@@ -4,8 +4,10 @@ import { AudioLines, FileMusic, Film, ListMusic, ListVideo, LoaderCircle } from 
 import { AnimatePresence, motion } from 'motion/react';
 import React, { useState } from 'react';
 import {
+  createDirectDownload,
   createSocialImport,
   downloadSocialImportResult,
+  startBrowserDownload,
   waitForCleanUpload,
   waitForSocialImport,
   type SocialImportOptions,
@@ -14,6 +16,7 @@ import type { FileFlowLanguage } from './use-fileflow-language';
 import { recordCompletedOperations } from './visitor-counter';
 
 type Mode = 'video' | 'video-playlist' | 'audio-playlist' | 'audio' | 'mp3';
+type DeliveryMode = 'cloud' | 'direct';
 
 const downloaderCopy = {
   en: {
@@ -38,8 +41,16 @@ const downloaderCopy = {
     downloading: 'Downloading directly to your device…',
     ready: 'The download has started.',
     failed: 'The file could not be downloaded.',
+    delivery: 'Delivery mode',
+    cloudMode: 'Checked cloud · up to 2 GB',
+    directMode: 'Direct to device · no size limit',
+    directHint:
+      'Direct mode uses temporary server space only and skips cloud storage and malware scanning.',
+    directStarting: 'The browser is preparing a direct download…',
     errors: {
-      media_too_large: 'This media is larger than the 512 MB server limit.',
+      media_too_large: 'This media is larger than the 2 GB checked-cloud limit. Use direct mode.',
+      extractor_outdated: 'The platform changed its format. The server extractor needs an update.',
+      supported_format_unavailable: 'No supported media format is available.',
       platform_auth_required: 'The platform requires verification. Try again later.',
       platform_ip_blocked: 'The platform blocked the server address. Try again later.',
       platform_rate_limited: 'The platform temporarily rate-limited the server.',
@@ -69,8 +80,16 @@ const downloaderCopy = {
     downloading: 'Скачиваем прямо на ваше устройство…',
     ready: 'Скачивание началось.',
     failed: 'Не удалось скачать файл.',
+    delivery: 'Режим скачивания',
+    cloudMode: 'Облако с проверкой · до 2 ГБ',
+    directMode: 'Напрямую на устройство · без лимита',
+    directHint:
+      'Прямой режим использует только временное место на сервере, без облачного хранения и антивирусной проверки.',
+    directStarting: 'Браузер готовит прямое скачивание…',
     errors: {
-      media_too_large: 'Файл превышает серверный лимит 512 МБ.',
+      media_too_large: 'Файл превышает лимит облачного режима 2 ГБ. Используйте прямой режим.',
+      extractor_outdated: 'Платформа изменила формат. Необходимо обновить серверный экстрактор.',
+      supported_format_unavailable: 'Поддерживаемый формат медиа не найден.',
       platform_auth_required: 'Платформа запросила подтверждение. Попробуйте позже.',
       platform_ip_blocked: 'Платформа заблокировала адрес сервера. Попробуйте позже.',
       platform_rate_limited: 'Платформа временно ограничила запросы сервера.',
@@ -100,8 +119,17 @@ const downloaderCopy = {
     downloading: 'Descargando directamente en tu dispositivo…',
     ready: 'La descarga ha comenzado.',
     failed: 'No se pudo descargar el archivo.',
+    delivery: 'Modo de entrega',
+    cloudMode: 'Nube verificada · hasta 2 GB',
+    directMode: 'Directo al dispositivo · sin límite',
+    directHint:
+      'El modo directo usa solo espacio temporal del servidor, sin almacenamiento en la nube ni análisis antivirus.',
+    directStarting: 'El navegador está preparando la descarga directa…',
     errors: {
-      media_too_large: 'El archivo supera el límite de 512 MB del servidor.',
+      media_too_large:
+        'El archivo supera el límite de nube verificada de 2 GB. Usa el modo directo.',
+      extractor_outdated: 'La plataforma cambió su formato. Hay que actualizar el extractor.',
+      supported_format_unavailable: 'No hay un formato compatible disponible.',
       platform_auth_required: 'La plataforma requiere verificación. Inténtalo más tarde.',
       platform_ip_blocked: 'La plataforma bloqueó el servidor. Inténtalo más tarde.',
       platform_rate_limited: 'La plataforma limitó temporalmente el servidor.',
@@ -131,6 +159,7 @@ export function VideoDownloader({ language }: { language: FileFlowLanguage }) {
   const text = downloaderCopy[language];
   const [url, setUrl] = useState('');
   const [activeMode, setActiveMode] = useState<Mode | null>(null);
+  const [deliveryMode, setDeliveryMode] = useState<DeliveryMode>('cloud');
   const [status, setStatus] = useState<'idle' | 'running' | 'ready' | 'error'>('idle');
   const [message, setMessage] = useState('');
   const [progress, setProgress] = useState<number | null>(null);
@@ -164,6 +193,16 @@ export function VideoDownloader({ language }: { language: FileFlowLanguage }) {
     setMessage(text.working);
     setProgress(1);
     try {
+      if (deliveryMode === 'direct') {
+        setMessage(text.directStarting);
+        setProgress(null);
+        const ticket = await createDirectDownload(url.trim(), options);
+        startBrowserDownload(ticket.download_path);
+        setStatus('ready');
+        setMessage(text.ready);
+        void recordCompletedOperations();
+        return;
+      }
       const item = await createSocialImport(url.trim(), options);
       const completed = await waitForSocialImport(item.id, (current) => {
         setMessage(current.status === 'queued' ? text.working : text.importing);
@@ -231,6 +270,30 @@ export function VideoDownloader({ language }: { language: FileFlowLanguage }) {
               setProgress(null);
             }}
           />
+        </div>
+        <div className="ff-delivery-mode" role="group" aria-label={text.delivery}>
+          <strong>{text.delivery}</strong>
+          <div>
+            <button
+              type="button"
+              className={deliveryMode === 'cloud' ? 'is-active' : ''}
+              aria-pressed={deliveryMode === 'cloud'}
+              onClick={() => setDeliveryMode('cloud')}
+              disabled={status === 'running'}
+            >
+              {text.cloudMode}
+            </button>
+            <button
+              type="button"
+              className={deliveryMode === 'direct' ? 'is-active' : ''}
+              aria-pressed={deliveryMode === 'direct'}
+              onClick={() => setDeliveryMode('direct')}
+              disabled={status === 'running'}
+            >
+              {text.directMode}
+            </button>
+          </div>
+          {deliveryMode === 'direct' ? <small>{text.directHint}</small> : null}
         </div>
 
         <AnimatePresence initial={false}>

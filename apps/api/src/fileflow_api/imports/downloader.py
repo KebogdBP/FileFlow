@@ -60,7 +60,7 @@ class ImportClient(Protocol):
         self,
         url: str,
         workspace: Path,
-        max_bytes: int,
+        max_bytes: int | None,
         options: ImportOptions,
         on_progress: Callable[[int], None] | None = None,
     ) -> ImportedMedia: ...
@@ -85,7 +85,7 @@ class YtDlpClient:
         self,
         url: str,
         workspace: Path,
-        max_bytes: int,
+        max_bytes: int | None,
         import_options: ImportOptions | None = None,
         on_progress: Callable[[int], None] | None = None,
     ) -> ImportedMedia:
@@ -142,7 +142,6 @@ class YtDlpClient:
                 workspace
                 / ("source-%(playlist_index)03d.%(ext)s" if is_playlist else "source.%(ext)s")
             ),
-            "max_filesize": max_bytes,
             "socket_timeout": 20,
             "retries": 5,
             "fragment_retries": 5,
@@ -156,6 +155,8 @@ class YtDlpClient:
             "progress_hooks": [_download_progress_hook(on_progress)],
             "postprocessor_hooks": [_postprocessor_progress_hook(on_progress)],
         }
+        if max_bytes is not None:
+            options["max_filesize"] = max_bytes
         if format_spec is not None:
             options["format"] = format_spec
         elif selected.media_type == "comments":
@@ -300,8 +301,10 @@ class YtDlpClient:
                     bundle.write(path, f"{index:03d}-{path.name}")
             for path in media_files:
                 path.unlink()
-            if archive.stat().st_size <= 0 or archive.stat().st_size > max_bytes:
-                raise ValueError("imported playlist violates size limits")
+            if archive.stat().st_size <= 0 or (
+                max_bytes is not None and archive.stat().st_size > max_bytes
+            ):
+                raise ImportDownloadError("media_too_large")
             return ImportedMedia(
                 archive,
                 "application/zip",
@@ -315,8 +318,10 @@ class YtDlpClient:
         if len(media_files) != 1:
             raise ValueError(f"import did not produce one {expected_suffix} artifact")
         media = media_files[0]
-        if media.stat().st_size <= 0 or media.stat().st_size > max_bytes:
-            raise ValueError("imported media violates size limits")
+        if media.stat().st_size <= 0 or (
+            max_bytes is not None and media.stat().st_size > max_bytes
+        ):
+            raise ImportDownloadError("media_too_large")
         with media.open("rb") as downloaded:
             header = downloaded.read(12)
         if selected.media_type == "subtitles":

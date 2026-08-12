@@ -5,6 +5,12 @@ www.{$FILEFLOW_WEB_HOST} {
 {$FILEFLOW_WEB_HOST} {
 	encode zstd gzip
 
+	handle /api/v1/imports/direct/* {
+		reverse_proxy api:8000 {
+			flush_interval -1
+		}
+	}
+
 	handle /api/* {
 		reverse_proxy api:8000
 	}
@@ -23,7 +29,9 @@ www.{$FILEFLOW_WEB_HOST} {
 
 api.fileflow.pro, {$FILEFLOW_API_HOST} {
 	encode zstd gzip
-	reverse_proxy api:8000
+	reverse_proxy api:8000 {
+		flush_interval -1
+	}
 
 	log {
 		output stdout

@@ -32,6 +32,8 @@ describe('glass File Flow landing page', () => {
     expect(markup).toContain('From a link');
     expect(markup.match(/<h1/g)).toHaveLength(1);
     expect(markup).toContain('id="tools-title"');
+    expect(markup).toContain('Checked cloud · up to 2 GB');
+    expect(markup).toContain('Direct to device · no size limit');
   });
 
   it('distinguishes current actions from roadmap media tools', () => {

@@ -5,7 +5,9 @@ import { Badge, Button, Input, Select } from '@fileflow/ui';
 import Image from 'next/image';
 import {
   API_URL,
+  createDirectDownload,
   createSocialImport,
+  startBrowserDownload,
   waitForCleanUpload,
   waitForSocialImport,
   type SocialImport,
@@ -46,6 +48,11 @@ const socialCopy = {
     playlistHint: 'Imports one numbered item so every job still has one safe result.',
     videoOperations: ['Compress video', 'Convert to MP4', 'Remove video metadata', 'Extract audio'],
     audioOperations: ['Optimize audio', 'Convert to MP3', 'Convert to WAV', 'Trim audio'],
+    deliveryMode: 'Delivery mode',
+    deliveryModes: ['Checked cloud · up to 2 GB', 'Direct to device · no size limit'],
+    directHint: 'Temporary server space only; no cloud storage or malware scan.',
+    directReady: 'The direct download was handed to your browser.',
+    downloadAgain: 'Start download again',
     errors: {
       platform_auth_required:
         'The platform requested verification. Upload the file directly or try again later.',
@@ -56,7 +63,7 @@ const socialCopy = {
         'The platform changed its page format. The server extractor needs an update.',
       media_unavailable: 'This media is unavailable or private.',
       supported_format_unavailable: 'No supported media format is available.',
-      media_too_large: 'This media is larger than the 512 MB server limit.',
+      media_too_large: 'This media is larger than the 2 GB checked-cloud limit. Use direct mode.',
       import_failed: 'The platform could not import this link.',
       subtitles_not_found: 'No subtitles were found in the selected language.',
       comments_not_found: 'This platform did not return any public comments for the video.',
@@ -102,6 +109,12 @@ const socialCopy = {
       'Преобразовать в WAV',
       'Обрезать аудио',
     ],
+    deliveryMode: 'Режим скачивания',
+    deliveryModes: ['Облако с проверкой · до 2 ГБ', 'Напрямую на устройство · без лимита'],
+    directHint:
+      'Только временное место на сервере; без облачного хранения и антивирусной проверки.',
+    directReady: 'Прямое скачивание передано вашему браузеру.',
+    downloadAgain: 'Запустить скачивание ещё раз',
     errors: {
       platform_auth_required:
         'Платформа запросила подтверждение. Загрузите файл напрямую или повторите позже.',
@@ -113,7 +126,7 @@ const socialCopy = {
         'Платформа изменила формат страницы. Нужно обновить серверный экстрактор.',
       media_unavailable: 'Это медиа недоступно или является приватным.',
       supported_format_unavailable: 'Поддерживаемый формат медиа не найден.',
-      media_too_large: 'Файл превышает серверный лимит 512 МБ.',
+      media_too_large: 'Файл превышает лимит облачного режима 2 ГБ. Используйте прямой режим.',
       import_failed: 'Не удалось импортировать медиа по этой ссылке.',
       subtitles_not_found: 'Субтитры на выбранном языке не найдены.',
       comments_not_found: 'Платформа не вернула публичные комментарии для этого видео.',
@@ -154,6 +167,11 @@ const socialCopy = {
     playlistHint: 'Importa un elemento numerado para mantener un resultado seguro por tarea.',
     videoOperations: ['Comprimir vídeo', 'Convertir a MP4', 'Eliminar metadatos', 'Extraer audio'],
     audioOperations: ['Optimizar audio', 'Convertir a MP3', 'Convertir a WAV', 'Recortar audio'],
+    deliveryMode: 'Modo de entrega',
+    deliveryModes: ['Nube verificada · hasta 2 GB', 'Directo al dispositivo · sin límite'],
+    directHint: 'Solo espacio temporal del servidor; sin almacenamiento en la nube ni análisis.',
+    directReady: 'La descarga directa se envió al navegador.',
+    downloadAgain: 'Iniciar la descarga otra vez',
     errors: {
       platform_auth_required:
         'La plataforma solicitó verificación. Sube el archivo directamente o inténtalo más tarde.',
@@ -163,7 +181,8 @@ const socialCopy = {
       extractor_outdated: 'La plataforma cambió su formato. Hay que actualizar el extractor.',
       media_unavailable: 'Este contenido no está disponible o es privado.',
       supported_format_unavailable: 'No hay un formato compatible disponible.',
-      media_too_large: 'El archivo supera el límite de 512 MB del servidor.',
+      media_too_large:
+        'El archivo supera el límite de nube verificada de 2 GB. Usa el modo directo.',
       import_failed: 'No se pudo importar el contenido desde este enlace.',
       subtitles_not_found: 'No se encontraron subtítulos en el idioma elegido.',
       comments_not_found: 'La plataforma no devolvió comentarios públicos para este vídeo.',
@@ -188,6 +207,7 @@ export function SocialImportTool({
   const [mediaType, setMediaType] = useState<'video' | 'audio' | 'subtitles' | 'comments'>('video');
   const [subtitleLanguage, setSubtitleLanguage] = useState('en');
   const [videoQuality, setVideoQuality] = useState<'best' | '1080' | '720' | '480'>('best');
+  const [deliveryMode, setDeliveryMode] = useState<'cloud' | 'direct'>('cloud');
   const [audioBitrate, setAudioBitrate] = useState<128 | 192 | 320>(192);
   const [startSeconds, setStartSeconds] = useState('');
   const [endSeconds, setEndSeconds] = useState('');
@@ -197,6 +217,7 @@ export function SocialImportTool({
     | { status: 'idle' }
     | { status: 'running'; stage: string; progress: number }
     | { status: 'completed'; item: SocialImport }
+    | { status: 'direct'; downloadPath: string }
     | { status: 'error'; message: string }
   >({ status: 'idle' });
   const aborter = useRef<AbortController | null>(null);
@@ -233,6 +254,13 @@ export function SocialImportTool({
     aborter.current = controller;
     setState({ status: 'running', stage: text.stages[0], progress: 1 });
     try {
+      if (deliveryMode === 'direct' && !['subtitles', 'comments'].includes(mediaType)) {
+        const ticket = await createDirectDownload(url, options, controller.signal);
+        startBrowserDownload(ticket.download_path);
+        setState({ status: 'direct', downloadPath: ticket.download_path });
+        void recordCompletedOperations();
+        return;
+      }
       const created = await createSocialImport(url, options, controller.signal);
       setState({ status: 'running', stage: `${text.stages[1]} ${created.provider}`, progress: 2 });
       const completed = await waitForSocialImport(
@@ -319,6 +347,19 @@ export function SocialImportTool({
             <option value="subtitles">{text.mediaTypes[2]}</option>
             <option value="comments">{text.mediaTypes[3]}</option>
           </Select>
+          {!['subtitles', 'comments'].includes(mediaType) ? (
+            <Select
+              id="social-delivery-mode"
+              className="social-import-select"
+              label={text.deliveryMode}
+              description={deliveryMode === 'direct' ? text.directHint : undefined}
+              value={deliveryMode}
+              onChange={(event) => setDeliveryMode(event.target.value as 'cloud' | 'direct')}
+            >
+              <option value="cloud">{text.deliveryModes[0]}</option>
+              <option value="direct">{text.deliveryModes[1]}</option>
+            </Select>
+          ) : null}
           {mediaType === 'video' ? (
             <Select
               id="social-video-quality"
@@ -440,6 +481,18 @@ export function SocialImportTool({
               {text.chooseFile}
             </Button>
           ) : null}
+        </div>
+      ) : null}
+      {state.status === 'direct' ? (
+        <div className="import-result direct-import-result">
+          <div>
+            <Badge variant="success">{text.imported}</Badge>
+            <strong>{text.directReady}</strong>
+            <span>{text.directHint}</span>
+          </div>
+          <a className="image-download" href={`${API_URL}${state.downloadPath}`}>
+            {text.downloadAgain}
+          </a>
         </div>
       ) : null}
       {state.status === 'completed' && state.item.upload_id ? (

@@ -1,14 +1,25 @@
+import base64
+import hashlib
+import hmac
+import json
+import shutil
+from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
-from tempfile import TemporaryDirectory
+from tempfile import TemporaryDirectory, mkdtemp
 from uuid import uuid4
 
 from fastapi import HTTPException
 from sqlalchemy.orm import Session, sessionmaker
 
 from fileflow_api.config import Settings
-from fileflow_api.imports.contracts import ImportCreate
-from fileflow_api.imports.downloader import ImportClient, ImportDownloadError, ImportOptions
+from fileflow_api.imports.contracts import DirectDownloadTicket, ImportCreate
+from fileflow_api.imports.downloader import (
+    ImportClient,
+    ImportDownloadError,
+    ImportedMedia,
+    ImportOptions,
+)
 from fileflow_api.imports.models import ImportStatus, SocialImport
 from fileflow_api.imports.url_policy import (
     COMMENT_PROVIDERS,
@@ -18,6 +29,15 @@ from fileflow_api.imports.url_policy import (
 from fileflow_api.jobs.queue import TaskQueue
 from fileflow_api.uploads.models import SafetyStatus, Upload, UploadStatus
 from fileflow_api.uploads.storage import ObjectStorage
+
+
+@dataclass(frozen=True)
+class PreparedDirectDownload:
+    media: ImportedMedia
+    workspace: Path
+
+    def cleanup(self) -> None:
+        shutil.rmtree(self.workspace, ignore_errors=True)
 
 
 class SocialImportService:
@@ -34,6 +54,76 @@ class SocialImportService:
         self._queue = queue
         self._client = client
         self._settings = settings
+
+    def create_direct_ticket(self, request: ImportCreate) -> DirectDownloadTicket:
+        provider, url = (
+            validate_public_url(str(request.url))
+            if request.generic_audio
+            else validate_social_url(str(request.url))
+        )
+        if request.media_type == "comments" and provider not in COMMENT_PROVIDERS:
+            raise HTTPException(status_code=422, detail="comments_unsupported")
+        expires_at = datetime.now(UTC) + timedelta(
+            seconds=self._settings.direct_download_ticket_ttl_seconds
+        )
+        payload = request.model_dump(mode="json")
+        payload["url"] = url
+        payload["expires_at"] = int(expires_at.timestamp())
+        encoded = _urlsafe_encode(json.dumps(payload, separators=(",", ":")).encode("utf-8"))
+        signature = hmac.new(
+            self._settings.s3_secret_key.encode("utf-8"),
+            encoded.encode("ascii"),
+            hashlib.sha256,
+        ).digest()
+        ticket = f"{encoded}.{_urlsafe_encode(signature)}"
+        return DirectDownloadTicket(
+            download_path=f"/imports/direct/{ticket}",
+            expires_at=expires_at,
+        )
+
+    def prepare_direct_download(self, ticket: str) -> PreparedDirectDownload:
+        request = self._direct_request(ticket)
+        workspace = Path(mkdtemp(prefix="fileflow-direct-"))
+        try:
+            media = self._client.download(
+                str(request.url),
+                workspace,
+                None,
+                _import_options(request, self._settings),
+            )
+            return PreparedDirectDownload(media=media, workspace=workspace)
+        except Exception:
+            shutil.rmtree(workspace, ignore_errors=True)
+            raise
+
+    def _direct_request(self, ticket: str) -> ImportCreate:
+        try:
+            encoded, supplied_signature = ticket.split(".", 1)
+            expected_signature = hmac.new(
+                self._settings.s3_secret_key.encode("utf-8"),
+                encoded.encode("ascii"),
+                hashlib.sha256,
+            ).digest()
+            if not hmac.compare_digest(
+                expected_signature,
+                _urlsafe_decode(supplied_signature),
+            ):
+                raise ValueError("invalid signature")
+            payload = json.loads(_urlsafe_decode(encoded))
+            expires_at = int(payload.pop("expires_at"))
+            if expires_at < int(datetime.now(UTC).timestamp()):
+                raise ValueError("expired ticket")
+            request = ImportCreate.model_validate(payload)
+        except (TypeError, ValueError, KeyError, json.JSONDecodeError):
+            raise HTTPException(
+                status_code=410,
+                detail="Direct download ticket is invalid or expired.",
+            ) from None
+        if request.generic_audio:
+            validate_public_url(str(request.url))
+        else:
+            validate_social_url(str(request.url))
+        return request
 
     def create(self, request: ImportCreate) -> SocialImport:
         provider, url = (
@@ -113,21 +203,7 @@ class SocialImportService:
                     item.source_url,
                     Path(directory),
                     self._settings.max_upload_bytes,
-                    ImportOptions(
-                        media_type=item.media_type,
-                        video_quality=item.video_quality,
-                        audio_bitrate_kbps=item.audio_bitrate_kbps,
-                        start_seconds=item.start_seconds,
-                        end_seconds=item.end_seconds,
-                        playlist_item=item.playlist_item,
-                        playlist_count=item.playlist_count,
-                        generic_audio=item.generic_audio,
-                        subtitle_language=item.subtitle_language,
-                        comment_limit=self._settings.social_import_max_comments,
-                        comment_character_limit=(
-                            self._settings.social_import_max_comment_characters
-                        ),
-                    ),
+                    _import_options(item, self._settings),
                     report_progress,
                 )
                 size = media.path.stat().st_size
@@ -219,3 +295,28 @@ class SocialImportService:
             item = session.get(SocialImport, import_id)
             if item is not None and item.status == ImportStatus.RUNNING and bounded > item.progress:
                 item.progress = bounded
+
+
+def _import_options(request: ImportCreate | SocialImport, settings: Settings) -> ImportOptions:
+    return ImportOptions(
+        media_type=request.media_type,
+        video_quality=request.video_quality,
+        audio_bitrate_kbps=request.audio_bitrate_kbps,
+        start_seconds=request.start_seconds,
+        end_seconds=request.end_seconds,
+        playlist_item=request.playlist_item,
+        playlist_count=request.playlist_count,
+        generic_audio=request.generic_audio,
+        subtitle_language=request.subtitle_language,
+        comment_limit=settings.social_import_max_comments,
+        comment_character_limit=settings.social_import_max_comment_characters,
+    )
+
+
+def _urlsafe_encode(value: bytes) -> str:
+    return base64.urlsafe_b64encode(value).rstrip(b"=").decode("ascii")
+
+
+def _urlsafe_decode(value: str) -> bytes:
+    padding = "=" * (-len(value) % 4)
+    return base64.urlsafe_b64decode(f"{value}{padding}")

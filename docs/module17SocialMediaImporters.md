@@ -87,3 +87,7 @@ before Python imports yt-dlp and cannot be combined with the configured bgutil
 PO-token provider, which is itself a plugin.
 
 The importer image includes Node 22 because current yt-dlp YouTube extraction requires a supported external JavaScript runtime. Network policy should allow only required platform/CDN destinations and deny private address ranges at the infrastructure layer.
+
+## Delivery modes
+
+The checked-cloud mode keeps the existing quarantine, object-storage and malware-scan lifecycle and accepts results up to 2 GB. The direct-to-device mode issues a short-lived HMAC-signed ticket, downloads and merges media in an isolated temporary server directory, and serves the resulting file with native HTTP streaming. Direct results are never uploaded to object storage, are not malware-scanned, have no FileFlow size ceiling, and the temporary directory is removed after the response completes. The browser starts a native download instead of buffering the full response into a JavaScript `Blob`, so large files do not consume equivalent browser memory.

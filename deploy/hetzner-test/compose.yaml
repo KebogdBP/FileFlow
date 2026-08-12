@@ -22,8 +22,8 @@ x-app-environment: &app-environment
   FILEFLOW_GEMINI_API_KEY: ${FILEFLOW_GEMINI_API_KEY:-}
   FILEFLOW_GEMINI_BASE_URL: ${FILEFLOW_GEMINI_BASE_URL:-https://generativelanguage.googleapis.com/v1beta/openai}
   FILEFLOW_GEMINI_MODEL: ${FILEFLOW_GEMINI_MODEL:-gemini-3.6-flash}
-  FILEFLOW_MAX_UPLOAD_BYTES: 536870912
-  FILEFLOW_WORKER_MAX_OUTPUT_BYTES: 1073741824
+  FILEFLOW_MAX_UPLOAD_BYTES: 2147483648
+  FILEFLOW_WORKER_MAX_OUTPUT_BYTES: 2147483648
   FILEFLOW_UPLOAD_RETENTION_SECONDS: 3600
   FILEFLOW_FREE_DAILY_CLOUD_JOBS: 10
 
@@ -141,9 +141,9 @@ services:
     image: clamav/clamav:1.4_base
     restart: unless-stopped
     environment:
-      CLAMD_CONF_StreamMaxLength: 512M
-      CLAMD_CONF_MaxFileSize: 512M
-      CLAMD_CONF_MaxScanSize: 512M
+      CLAMD_CONF_StreamMaxLength: 2G
+      CLAMD_CONF_MaxFileSize: 2G
+      CLAMD_CONF_MaxScanSize: 2G
     volumes:
       - clamav_signatures:/var/lib/clamav
     mem_limit: 2g
