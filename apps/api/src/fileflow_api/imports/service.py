@@ -10,7 +10,11 @@ from fileflow_api.config import Settings
 from fileflow_api.imports.contracts import ImportCreate
 from fileflow_api.imports.downloader import ImportClient, ImportDownloadError, ImportOptions
 from fileflow_api.imports.models import ImportStatus, SocialImport
-from fileflow_api.imports.url_policy import validate_public_url, validate_social_url
+from fileflow_api.imports.url_policy import (
+    COMMENT_PROVIDERS,
+    validate_public_url,
+    validate_social_url,
+)
 from fileflow_api.jobs.queue import TaskQueue
 from fileflow_api.uploads.models import SafetyStatus, Upload, UploadStatus
 from fileflow_api.uploads.storage import ObjectStorage
@@ -37,6 +41,8 @@ class SocialImportService:
             if request.generic_audio
             else validate_social_url(str(request.url))
         )
+        if request.media_type == "comments" and provider not in COMMENT_PROVIDERS:
+            raise HTTPException(status_code=422, detail="comments_unsupported")
         item = SocialImport(
             id=uuid4().hex,
             source_url=url,
@@ -117,6 +123,10 @@ class SocialImportService:
                         playlist_count=item.playlist_count,
                         generic_audio=item.generic_audio,
                         subtitle_language=item.subtitle_language,
+                        comment_limit=self._settings.social_import_max_comments,
+                        comment_character_limit=(
+                            self._settings.social_import_max_comment_characters
+                        ),
                     ),
                     report_progress,
                 )

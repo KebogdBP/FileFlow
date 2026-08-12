@@ -60,6 +60,10 @@ const socialCopy = {
       import_failed: 'The platform could not import this link.',
       subtitles_not_found: 'No subtitles were found in the selected language.',
       comments_not_found: 'This platform did not return any public comments for the video.',
+      comments_unsupported:
+        'Public comment import is currently available for YouTube and Instagram.',
+      comments_api_update_required:
+        'Comment analysis is temporarily unavailable while the server is updating. Please try again shortly.',
     },
   },
   ru: {
@@ -113,6 +117,10 @@ const socialCopy = {
       import_failed: 'Не удалось импортировать медиа по этой ссылке.',
       subtitles_not_found: 'Субтитры на выбранном языке не найдены.',
       comments_not_found: 'Платформа не вернула публичные комментарии для этого видео.',
+      comments_unsupported:
+        'Импорт публичных комментариев сейчас доступен для YouTube и Instagram.',
+      comments_api_update_required:
+        'Анализ комментариев временно недоступен, пока обновляется сервер. Повторите попытку чуть позже.',
     },
   },
   es: {
@@ -159,6 +167,10 @@ const socialCopy = {
       import_failed: 'No se pudo importar el contenido desde este enlace.',
       subtitles_not_found: 'No se encontraron subtítulos en el idioma elegido.',
       comments_not_found: 'La plataforma no devolvió comentarios públicos para este vídeo.',
+      comments_unsupported:
+        'La importación de comentarios públicos está disponible para YouTube e Instagram.',
+      comments_api_update_required:
+        'El análisis de comentarios no está disponible mientras se actualiza el servidor. Inténtalo de nuevo pronto.',
     },
   },
 } as const;

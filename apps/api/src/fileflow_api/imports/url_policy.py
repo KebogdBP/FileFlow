@@ -26,6 +26,8 @@ PROVIDER_HOSTS = {
     "rutube": {"rutube.ru", "www.rutube.ru"},
 }
 
+COMMENT_PROVIDERS = {"youtube", "instagram"}
+
 
 def validate_social_url(value: str) -> tuple[str, str]:
     parsed = urlsplit(value)

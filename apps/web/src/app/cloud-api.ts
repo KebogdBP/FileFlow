@@ -84,8 +84,15 @@ export function accountToken() {
 async function responseError(response: Response) {
   const payload = (await response.json().catch(() => null)) as {
     detail?: string;
-    error?: { message?: string };
+    error?: {
+      message?: string;
+      details?: Array<{ location?: Array<string | number>; message?: string; type?: string }>;
+    };
   } | null;
+  const mediaTypeError = payload?.error?.details?.find(
+    (item) => item.location?.at(-1) === 'media_type' && item.type === 'literal_error',
+  );
+  if (mediaTypeError) return 'comments_api_update_required';
   return payload?.error?.message ?? payload?.detail ?? `Request failed (${response.status}).`;
 }
 

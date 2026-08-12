@@ -185,6 +185,22 @@ def test_import_contract_only_requires_a_platform_url() -> None:
     assert request.video_quality == "best"
 
 
+@pytest.mark.parametrize(
+    "url",
+    [
+        "https://www.tiktok.com/@creator/video/123",
+        "https://www.facebook.com/reel/123",
+        "https://vk.com/video-1_2",
+        "https://rutube.ru/video/3eac3b4561676c17df9132a9a1e62e3e/",
+    ],
+)
+def test_comment_import_rejects_platforms_without_public_comment_extraction(url: str) -> None:
+    service, _, queue = import_service()
+    with pytest.raises(HTTPException, match="comments_unsupported"):
+        service.create(ImportCreate(url=url, media_type="comments"))
+    assert queue.imports == []
+
+
 def test_generic_audio_accepts_public_https_and_rejects_private_hosts() -> None:
     assert validate_public_url("https://audio.example/track")[0] == "generic"
     with pytest.raises(HTTPException):
@@ -359,10 +375,46 @@ def test_downloader_collects_public_comments_into_readable_text(
     assert result.filename.endswith(".txt")
     assert captured["skip_download"] is True
     assert captured["getcomments"] is True
-    assert "Comments collected: 2" in content
+    assert captured["extractor_args"] == {
+        "youtube": {"comment_sort": ["top"], "max_comments": ["2500"]}
+    }
+    assert "Comments included in this file: 2" in content
     assert "Viewer One" in content
     assert "likes: 12" in content
     assert "I disagree with the conclusion." in content
+
+
+def test_instagram_carousel_comments_are_deduplicated(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    class FakeYoutubeDL:
+        def __init__(self, options: dict[str, object]) -> None:
+            pass
+
+        def __enter__(self) -> "FakeYoutubeDL":
+            return self
+
+        def __exit__(self, *args: object) -> None:
+            pass
+
+        def extract_info(self, url: str, download: bool) -> dict[str, object]:
+            comment = {"id": "same", "author": "Viewer", "text": "Shared discussion"}
+            return {
+                "title": "Carousel",
+                "extractor_key": "Instagram",
+                "entries": [{"comments": [comment]}, {"comments": [comment]}],
+            }
+
+    monkeypatch.setattr(downloader_module, "YoutubeDL", FakeYoutubeDL)
+    result = YtDlpClient().download(
+        "https://www.instagram.com/p/example/",
+        tmp_path,
+        1024 * 1024,
+        ImportOptions(media_type="comments"),
+    )
+    content = result.path.read_text(encoding="utf-8")
+    assert "Comments included in this file: 1" in content
+    assert content.count("Shared discussion") == 1
 
 
 def test_downloader_reports_when_platform_returns_no_comments(

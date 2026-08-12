@@ -1,6 +1,7 @@
 import os
 import shutil
 from collections.abc import Callable
+from copy import deepcopy
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
@@ -34,6 +35,8 @@ class ImportOptions:
     playlist_count: int | None = None
     generic_audio: bool = False
     subtitle_language: str = "en"
+    comment_limit: int = 2_500
+    comment_character_limit: int = 380_000
 
 
 @dataclass(frozen=True)
@@ -157,6 +160,13 @@ class YtDlpClient:
             options["format"] = format_spec
         elif selected.media_type == "comments":
             options.update({"skip_download": True, "getcomments": True})
+            if is_youtube:
+                options["extractor_args"] = {
+                    "youtube": {
+                        "comment_sort": ["top"],
+                        "max_comments": [str(selected.comment_limit)],
+                    }
+                }
         else:
             options.update(
                 {
@@ -183,15 +193,10 @@ class YtDlpClient:
                 # Current YouTube GVS requests from datacenter IPs require a
                 # video-bound Proof-of-Origin token. The provider is an
                 # internal-only sidecar; no token or endpoint reaches clients.
-                options["extractor_args"] = {
-                    "youtube": {
-                        "player_client": ["mweb"],
-                        "fetch_pot": ["always"],
-                    },
-                    "youtubepot-bgutilhttp": {
-                        "base_url": [self._pot_provider_url],
-                    },
-                }
+                extractor_args = options.setdefault("extractor_args", {})
+                youtube_args = extractor_args.setdefault("youtube", {})
+                youtube_args.update({"player_client": ["mweb"], "fetch_pot": ["always"]})
+                extractor_args["youtubepot-bgutilhttp"] = {"base_url": [self._pot_provider_url]}
         if self._cookies_file is not None:
             cookie_path = Path(self._cookies_file)
             if not cookie_path.is_file():
@@ -210,13 +215,21 @@ class YtDlpClient:
             # Current public TV responses are frequently DRM-only. Prefer the
             # Safari HLS path (which does not currently require a GVS token),
             # then try embedded playback for videos that allow it.
-            safari_options = dict(options)
-            safari_options["extractor_args"] = {"youtube": {"player_client": ["web_safari"]}}
+            safari_options = deepcopy(options)
+            safari_args = safari_options.setdefault("extractor_args", {}).setdefault("youtube", {})
+            safari_args.update({"player_client": ["web_safari"]})
+            safari_args.pop("fetch_pot", None)
+            safari_options["extractor_args"].pop("youtubepot-bgutilhttp", None)
             safari_options["impersonate"] = ImpersonateTarget.from_str("safari")
             attempts.append(safari_options)
 
-            embedded_options = dict(options)
-            embedded_options["extractor_args"] = {"youtube": {"player_client": ["web_embedded"]}}
+            embedded_options = deepcopy(options)
+            embedded_args = embedded_options.setdefault("extractor_args", {}).setdefault(
+                "youtube", {}
+            )
+            embedded_args.update({"player_client": ["web_embedded"]})
+            embedded_args.pop("fetch_pot", None)
+            embedded_options["extractor_args"].pop("youtubepot-bgutilhttp", None)
             attempts.append(embedded_options)
         elif browser_impersonation_fallback:
             # Meta and TikTok periodically gate otherwise public pages using a
@@ -249,7 +262,15 @@ class YtDlpClient:
         if selected.media_type == "comments":
             comments_path = workspace / "comments.txt"
             comments_path.write_text(
-                _comments_document(raw, title, creator), encoding="utf-8", newline="\n"
+                _comments_document(
+                    raw,
+                    title,
+                    creator,
+                    selected.comment_limit,
+                    selected.comment_character_limit,
+                ),
+                encoding="utf-8",
+                newline="\n",
             )
         files = [path for path in workspace.iterdir() if path.is_file() and not path.is_symlink()]
         expected_suffix = (
@@ -390,22 +411,32 @@ def _metadata_text(raw: dict[str, Any], name: str, limit: int) -> str | None:
     return str(value)[:limit] if value else None
 
 
-def _comments_document(raw: dict[str, Any], title: str | None, creator: str | None) -> str:
-    comments = raw.get("comments")
-    if not isinstance(comments, list) or not comments:
+def _comments_document(
+    raw: dict[str, Any],
+    title: str | None,
+    creator: str | None,
+    comment_limit: int,
+    character_limit: int,
+) -> str:
+    comments = _collected_comments(raw)
+    if not comments:
         raise ImportDownloadError("comments_not_found")
+    available = raw.get("comment_count")
+    available_text = str(available) if isinstance(available, int) else "Unknown"
     lines = [
         "FILEFLOW — COMMUNITY RESPONSE",
         f"Video: {title or 'Untitled'}",
         f"Creator: {creator or 'Unknown'}",
         f"Platform: {raw.get('extractor_key') or raw.get('extractor') or 'Unknown'}",
-        f"Comments collected: {len(comments)}",
+        f"Comments available: {available_text}",
+        f"Comments fetched from platform: {min(len(comments), comment_limit)}",
+        f"Collection limit: {comment_limit}",
+        "Selection: platform-ranked comments and replies",
         "",
     ]
     written = 0
-    for index, comment in enumerate(comments, 1):
-        if not isinstance(comment, dict):
-            continue
+    current_characters = len("\n".join(lines))
+    for index, comment in enumerate(comments[:comment_limit], 1):
         text = str(comment.get("text") or "").strip()
         if not text:
             continue
@@ -421,19 +452,67 @@ def _comments_document(raw: dict[str, Any], title: str | None, creator: str | No
             metadata.append(f"likes: {likes}")
         if parent and str(parent) != "root":
             metadata.append("reply")
-        lines.extend(
-            [
-                f"COMMENT {index}",
-                f"Author: {author}",
-                f"Metadata: {' | '.join(metadata)}",
-                text,
-                "",
-            ]
-        )
+        block_prefix = [
+            f"COMMENT {index}",
+            f"Author: {author}",
+            f"Metadata: {' | '.join(metadata)}",
+        ]
+        remaining = character_limit - current_characters - len("\n".join([*block_prefix, ""]))
+        if remaining < 80:
+            lines.extend(
+                [
+                    "COLLECTION NOTICE",
+                    f"Stopped at {written} comments to keep the file within the AI analysis limit.",
+                    "",
+                ]
+            )
+            break
+        if len(text) > remaining:
+            text = f"{text[: max(1, remaining - 35)]}\n[Comment truncated by FileFlow]"
+        block = [*block_prefix, text, ""]
+        block_characters = len("\n".join(block)) + 1
+        if current_characters + block_characters > character_limit:
+            lines.extend(
+                [
+                    "COLLECTION NOTICE",
+                    f"Stopped at {written} comments to keep the file within the AI analysis limit.",
+                    "",
+                ]
+            )
+            break
+        lines.extend(block)
+        current_characters += block_characters
         written += 1
     if written == 0:
         raise ImportDownloadError("comments_not_found")
+    lines.insert(6, f"Comments included in this file: {written}")
     return "\n".join(lines)
+
+
+def _collected_comments(raw: dict[str, Any]) -> list[dict[str, Any]]:
+    candidates: list[Any] = []
+    if isinstance(raw.get("comments"), list):
+        candidates.extend(raw["comments"])
+    entries = raw.get("entries")
+    if isinstance(entries, list):
+        for entry in entries:
+            if isinstance(entry, dict) and isinstance(entry.get("comments"), list):
+                candidates.extend(entry["comments"])
+    comments: list[dict[str, Any]] = []
+    seen: set[tuple[str, str, str]] = set()
+    for candidate in candidates:
+        if not isinstance(candidate, dict):
+            continue
+        key = (
+            str(candidate.get("id") or ""),
+            str(candidate.get("author") or ""),
+            str(candidate.get("text") or ""),
+        )
+        if key in seen:
+            continue
+        seen.add(key)
+        comments.append(candidate)
+    return comments
 
 
 def _clear_download_workspace(workspace: Path) -> None:
