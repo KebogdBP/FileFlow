@@ -272,7 +272,11 @@ class YtDlpClient:
                 encoding="utf-8",
                 newline="\n",
             )
-        files = [path for path in workspace.iterdir() if path.is_file() and not path.is_symlink()]
+        files = [
+            path
+            for path in workspace.iterdir()
+            if path.is_file() and not path.is_symlink() and path.name != WORKING_COOKIES_FILENAME
+        ]
         expected_suffix = (
             ".vtt"
             if selected.media_type == "subtitles"

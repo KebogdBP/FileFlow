@@ -417,6 +417,45 @@ def test_instagram_carousel_comments_are_deduplicated(
     assert content.count("Shared discussion") == 1
 
 
+def test_comment_result_never_selects_the_private_cookie_copy(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    cookie_source = tmp_path / "server-cookies.txt"
+    cookie_source.write_text("private-cookie-secret", encoding="utf-8")
+    workspace = tmp_path / "download"
+    workspace.mkdir()
+
+    class FakeYoutubeDL:
+        def __init__(self, options: dict[str, object]) -> None:
+            assert options["cookiefile"] == str(
+                workspace / downloader_module.WORKING_COOKIES_FILENAME
+            )
+
+        def __enter__(self) -> "FakeYoutubeDL":
+            return self
+
+        def __exit__(self, *args: object) -> None:
+            pass
+
+        def extract_info(self, url: str, download: bool) -> dict[str, object]:
+            return {
+                "title": "Public discussion",
+                "comments": [{"author": "Viewer", "text": "Public comment"}],
+            }
+
+    monkeypatch.setattr(downloader_module, "YoutubeDL", FakeYoutubeDL)
+    result = YtDlpClient(cookies_file=str(cookie_source)).download(
+        "https://www.youtube.com/watch?v=abc",
+        workspace,
+        1024 * 1024,
+        ImportOptions(media_type="comments"),
+    )
+    content = result.path.read_text(encoding="utf-8")
+    assert result.path.name == "comments.txt"
+    assert "Public comment" in content
+    assert "private-cookie-secret" not in content
+
+
 def test_downloader_reports_when_platform_returns_no_comments(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
