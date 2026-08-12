@@ -3,6 +3,9 @@
 Privacy-first file workspace built as a pnpm/Turborepo monorepo with Next.js, React and
 TypeScript.
 
+For the current implementation status, production notes, known limitations, prioritized
+backlog and developer onboarding, see [`Project_Progress.md`](Project_Progress.md).
+
 The current foundation includes:
 
 - M01 — repository and development environment;
