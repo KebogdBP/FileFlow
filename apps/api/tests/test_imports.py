@@ -214,9 +214,7 @@ def test_direct_download_ticket_bypasses_cloud_storage_and_size_limit() -> None:
 
 def test_direct_download_rejects_a_tampered_ticket() -> None:
     service, _, _ = import_service()
-    ticket = service.create_direct_ticket(
-        ImportCreate(url="https://www.youtube.com/watch?v=abc")
-    )
+    ticket = service.create_direct_ticket(ImportCreate(url="https://www.youtube.com/watch?v=abc"))
     raw = ticket.download_path.rsplit("/", 1)[-1]
 
     with pytest.raises(HTTPException) as error:
