@@ -16,6 +16,7 @@ ALLOWED_CONTENT_PREFIXES = ("image/", "video/", "audio/")
 ALLOWED_DOCUMENT_TYPES = {
     "application/pdf",
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    "text/plain",
     "text/vtt",
 }
 

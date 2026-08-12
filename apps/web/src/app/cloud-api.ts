@@ -35,7 +35,7 @@ export type SocialImport = {
   title: string | null;
   creator: string | null;
   thumbnail_url: string | null;
-  media_type: 'video' | 'audio' | 'subtitles';
+  media_type: 'video' | 'audio' | 'subtitles' | 'comments';
   video_quality: 'best' | '1080' | '720' | '480';
   audio_bitrate_kbps: 128 | 192 | 320;
   start_seconds: number | null;
@@ -48,7 +48,7 @@ export type SocialImport = {
 };
 
 export type SocialImportOptions = {
-  media_type: 'video' | 'audio' | 'subtitles';
+  media_type: 'video' | 'audio' | 'subtitles' | 'comments';
   video_quality: 'best' | '1080' | '720' | '480';
   audio_bitrate_kbps: 128 | 192 | 320;
   start_seconds?: number;
@@ -308,6 +308,7 @@ export function askSubtitleAi(
   prompt: string,
   history: readonly AiChatMessage[],
   token: string,
+  sourceKind: 'subtitles' | 'comments' = 'subtitles',
 ) {
   return apiJson<{ answer: string; model: string; remaining_today: number }>(
     '/subtitles/assist',
@@ -315,6 +316,7 @@ export function askSubtitleAi(
       method: 'POST',
       body: JSON.stringify({
         source_text: sourceText,
+        source_kind: sourceKind,
         prompt,
         history: history.slice(-8),
         response_language: 'auto',

@@ -2,6 +2,7 @@ import os
 import shutil
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, Protocol
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
@@ -111,7 +112,7 @@ class YtDlpClient:
             "vt.tiktok.com",
         }
         postprocessors: list[dict[str, Any]]
-        if selected.media_type == "subtitles":
+        if selected.media_type in {"subtitles", "comments"}:
             postprocessors = []
             format_spec: str | None = None
         elif selected.media_type == "audio":
@@ -154,6 +155,8 @@ class YtDlpClient:
         }
         if format_spec is not None:
             options["format"] = format_spec
+        elif selected.media_type == "comments":
+            options.update({"skip_download": True, "getcomments": True})
         else:
             options.update(
                 {
@@ -243,10 +246,17 @@ class YtDlpClient:
         title = _metadata_text(raw, "title", 500)
         creator = _metadata_text(raw, "uploader", 255)
         thumbnail = _metadata_text(raw, "thumbnail", 2048)
+        if selected.media_type == "comments":
+            comments_path = workspace / "comments.txt"
+            comments_path.write_text(
+                _comments_document(raw, title, creator), encoding="utf-8", newline="\n"
+            )
         files = [path for path in workspace.iterdir() if path.is_file() and not path.is_symlink()]
         expected_suffix = (
             ".vtt"
             if selected.media_type == "subtitles"
+            else ".txt"
+            if selected.media_type == "comments"
             else ".mp3"
             if selected.media_type == "audio"
             else ".mp4"
@@ -255,6 +265,8 @@ class YtDlpClient:
         if not media_files:
             if selected.media_type == "subtitles":
                 raise ImportDownloadError("subtitles_not_found")
+            if selected.media_type == "comments":
+                raise ImportDownloadError("comments_not_found")
             raise ValueError(f"import did not produce a {expected_suffix} artifact")
         if is_playlist:
             archive = workspace / "playlist.zip"
@@ -273,7 +285,7 @@ class YtDlpClient:
                 creator,
                 thumbnail,
             )
-        if selected.media_type == "subtitles" and media_files:
+        if selected.media_type in {"subtitles", "comments"} and media_files:
             media_files = media_files[:1]
         if len(media_files) != 1:
             raise ValueError(f"import did not produce one {expected_suffix} artifact")
@@ -287,6 +299,11 @@ class YtDlpClient:
                 raise ValueError("imported subtitles are not WebVTT")
             content_type = "text/vtt"
             filename = converted_filename(title or "Subtitles", ".vtt", source_is_filename=False)
+        elif selected.media_type == "comments":
+            content_type = "text/plain"
+            filename = converted_filename(
+                title or "Community response", ".txt", source_is_filename=False
+            )
         elif selected.media_type == "audio":
             if not _is_mp3_header(header):
                 raise ValueError("imported media is not an MP3 file")
@@ -371,6 +388,52 @@ def _is_mp3_header(header: bytes) -> bool:
 def _metadata_text(raw: dict[str, Any], name: str, limit: int) -> str | None:
     value = raw.get(name)
     return str(value)[:limit] if value else None
+
+
+def _comments_document(raw: dict[str, Any], title: str | None, creator: str | None) -> str:
+    comments = raw.get("comments")
+    if not isinstance(comments, list) or not comments:
+        raise ImportDownloadError("comments_not_found")
+    lines = [
+        "FILEFLOW — COMMUNITY RESPONSE",
+        f"Video: {title or 'Untitled'}",
+        f"Creator: {creator or 'Unknown'}",
+        f"Platform: {raw.get('extractor_key') or raw.get('extractor') or 'Unknown'}",
+        f"Comments collected: {len(comments)}",
+        "",
+    ]
+    written = 0
+    for index, comment in enumerate(comments, 1):
+        if not isinstance(comment, dict):
+            continue
+        text = str(comment.get("text") or "").strip()
+        if not text:
+            continue
+        timestamp = comment.get("timestamp")
+        date = "Unknown date"
+        if isinstance(timestamp, (int, float)):
+            date = datetime.fromtimestamp(timestamp, UTC).strftime("%Y-%m-%d %H:%M UTC")
+        author = str(comment.get("author") or "Anonymous").strip()
+        likes = comment.get("like_count")
+        parent = comment.get("parent")
+        metadata = [date]
+        if isinstance(likes, int):
+            metadata.append(f"likes: {likes}")
+        if parent and str(parent) != "root":
+            metadata.append("reply")
+        lines.extend(
+            [
+                f"COMMENT {index}",
+                f"Author: {author}",
+                f"Metadata: {' | '.join(metadata)}",
+                text,
+                "",
+            ]
+        )
+        written += 1
+    if written == 0:
+        raise ImportDownloadError("comments_not_found")
+    return "\n".join(lines)
 
 
 def _clear_download_workspace(workspace: Path) -> None:

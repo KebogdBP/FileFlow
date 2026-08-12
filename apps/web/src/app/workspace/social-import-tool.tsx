@@ -14,7 +14,10 @@ import {
 import { CloudJobTool } from './cloud-job-tool';
 import type { FileFlowLanguage } from '../use-fileflow-language';
 import { recordCompletedOperations } from '../visitor-counter';
-import { ImportedSubtitleWorkspace } from './subtitle-assistant';
+import {
+  ImportedCommunityResponseWorkspace,
+  ImportedSubtitleWorkspace,
+} from './subtitle-assistant';
 
 const socialCopy = {
   en: {
@@ -28,11 +31,11 @@ const socialCopy = {
     stop: 'Stop waiting',
     thumbnail: 'Imported media thumbnail',
     imported: 'IMPORTED',
-    fallbackTitle: ['Imported video', 'Imported audio', 'Imported subtitles'],
+    fallbackTitle: ['Imported video', 'Imported audio', 'Imported subtitles', 'Community response'],
     next: 'What next?',
-    download: ['Download video', 'Download MP3', 'Download VTT'],
+    download: ['Download video', 'Download MP3', 'Download VTT', 'Download comments TXT'],
     mediaType: 'Import as',
-    mediaTypes: ['Video', 'Audio (MP3)', 'Subtitles + AI'],
+    mediaTypes: ['Video', 'Audio (MP3)', 'Subtitles + AI', 'Community response + AI'],
     subtitleLanguage: 'Subtitle language',
     videoQuality: 'Video quality',
     qualities: ['Best available', 'Up to 1080p', 'Up to 720p', 'Up to 480p'],
@@ -56,6 +59,7 @@ const socialCopy = {
       media_too_large: 'This media is larger than the 512 MB server limit.',
       import_failed: 'The platform could not import this link.',
       subtitles_not_found: 'No subtitles were found in the selected language.',
+      comments_not_found: 'This platform did not return any public comments for the video.',
     },
   },
   ru: {
@@ -69,11 +73,16 @@ const socialCopy = {
     stop: 'Прекратить ожидание',
     thumbnail: 'Превью импортированного медиа',
     imported: 'ИМПОРТИРОВАНО',
-    fallbackTitle: ['Импортированное видео', 'Импортированное аудио', 'Извлечённые субтитры'],
+    fallbackTitle: [
+      'Импортированное видео',
+      'Импортированное аудио',
+      'Извлечённые субтитры',
+      'Общественный резонанс',
+    ],
     next: 'Что сделать дальше?',
-    download: ['Скачать видео', 'Скачать MP3', 'Скачать VTT'],
+    download: ['Скачать видео', 'Скачать MP3', 'Скачать VTT', 'Скачать комментарии TXT'],
     mediaType: 'Импортировать как',
-    mediaTypes: ['Видео', 'Аудио (MP3)', 'Субтитры + AI'],
+    mediaTypes: ['Видео', 'Аудио (MP3)', 'Субтитры + AI', 'Общественный резонанс + AI'],
     subtitleLanguage: 'Язык субтитров',
     videoQuality: 'Качество видео',
     qualities: ['Лучшее доступное', 'До 1080p', 'До 720p', 'До 480p'],
@@ -103,6 +112,7 @@ const socialCopy = {
       media_too_large: 'Файл превышает серверный лимит 512 МБ.',
       import_failed: 'Не удалось импортировать медиа по этой ссылке.',
       subtitles_not_found: 'Субтитры на выбранном языке не найдены.',
+      comments_not_found: 'Платформа не вернула публичные комментарии для этого видео.',
     },
   },
   es: {
@@ -116,11 +126,16 @@ const socialCopy = {
     stop: 'Dejar de esperar',
     thumbnail: 'Miniatura del contenido importado',
     imported: 'IMPORTADO',
-    fallbackTitle: ['Vídeo importado', 'Audio importado', 'Subtítulos extraídos'],
+    fallbackTitle: [
+      'Vídeo importado',
+      'Audio importado',
+      'Subtítulos extraídos',
+      'Respuesta de la comunidad',
+    ],
     next: '¿Qué hacer después?',
-    download: ['Descargar vídeo', 'Descargar MP3', 'Descargar VTT'],
+    download: ['Descargar vídeo', 'Descargar MP3', 'Descargar VTT', 'Descargar comentarios TXT'],
     mediaType: 'Importar como',
-    mediaTypes: ['Vídeo', 'Audio (MP3)', 'Subtítulos + IA'],
+    mediaTypes: ['Vídeo', 'Audio (MP3)', 'Subtítulos + IA', 'Respuesta de la comunidad + IA'],
     subtitleLanguage: 'Idioma de subtítulos',
     videoQuality: 'Calidad de vídeo',
     qualities: ['Mejor disponible', 'Hasta 1080p', 'Hasta 720p', 'Hasta 480p'],
@@ -143,6 +158,7 @@ const socialCopy = {
       media_too_large: 'El archivo supera el límite de 512 MB del servidor.',
       import_failed: 'No se pudo importar el contenido desde este enlace.',
       subtitles_not_found: 'No se encontraron subtítulos en el idioma elegido.',
+      comments_not_found: 'La plataforma no devolvió comentarios públicos para este vídeo.',
     },
   },
 } as const;
@@ -157,7 +173,7 @@ export function SocialImportTool({
   onChooseFile?: () => void;
 }) {
   const text = socialCopy[language];
-  const [mediaType, setMediaType] = useState<'video' | 'audio' | 'subtitles'>('video');
+  const [mediaType, setMediaType] = useState<'video' | 'audio' | 'subtitles' | 'comments'>('video');
   const [subtitleLanguage, setSubtitleLanguage] = useState('en');
   const [videoQuality, setVideoQuality] = useState<'best' | '1080' | '720' | '480'>('best');
   const [audioBitrate, setAudioBitrate] = useState<128 | 192 | 320>(192);
@@ -177,7 +193,7 @@ export function SocialImportTool({
     const startValue = startSeconds === '' ? undefined : Number(startSeconds);
     const endValue = endSeconds === '' ? undefined : Number(endSeconds);
     if (
-      mediaType !== 'subtitles' &&
+      !['subtitles', 'comments'].includes(mediaType) &&
       startValue !== undefined &&
       endValue !== undefined &&
       endValue <= startValue
@@ -190,11 +206,13 @@ export function SocialImportTool({
       video_quality: videoQuality,
       audio_bitrate_kbps: audioBitrate,
       subtitle_language: subtitleLanguage,
-      ...(mediaType === 'subtitles' || startValue === undefined
+      ...(['subtitles', 'comments'].includes(mediaType) || startValue === undefined
         ? {}
         : { start_seconds: startValue }),
-      ...(mediaType === 'subtitles' || endValue === undefined ? {} : { end_seconds: endValue }),
-      ...(mediaType === 'subtitles' || playlistItem === ''
+      ...(['subtitles', 'comments'].includes(mediaType) || endValue === undefined
+        ? {}
+        : { end_seconds: endValue }),
+      ...(['subtitles', 'comments'].includes(mediaType) || playlistItem === ''
         ? {}
         : { playlist_item: Number(playlistItem) }),
     };
@@ -248,7 +266,14 @@ export function SocialImportTool({
 
   const editable = state.status === 'idle' || state.status === 'error';
   const completedType = state.status === 'completed' ? state.item.media_type : mediaType;
-  const completedIndex = completedType === 'audio' ? 1 : completedType === 'subtitles' ? 2 : 0;
+  const completedIndex =
+    completedType === 'audio'
+      ? 1
+      : completedType === 'subtitles'
+        ? 2
+        : completedType === 'comments'
+          ? 3
+          : 0;
   const operations =
     completedType === 'audio'
       ? [
@@ -274,12 +299,13 @@ export function SocialImportTool({
             label={text.mediaType}
             value={mediaType}
             onChange={(event) =>
-              setMediaType(event.target.value as 'video' | 'audio' | 'subtitles')
+              setMediaType(event.target.value as 'video' | 'audio' | 'subtitles' | 'comments')
             }
           >
             <option value="video">{text.mediaTypes[0]}</option>
             <option value="audio">{text.mediaTypes[1]}</option>
             <option value="subtitles">{text.mediaTypes[2]}</option>
+            <option value="comments">{text.mediaTypes[3]}</option>
           </Select>
           {mediaType === 'video' ? (
             <Select
@@ -309,7 +335,7 @@ export function SocialImportTool({
               <option value="192">192 kbps</option>
               <option value="128">128 kbps</option>
             </Select>
-          ) : (
+          ) : mediaType === 'subtitles' ? (
             <Select
               id="social-subtitle-language"
               className="social-import-select"
@@ -324,8 +350,8 @@ export function SocialImportTool({
               <option value="de">Deutsch</option>
               <option value="fr">Français</option>
             </Select>
-          )}
-          {mediaType !== 'subtitles' ? (
+          ) : null}
+          {!['subtitles', 'comments'].includes(mediaType) ? (
             <Input
               id="social-start"
               label={text.startTime}
@@ -337,7 +363,7 @@ export function SocialImportTool({
               onChange={(event) => setStartSeconds(event.target.value)}
             />
           ) : null}
-          {mediaType !== 'subtitles' ? (
+          {!['subtitles', 'comments'].includes(mediaType) ? (
             <Input
               id="social-end"
               label={text.endTime}
@@ -349,7 +375,7 @@ export function SocialImportTool({
               onChange={(event) => setEndSeconds(event.target.value)}
             />
           ) : null}
-          {mediaType !== 'subtitles' ? (
+          {!['subtitles', 'comments'].includes(mediaType) ? (
             <Input
               id="social-playlist-item"
               label={text.playlistItem}
@@ -427,6 +453,8 @@ export function SocialImportTool({
           </a>
           {state.item.media_type === 'subtitles' ? (
             <ImportedSubtitleWorkspace importId={state.item.id} language={language} />
+          ) : state.item.media_type === 'comments' ? (
+            <ImportedCommunityResponseWorkspace importId={state.item.id} language={language} />
           ) : (
             <>
               <Select

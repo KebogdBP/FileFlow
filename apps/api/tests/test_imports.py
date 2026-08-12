@@ -310,6 +310,87 @@ def test_downloader_fetches_selected_manual_or_automatic_subtitles(
     assert captured["subtitleslangs"] == ["ru"]
 
 
+def test_downloader_collects_public_comments_into_readable_text(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    captured: dict[str, object] = {}
+
+    class FakeYoutubeDL:
+        def __init__(self, options: dict[str, object]) -> None:
+            captured.update(options)
+
+        def __enter__(self) -> "FakeYoutubeDL":
+            return self
+
+        def __exit__(self, *args: object) -> None:
+            pass
+
+        def extract_info(self, url: str, download: bool) -> dict[str, object]:
+            return {
+                "title": "Public discussion",
+                "uploader": "Creator",
+                "extractor_key": "Youtube",
+                "comments": [
+                    {
+                        "author": "Viewer One",
+                        "text": "This changed my mind.",
+                        "timestamp": 1_700_000_000,
+                        "like_count": 12,
+                        "parent": "root",
+                    },
+                    {
+                        "author": "Viewer Two",
+                        "text": "I disagree with the conclusion.",
+                        "parent": "comment-1",
+                    },
+                ],
+            }
+
+    monkeypatch.setattr(downloader_module, "YoutubeDL", FakeYoutubeDL)
+    result = YtDlpClient().download(
+        "https://www.youtube.com/watch?v=abc",
+        tmp_path,
+        1024 * 1024,
+        ImportOptions(media_type="comments"),
+    )
+
+    content = result.path.read_text(encoding="utf-8")
+    assert result.content_type == "text/plain"
+    assert result.filename.endswith(".txt")
+    assert captured["skip_download"] is True
+    assert captured["getcomments"] is True
+    assert "Comments collected: 2" in content
+    assert "Viewer One" in content
+    assert "likes: 12" in content
+    assert "I disagree with the conclusion." in content
+
+
+def test_downloader_reports_when_platform_returns_no_comments(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    class FakeYoutubeDL:
+        def __init__(self, options: dict[str, object]) -> None:
+            pass
+
+        def __enter__(self) -> "FakeYoutubeDL":
+            return self
+
+        def __exit__(self, *args: object) -> None:
+            pass
+
+        def extract_info(self, url: str, download: bool) -> dict[str, object]:
+            return {"title": "No discussion", "comments": []}
+
+    monkeypatch.setattr(downloader_module, "YoutubeDL", FakeYoutubeDL)
+    with pytest.raises(ImportDownloadError, match="comments_not_found"):
+        YtDlpClient().download(
+            "https://www.youtube.com/watch?v=abc",
+            tmp_path,
+            1024 * 1024,
+            ImportOptions(media_type="comments"),
+        )
+
+
 def test_downloader_applies_audio_quality_trim_and_playlist_item(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:

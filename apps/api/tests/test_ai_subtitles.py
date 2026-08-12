@@ -119,6 +119,39 @@ def test_ai_assistant_grounds_the_question_in_subtitle_text() -> None:
     assert client.messages[-1]["content"] == "What was the topic?"
 
 
+def test_ai_assistant_uses_public_response_analysis_for_comments() -> None:
+    engine = create_engine(
+        "sqlite+pysqlite:///:memory:",
+        connect_args={"check_same_thread": False},
+        poolclass=StaticPool,
+    )
+    Base.metadata.create_all(engine)
+    sessions = build_session_factory(engine)
+    with sessions.begin() as session:
+        session.add(
+            Account(
+                id="b" * 32,
+                email="comments@example.com",
+                display_name="Comments User",
+                password_hash="unused",
+                plan=AccountPlan.FREE,
+                created_at=datetime.now(UTC),
+            )
+        )
+    client = FakeAiClient()
+    service = SubtitleAiService(sessions, client, Settings(environment="test"))
+    service.assist(
+        "b" * 32,
+        SubtitleAssistRequest(
+            source_text="COMMENT 1\nAuthor: Viewer\nI support this idea.",
+            source_kind="comments",
+            prompt="What is the public response?",
+        ),
+    )
+    assert "public-response analyst" in client.messages[0]["content"]
+    assert "PUBLIC COMMENTS START" in client.messages[1]["content"]
+
+
 def test_docx_export_contains_editable_subtitle_text(tmp_path: Path) -> None:
     output = tmp_path / "subtitles.docx"
     output.write_bytes(subtitle_docx("Podcast", "First point\nSecond point"))

@@ -80,6 +80,75 @@ const copy = {
   },
 } as const;
 
+const communityCopy = {
+  en: {
+    title: 'Community response',
+    lead: 'Explore how viewers reacted, which views dominate and where debate emerged.',
+    editor: 'Collected public comments',
+    assistant: 'AI response analyst',
+    placeholder: 'Ask how the audience reacted to this topic…',
+    ask: 'Analyze comments',
+    working: 'Analyzing…',
+    signin: 'Sign in to use AI analysis and DOCX export.',
+    exports: ['Download TXT', 'Download TXT', 'Download DOCX'],
+    prompts: [
+      'What is the overall public response to this video?',
+      'How is the audience reacting to the main topic?',
+      'What debates or disagreements appear in the comments?',
+      'Group the comments into common, minority and disputed viewpoints.',
+    ],
+    empty: 'No readable public comments were returned.',
+    loading: 'Opening the collected comments…',
+    chars: 'characters',
+    privacy:
+      'Only these comments and your question are sent to the configured AI provider after you press Analyze.',
+  },
+  ru: {
+    title: 'Общественный резонанс',
+    lead: 'Изучите реакцию зрителей, преобладающие мнения и возникшие дискуссии.',
+    editor: 'Собранные публичные комментарии',
+    assistant: 'AI-аналитик реакции',
+    placeholder: 'Спросите, как аудитория отреагировала на эту тему…',
+    ask: 'Анализировать комментарии',
+    working: 'Анализируем…',
+    signin: 'Войдите в аккаунт, чтобы использовать AI-анализ и экспорт DOCX.',
+    exports: ['Скачать TXT', 'Скачать TXT', 'Скачать DOCX'],
+    prompts: [
+      'Какой общественный резонанс вызвало это видео?',
+      'Как общественность реагирует на основную тему?',
+      'Какие дебаты и разногласия ведутся в комментариях?',
+      'Раздели мнения на распространённые, меньшинство и спорные позиции.',
+    ],
+    empty: 'Публичные комментарии не найдены или не читаются.',
+    loading: 'Открываем собранные комментарии…',
+    chars: 'символов',
+    privacy:
+      'Только эти комментарии и ваш вопрос отправляются AI-провайдеру после нажатия кнопки анализа.',
+  },
+  es: {
+    title: 'Respuesta de la comunidad',
+    lead: 'Explora la reacción del público, las opiniones dominantes y los debates.',
+    editor: 'Comentarios públicos recopilados',
+    assistant: 'Analista de respuesta con IA',
+    placeholder: 'Pregunta cómo reaccionó la audiencia a este tema…',
+    ask: 'Analizar comentarios',
+    working: 'Analizando…',
+    signin: 'Inicia sesión para usar el análisis de IA y exportar a DOCX.',
+    exports: ['Descargar TXT', 'Descargar TXT', 'Descargar DOCX'],
+    prompts: [
+      '¿Cuál es la respuesta general del público a este vídeo?',
+      '¿Cómo reacciona la audiencia al tema principal?',
+      '¿Qué debates o desacuerdos aparecen en los comentarios?',
+      'Agrupa las opiniones en comunes, minoritarias y controvertidas.',
+    ],
+    empty: 'No se obtuvieron comentarios públicos legibles.',
+    loading: 'Abriendo los comentarios recopilados…',
+    chars: 'caracteres',
+    privacy:
+      'Solo estos comentarios y tu pregunta se envían al proveedor de IA al pulsar Analizar.',
+  },
+} as const;
+
 const aiErrors: Record<FileFlowLanguage, Record<string, string>> = {
   en: {
     ai_not_configured: 'The AI assistant is not configured on this server yet.',
@@ -132,23 +201,64 @@ export function ImportedSubtitleWorkspace({
   );
 }
 
+export function ImportedCommunityResponseWorkspace({
+  importId,
+  language,
+}: {
+  importId: string;
+  language: FileFlowLanguage;
+}) {
+  const text = communityCopy[language];
+  const [result, setResult] = useState<{ text: string; filename: string }>();
+  const [error, setError] = useState('');
+  useEffect(() => {
+    let active = true;
+    void getSocialImportResult(importId)
+      .then(async ({ blob, filename }) => {
+        const content = await blob.text();
+        if (active) setResult({ text: content, filename });
+      })
+      .catch((reason: unknown) => {
+        if (active) setError(reason instanceof Error ? reason.message : text.empty);
+      });
+    return () => {
+      active = false;
+    };
+  }, [importId, text.empty]);
+  if (error) return <p className="input-error">{error}</p>;
+  if (!result) return <p className="subtitle-loading">{text.loading}</p>;
+  return (
+    <SubtitleWorkspace
+      initialText={result.text}
+      filename={result.filename}
+      language={language}
+      sourceKind="comments"
+    />
+  );
+}
+
 export function SubtitleWorkspace({
   initialText,
   filename,
   language,
+  sourceKind = 'subtitles',
 }: {
   initialText: string;
   filename: string;
   language: FileFlowLanguage;
+  sourceKind?: 'subtitles' | 'comments';
 }) {
-  const labels = copy[language];
+  const labels = sourceKind === 'comments' ? communityCopy[language] : copy[language];
   const [subtitleText, setSubtitleText] = useState(initialText);
   const [prompt, setPrompt] = useState('');
   const [history, setHistory] = useState<AiChatMessage[]>([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [remaining, setRemaining] = useState<number>();
-  const plainText = useMemo(() => vttToPlainText(subtitleText), [subtitleText]);
+  const plainText = useMemo(
+    () => (sourceKind === 'comments' ? subtitleText : vttToPlainText(subtitleText)),
+    [sourceKind, subtitleText],
+  );
   const token = accountToken();
 
   async function ask(question = prompt) {
@@ -158,7 +268,13 @@ export function SubtitleWorkspace({
     setBusy(true);
     setError('');
     try {
-      const response = await askSubtitleAi(subtitleText, cleanQuestion, history, accessToken);
+      const response = await askSubtitleAi(
+        subtitleText,
+        cleanQuestion,
+        history,
+        accessToken,
+        sourceKind,
+      );
       setHistory((current) => [
         ...current,
         { role: 'user', content: cleanQuestion },
@@ -197,7 +313,9 @@ export function SubtitleWorkspace({
     <section className="subtitle-workspace">
       <div className="subtitle-heading">
         <div>
-          <Badge variant="success">SUBTITLES READY</Badge>
+          <Badge variant="success">
+            {sourceKind === 'comments' ? 'COMMENTS READY' : 'SUBTITLES READY'}
+          </Badge>
           <h4>{labels.title}</h4>
           <p>{labels.lead}</p>
         </div>
@@ -218,17 +336,25 @@ export function SubtitleWorkspace({
             <Button
               type="button"
               variant="secondary"
-              onClick={() => downloadText(subtitleText, '.vtt', 'text/vtt')}
+              onClick={() =>
+                downloadText(
+                  subtitleText,
+                  sourceKind === 'comments' ? '.txt' : '.vtt',
+                  sourceKind === 'comments' ? 'text/plain' : 'text/vtt',
+                )
+              }
             >
               {labels.exports[0]}
             </Button>
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={() => downloadText(plainText, '.txt', 'text/plain')}
-            >
-              {labels.exports[1]}
-            </Button>
+            {sourceKind === 'subtitles' ? (
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => downloadText(plainText, '.txt', 'text/plain')}
+              >
+                {labels.exports[1]}
+              </Button>
+            ) : null}
             <Button
               type="button"
               variant="secondary"

@@ -15,6 +15,7 @@ class AiMessage(BaseModel):
 
 class SubtitleAssistRequest(BaseModel):
     source_text: str = Field(min_length=1)
+    source_kind: Literal["subtitles", "comments"] = "subtitles"
     prompt: str = Field(min_length=1, max_length=4_000)
     history: list[AiMessage] = Field(default_factory=list, max_length=8)
     response_language: str = Field(default="auto", max_length=32)

@@ -8,7 +8,7 @@ from fileflow_api.imports.models import ImportStatus
 
 class ImportCreate(BaseModel):
     url: HttpUrl
-    media_type: Literal["video", "audio", "subtitles"] = "video"
+    media_type: Literal["video", "audio", "subtitles", "comments"] = "video"
     video_quality: Literal["best", "1080", "720", "480"] = "best"
     audio_bitrate_kbps: Literal[128, 192, 320] = 192
     start_seconds: float | None = Field(default=None, ge=0, le=86_400)
@@ -24,10 +24,10 @@ class ImportCreate(BaseModel):
             raise ValueError("playlist_item and playlist_count cannot be combined")
         if self.generic_audio and self.media_type != "audio":
             raise ValueError("generic_audio requires audio media_type")
-        if self.media_type == "subtitles" and (
+        if self.media_type in {"subtitles", "comments"} and (
             self.playlist_item is not None or self.playlist_count is not None
         ):
-            raise ValueError("subtitle extraction supports one video at a time")
+            raise ValueError("text extraction supports one video at a time")
         if (
             self.start_seconds is not None
             and self.end_seconds is not None
@@ -46,7 +46,7 @@ class ImportResponse(BaseModel):
     title: str | None
     creator: str | None
     thumbnail_url: str | None
-    media_type: Literal["video", "audio", "subtitles"]
+    media_type: Literal["video", "audio", "subtitles", "comments"]
     video_quality: Literal["best", "1080", "720", "480"]
     audio_bitrate_kbps: int
     start_seconds: float | None

@@ -99,6 +99,18 @@ def test_webvtt_subtitles_pass_the_existing_malware_pipeline() -> None:
     assert not storage.deleted
 
 
+def test_fileflow_comment_text_passes_the_existing_malware_pipeline() -> None:
+    content = "FILEFLOW — COMMUNITY RESPONSE\n\nCOMMENT 1\nA useful point".encode()
+    service, upload_id, storage, scanner = safety_service(
+        content, "text/plain", ScanResult(MalwareVerdict.CLEAN)
+    )
+    upload = service.inspect(upload_id)
+    assert upload.safety_status == SafetyStatus.CLEAN
+    assert upload.detected_content_type == "text/plain"
+    assert scanner.received == content
+    assert not storage.deleted
+
+
 @pytest.mark.parametrize(
     ("content", "declared", "result", "reason"),
     [

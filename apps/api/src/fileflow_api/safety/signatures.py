@@ -18,6 +18,7 @@ SIGNATURES = (
     Signature("audio/ogg", 0, b"OggS"),
     Signature("audio/mpeg", 0, b"ID3"),
     Signature("video/mp4", 4, b"ftyp"),
+    Signature("text/plain", 0, "FILEFLOW — COMMUNITY RESPONSE".encode()),
     Signature("text/vtt", 0, b"WEBVTT"),
 )
 
