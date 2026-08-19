@@ -24,6 +24,13 @@ PROVIDER_HOSTS = {
         "www.vkvideo.ru",
     },
     "rutube": {"rutube.ru", "www.rutube.ru"},
+    "yandex": {
+        "yandex.ru",
+        "www.yandex.ru",
+        "yandex.com",
+        "www.yandex.com",
+        "frontend.vh.yandex.ru",
+    },
 }
 
 COMMENT_PROVIDERS = {"youtube", "instagram"}
