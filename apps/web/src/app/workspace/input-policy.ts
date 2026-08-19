@@ -3,7 +3,15 @@ export const MAX_INPUT_BYTES = 2 * 1024 * 1024 * 1024;
 export const FILE_ACCEPT = ['image/*', 'video/*', 'audio/*', 'application/pdf', '.docx'] as const;
 
 export type InputPlatform =
-  'youtube' | 'instagram' | 'tiktok' | 'vk' | 'rutube' | 'dropbox' | 'google-drive' | 'direct-link';
+  | 'youtube'
+  | 'instagram'
+  | 'tiktok'
+  | 'vk'
+  | 'rutube'
+  | 'yandex'
+  | 'dropbox'
+  | 'google-drive'
+  | 'direct-link';
 
 export type InputValidationResult<T> = { ok: true; value: T } | { ok: false; error: string };
 
@@ -62,6 +70,9 @@ export function validateSourceUrl(
     'vk.ru',
     'vkvideo.ru',
     'rutube.ru',
+    'yandex.ru',
+    'yandex.com',
+    'frontend.vh.yandex.ru',
     'dropbox.com',
     'drive.google.com',
     'docs.google.com',
@@ -95,6 +106,13 @@ function getPlatform(hostname: string): InputPlatform | undefined {
     return 'vk';
   }
   if (hostname === 'rutube.ru' || hostname.endsWith('.rutube.ru')) return 'rutube';
+  if (
+    hostname === 'yandex.ru' ||
+    hostname === 'yandex.com' ||
+    hostname === 'frontend.vh.yandex.ru'
+  ) {
+    return 'yandex';
+  }
   if (hostname === 'dropbox.com' || hostname.endsWith('.dropbox.com')) return 'dropbox';
   if (
     hostname === 'drive.google.com' ||

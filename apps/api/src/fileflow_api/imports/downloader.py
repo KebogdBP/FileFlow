@@ -1,4 +1,6 @@
+import json
 import os
+import re
 import shutil
 from collections.abc import Callable
 from copy import deepcopy
@@ -7,6 +9,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, Protocol
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
+from urllib.request import ProxyHandler, Request, build_opener
 from zipfile import ZIP_DEFLATED, ZipFile
 
 # The reference downloader needs this escape hatch when an installed third-party
@@ -96,10 +99,30 @@ class YtDlpClient:
             if selected.playlist_item is not None or is_playlist or selected.generic_audio
             else _single_video_url(url)
         )
+        resolved_yandex_url = _resolve_yandex_preview_url(source_url, self._proxy_url)
+        if resolved_yandex_url is not None:
+            source_url = resolved_yandex_url
         hostname = (urlsplit(source_url).hostname or "").lower()
         is_youtube = (
             hostname == "youtu.be" or hostname == "youtube.com" or hostname.endswith(".youtube.com")
         )
+        # VK Video and Yandex Video preview pages can be transparent wrappers
+        # around a YouTube embed. yt-dlp follows that redirect inside the same
+        # YoutubeDL instance, so the YouTube runtime, PO-token provider and
+        # client fallbacks must be configured before the wrapper is extracted.
+        uses_youtube_embeds = is_youtube or hostname in {
+            "vk.com",
+            "www.vk.com",
+            "m.vk.com",
+            "vk.ru",
+            "www.vk.ru",
+            "vkvideo.ru",
+            "www.vkvideo.ru",
+            "yandex.ru",
+            "www.yandex.ru",
+            "yandex.com",
+            "www.yandex.com",
+        }
         browser_impersonation_fallback = hostname in {
             "facebook.com",
             "www.facebook.com",
@@ -188,7 +211,7 @@ class YtDlpClient:
                 [(selected.start_seconds or 0, selected.end_seconds)],
             )
             options["force_keyframes_at_cuts"] = True
-        if is_youtube:
+        if uses_youtube_embeds:
             options.update(_javascript_options(self._allow_remote_ejs))
             if self._pot_provider_url is not None:
                 # Current YouTube GVS requests from datacenter IPs require a
@@ -212,7 +235,7 @@ class YtDlpClient:
         if self._proxy_url is not None:
             options["proxy"] = self._proxy_url
         attempts = [options]
-        if is_youtube:
+        if uses_youtube_embeds:
             # Current public TV responses are frequently DRM-only. Prefer the
             # Safari HLS path (which does not currently require a GVS token),
             # then try embedded playback for videos that allow it.
@@ -372,6 +395,76 @@ def _download_progress_hook(
             on_progress(min(85, max(5, round(5 + (downloaded / total) * 80))))
 
     return report
+
+
+def _resolve_yandex_preview_url(url: str, proxy_url: str | None) -> str | None:
+    parsed = urlsplit(url)
+    hostname = (parsed.hostname or "").lower()
+    yandex_hosts = {"yandex.ru", "www.yandex.ru", "yandex.com", "www.yandex.com"}
+    is_preview_path = re.match(r"^/video/(?:touch/)?preview(?:/|$)", parsed.path)
+    if hostname not in yandex_hosts or not is_preview_path:
+        return None
+    video_id_match = re.search(r"/preview/(\d+)", parsed.path)
+    video_id = (
+        video_id_match.group(1) if video_id_match else dict(parse_qsl(parsed.query)).get("filmId")
+    )
+    if not video_id:
+        return None
+    handlers = []
+    if proxy_url and proxy_url.startswith(("http://", "https://")):
+        handlers.append(ProxyHandler({"http": proxy_url, "https": proxy_url}))
+    request = Request(
+        url,
+        headers={
+            "User-Agent": (
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136 Safari/537.36"
+            )
+        },
+    )
+    try:
+        with build_opener(*handlers).open(request, timeout=20) as response:
+            webpage = response.read(4 * 1024 * 1024).decode("utf-8", errors="replace")
+    except OSError:
+        return None
+    return _yandex_preview_target(webpage, video_id)
+
+
+def _yandex_preview_target(webpage: str, video_id: str) -> str | None:
+    state_match = re.search(
+        r"<noframes[^>]+PreloadedState[^>]*>\s*(.*?)\s*</\s*noframes>",
+        webpage,
+        re.DOTALL | re.IGNORECASE,
+    )
+    if not state_match:
+        return None
+    try:
+        state = json.loads(state_match.group(1))
+    except (TypeError, ValueError):
+        return None
+    clips = state.get("viewer", {}).get("clips", {})
+    item = clips.get("items", {}).get(video_id, {})
+    duplicate = clips.get("dups", {}).get(video_id, {})
+    candidates = (
+        item.get("relatedParams", {}).get("related_url"),
+        item.get("url"),
+        duplicate.get("host", {}).get("href"),
+        duplicate.get("player", {}).get("videoUrl"),
+    )
+    for candidate in candidates:
+        if not isinstance(candidate, str):
+            continue
+        parsed = urlsplit(candidate)
+        if (
+            parsed.scheme not in {"http", "https"}
+            or not parsed.hostname
+            or parsed.username
+            or parsed.password
+            or parsed.port
+        ):
+            continue
+        return urlunsplit(("https", parsed.netloc, parsed.path, parsed.query, ""))
+    return None
 
 
 def _postprocessor_progress_hook(

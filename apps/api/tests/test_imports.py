@@ -1,3 +1,4 @@
+import json
 import os
 from collections.abc import Callable
 from pathlib import Path
@@ -23,6 +24,7 @@ from fileflow_api.imports.downloader import (
     _download_error_code,
     _single_video_url,
     _video_format,
+    _yandex_preview_target,
 )
 from fileflow_api.imports.models import ImportStatus
 from fileflow_api.imports.service import SocialImportService
@@ -145,6 +147,8 @@ def import_service(
         ("https://vk.com/video-1_2", "vk"),
         ("https://vkvideo.ru/video-1_2", "vk"),
         ("https://rutube.ru/video/3eac3b4561676c17df9132a9a1e62e3e/", "rutube"),
+        ("https://yandex.ru/video/preview/5275069442094787341", "yandex"),
+        ("https://frontend.vh.yandex.ru/player/4dbb262b4fe5cf15a215de4f34eee34d", "yandex"),
         ("https://www.youtube.com/playlist?list=abc", "youtube"),
         ("https://www.youtube.com/@creator/live", "youtube"),
         ("https://www.instagram.com/creator/", "instagram"),
@@ -153,6 +157,28 @@ def import_service(
 )
 def test_platform_urls_are_classified_without_path_restrictions(url: str, provider: str) -> None:
     assert validate_social_url(url)[0] == provider
+
+
+def test_current_yandex_preview_state_resolves_to_the_original_media() -> None:
+    state = {
+        "viewer": {
+            "clips": {
+                "items": {
+                    "135": {
+                        "relatedParams": {
+                            "related_url": "http://rutube.ru/video/81ca50d7b619a03c877f51474632669e/"
+                        }
+                    }
+                },
+                "dups": {},
+            }
+        }
+    }
+    webpage = f'<noframes class="PreloadedState">{json.dumps(state)}</noframes>'
+
+    assert _yandex_preview_target(webpage, "135") == (
+        "https://rutube.ru/video/81ca50d7b619a03c877f51474632669e/"
+    )
 
 
 @pytest.mark.parametrize(
@@ -726,6 +752,52 @@ def test_youtube_uses_internal_pot_provider_when_configured(
     monkeypatch.setattr(downloader_module, "YoutubeDL", FakeYoutubeDL)
     YtDlpClient(pot_provider_url="http://pot-provider:4416/").download(
         "https://www.youtube.com/watch?v=abc",
+        tmp_path,
+        1024 * 1024,
+    )
+
+    assert captured["extractor_args"] == {
+        "youtube": {
+            "player_client": ["mweb"],
+            "fetch_pot": ["always"],
+        },
+        "youtubepot-bgutilhttp": {
+            "base_url": ["http://pot-provider:4416"],
+        },
+    }
+
+
+@pytest.mark.parametrize(
+    "url",
+    [
+        "https://vkvideo.ru/video241888432_456240395",
+        "https://yandex.ru/video/preview/5275069442094787341",
+    ],
+)
+def test_youtube_wrapper_uses_internal_pot_provider(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path, url: str
+) -> None:
+    captured: dict[str, object] = {}
+    monkeypatch.setattr(downloader_module, "_resolve_yandex_preview_url", lambda *_: None)
+
+    class FakeYoutubeDL:
+        def __init__(self, options: dict[str, object]) -> None:
+            captured.update(options)
+
+        def __enter__(self) -> "FakeYoutubeDL":
+            return self
+
+        def __exit__(self, *args: object) -> None:
+            pass
+
+        def extract_info(self, source_url: str, download: bool) -> dict[str, str]:
+            assert source_url == url
+            (tmp_path / "source.mp4").write_bytes(b"\x00\x00\x00\x18ftypisom-public-video")
+            return {"title": "Wrapped video"}
+
+    monkeypatch.setattr(downloader_module, "YoutubeDL", FakeYoutubeDL)
+    YtDlpClient(pot_provider_url="http://pot-provider:4416/").download(
+        url,
         tmp_path,
         1024 * 1024,
     )

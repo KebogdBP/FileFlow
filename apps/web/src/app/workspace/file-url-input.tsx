@@ -50,7 +50,7 @@ const workspaceCopy = {
     publicUrl: 'Public media URL',
     useLink: 'Use this link',
     chooseFileInstead: 'Choose a file instead',
-    linkHelp: 'YouTube, Instagram, Dropbox, Google Drive or any public HTTPS link',
+    linkHelp: 'Public YouTube, TikTok, Instagram, VK Video, Rutube and Yandex Video links',
     local: 'LOCAL',
     linkBadge: 'LINK',
     noImport: 'No import has started',
@@ -139,7 +139,7 @@ const workspaceCopy = {
     publicUrl: 'Публичная ссылка на медиа',
     useLink: 'Использовать ссылку',
     chooseFileInstead: 'Выбрать файл с устройства',
-    linkHelp: 'Публичные ссылки YouTube, TikTok, Instagram, VK Видео и Rutube',
+    linkHelp: 'Публичные ссылки YouTube, TikTok, Instagram, VK Видео, Rutube и Яндекс.Видео',
     local: 'ЛОКАЛЬНО',
     linkBadge: 'ССЫЛКА',
     noImport: 'Импорт ещё не начался',
@@ -254,7 +254,7 @@ const workspaceCopy = {
     publicUrl: 'URL pública de medios',
     useLink: 'Usar este enlace',
     chooseFileInstead: 'Elegir un archivo del dispositivo',
-    linkHelp: 'Enlaces públicos de YouTube, TikTok, Instagram, VK Video y Rutube',
+    linkHelp: 'Enlaces públicos de YouTube, TikTok, Instagram, VK Video, Rutube y Yandex Video',
     local: 'LOCAL',
     linkBadge: 'ENLACE',
     noImport: 'La importación aún no ha empezado',
@@ -833,7 +833,9 @@ function UrlIntentPanel({
 }) {
   const text = workspaceCopy[language];
   const [confirmed, setConfirmed] = useState(false);
-  const isImportableMedia = ['youtube', 'instagram', 'tiktok', 'vk', 'rutube'].includes(platform);
+  const isImportableMedia = ['youtube', 'instagram', 'tiktok', 'vk', 'rutube', 'yandex'].includes(
+    platform,
+  );
 
   if (!isImportableMedia) {
     return (
